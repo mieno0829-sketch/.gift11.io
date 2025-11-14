@@ -1,10 +1,10 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ja">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>自動車保険 更新手続き（完全版・修正版・保存用）</title>
-<!-- Version: full-2025-11-14-stable-a11y-progress25-time-history-noticeLink-header2rows-faq-bluePlayIcon-2025-11-14g -->
+<!-- Version: full-2025-11-14-stable-a11y-progress25-time-history-noticeLink-header2rows-faq-bluePlayIcon-pressChip-mobileHighlight-strong-2025-11-14i+fix-funcs -->
 <style>
   :root {
     --blue-900:#0f3d7a; --blue-700:#1f5fbf; --blue-500:#3c7fe6;
@@ -158,7 +158,7 @@
   .officialInline-text a{ color:var(--blue-700); text-decoration:none; }
   .officialInline-text a:active{ opacity:0.85; }
 
-  /* 動画チップ（枠=--border、hover/activeで薄い青） */
+  /* 動画チップ（濃いめ） */
   .videoChip {
     display:flex; align-items:center; gap:8px;
     border:1px solid var(--border);
@@ -169,8 +169,22 @@
   }
   .videoChip:hover,
   .videoChip:active,
-  .videoChip:focus-visible { background:#eef4ff; }
+  .videoChip:focus-visible { background:#e3edff; border-color:#2a6ad6; }
   .videoChip-icon { width:22px; height:22px; flex:0 0 22px; }
+  .videoChip-icon rect,
+  .videoChip-icon polygon { transition: fill .12s ease, transform .12s ease; }
+  @media (hover:none){
+    .videoChip{
+      background:#f1f6ff;
+      box-shadow:0 1px 0 rgba(31,95,191,.08);
+    }
+  }
+  .videoChip.pressed{
+    background:#d5e3ff;
+    border-color:#1a4ea0;
+  }
+  .videoChip.pressed .videoChip-icon rect{ fill:#174a96; }
+  .videoChip.pressed .videoChip-icon polygon{ transform:translateX(0.6px); }
 
   /* FAQモーダル：2文字分空け＋折返し整列＋太字見出し */
   .faqList{
@@ -240,7 +254,7 @@
         <div class="list">・紙の継続証の郵送も選べます（完了画面で指定）</div>
         <div class="list">・困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
 
-        <!-- ログイン動画チップ（青塗り四角＋白▷） -->
+        <!-- ログイン画面 動画チップ -->
         <a href="#" class="videoChip" role="button"
            onclick="openNotice('本番では１分動画に推移します')"
            aria-label="はじめての方はコチラ（使い方の1分動画）">
@@ -414,7 +428,7 @@
           <div class="licRow">
             <div class="licBox short">交付日：yyyy年mm月dd日</div>
           </div>
-          <div class="licRow">
+            <div class="licRow">
             <div class="licBox red short">有効期限：yyyy年mm月dd日</div>
           </div>
           <div class="licRow">
@@ -559,7 +573,7 @@
       <div class="card">
         <div class="h1">現在の補償内容と保険料</div>
 
-        <!-- 画面14動画チップ（青塗り四角＋白▷） -->
+        <!-- 画面14 動画チップ -->
         <a href="#" class="videoChip" role="button"
            onclick="openNotice('本番では補償のポイント解説動画に推移します')"
            aria-label="60秒で分かる補償のポイントはコチラ">
@@ -970,7 +984,7 @@
   const MAX_STEPS = 25;
 
   const screens=[...document.querySelectorAll('.screen')];
-  let step=0;
+  let step=0; // DOMインデックス
   const titles=()=>screens.map(s=>s.dataset.title);
 
   /* 履歴スタック（戻る対策） */
@@ -987,7 +1001,6 @@
     screens.forEach((s,idx)=>s.classList.toggle('active',idx===i));
     const curTitle=titles()[i]||'';
     const x = titleToNo(curTitle);
-
     const progText = document.getElementById('progressText');
     if (progText) {
       progText.textContent = x===1 ? `進捗 ${x}/${MAX_STEPS}（最大）` : `進捗 ${x}/${MAX_STEPS}`;
@@ -1048,7 +1061,7 @@
     }catch(e){ openNotice('保存に失敗しました（デモ）。'); }
   }
 
-  /* 音声ガイド */
+  /* 音声ガイド（既存） */
   let guidedSpeaking=false; let guidedCancelFn=null;
   const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=50;
 
@@ -1088,28 +1101,6 @@
     const normalized=normalizeDigitsAndDashes(bn);
     const parts=normalized.split('-').filter(Boolean).map(token=> token.split('').map(d=> map[d]||d).join(''));
     return parts.join('の');
-  }
-  function buildAddressSegments(addr){
-    const segs=[]; let rest=addr;
-    if(rest.includes('東京都')){ segs.push('東京都'); rest=rest.replace('東京都',''); }
-    if(rest.includes('港区'))  { segs.push('港区');   rest=rest.replace('港区',''); }
-    if(rest.includes('赤坂')){ segs.push('アカサカ'); rest=rest.replace('赤坂',''); }
-    rest = replaceMaruWords(rest);
-    const normalized=normalizeDigitsAndDashes(rest);
-    const blockMatch=normalized.match(/(\d+(?:-\d+)+|\d+)/);
-    if(blockMatch){
-      segs.push(readBlockNumberForSpeech(blockMatch[1]));
-      rest=rest.replace(/[０-９0-9][０-９0-9\-‐‑‒–—−ー－]*/, '').trim();
-    }
-    if(rest) segs.push(rest.replace(/\s+/g,''));
-    return segs.filter(Boolean);
-  }
-  function kanaDigits(s){ const map={'0':'ゼロ','1':'イチ','2':'ニ','3':'サン','4':'ヨン','5':'ゴ','6':'ロク','7':'ナナ','8':'ハチ','9':'キュウ'}; return s.split('').map(d=> map[d]||d).join(''); }
-  function formatPhoneNo(phoneRaw){
-    const p=phoneRaw.replace(/[^\d]/g,'');
-    if(p.length===11) return `${kanaDigits(p.slice(0,3))}の${kanaDigits(p.slice(3,7))}の${kanaDigits(p.slice(7))}`;
-    if(p.length===10) return `${kanaDigits(p.slice(0,3))}の${kanaDigits(p.slice(3,7))}の${kanaDigits(p.slice(7))}`;
-    return kanaDigits(p);
   }
   function buildGuidedQueue(){
     const title=titles()[step];
@@ -1199,7 +1190,7 @@
     return true;
   }
 
-  /* 保険料・差分 */
+  /* 保険料・差分（既存） */
   let cur=5900, same=6400, bodily='3000';
   function money(n){ return '¥'+Math.round(n).toLocaleString(); }
   function setCell(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
@@ -1257,47 +1248,6 @@
     updateOptionSummary(); updateDiffLinesDynamic();
   }
 
-  const currentOptionBaseline=['弁護士費用特約','代車費用特約']; let optSummaryMode='dynamic';
-  function getSelectedOptionsLabels(){ const s=[]; if(document.getElementById('opt_law')?.checked) s.push('弁護士費用特約'); if(document.getElementById('opt_rental')?.checked) s.push('代車費用特約'); if(document.getElementById('opt_dap')?.checked) s.push('DAP（ドライブレコーダー）特約'); return s; }
-  function arrayEqualIgnoreOrder(a,b){ if(a.length!==b.length) return false; const aa=[...a].sort(), bb=[...b].sort(); return aa.every((v,i)=> v===bb[i]); }
-  function renderOptionDiff(newList){ const curStr='弁護士費用・代車費用'; const newStr = newList.length ? newList.join(',') : 'なし'; const el=document.getElementById('optSummary'); if(!el) return; if(arrayEqualIgnoreOrder(newList, currentOptionBaseline)){ el.textContent = `特約：${curStr}（変更なし）`; }else{ el.textContent = `特約：${curStr} → ${newStr}`; } }
-  function updateOptionSummary(){ if(optSummaryMode==='fixedCurrent'){ renderOptionDiff([...currentOptionBaseline]); return; } if(optSummaryMode==='fixedNone'){ renderOptionDiff([]); return; } const sel=getSelectedOptionsLabels(); renderOptionDiff(sel); }
-  function chooseSameFlow(){
-    optSummaryMode='fixedCurrent';
-    const newM=same, newY=newM*12;
-    setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
-    setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
-    setDelta('sumDeltaMonthly', newM-cur); setDelta('sumDeltaYearly', newY - cur*12);
-    const b=document.getElementById('diffBodily'), v=document.getElementById('diffVehicle');
-    if(b) b.textContent='変更なし（前年同条件で更新）';
-    if(v) v.textContent='—';
-    updateOptionSummary();
-    goToTitle('重要なご説明');
-  }
-  function openSimplePlans(){ goToTitle('別のプランから選ぶ'); }
-  function goStepByStep(){ optSummaryMode='dynamic'; goToTitle('人身傷害の金額を選ぶ'); }
-  function chooseSimplePlan(type){
-    let newM=same;
-    if(type==='up'){
-      newM=6900;
-      const b=document.getElementById('diffBodily'); const v=document.getElementById('diffVehicle');
-      if(b) b.textContent='人身傷害：3,000万円 → 5,000万円';
-      if(v) v.textContent='車両保険：200万円（免責5万円） → 250万円（免責5万円）';
-      optSummaryMode='fixedCurrent';
-    }else{
-      newM=4800;
-      const b=document.getElementById('diffBodily'); const v=document.getElementById('diffVehicle');
-      if(b) b.textContent='人身傷害：3,000万円（変更なし）';
-      if(v) v.innerHTML='車両保険：あり → <span class="changeMinus">なし</span>';
-      optSummaryMode='fixedNone';
-    }
-    const newY=newM*12;
-    setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
-    setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
-    setDelta('sumDeltaMonthly', newM - cur); setDelta('sumDeltaYearly', newY - cur*12);
-    updateOptionSummary(); goToTitle('重要なご説明');
-  }
-
   /* 同意〜完了 */
   let flagSendPdf=false, flagPostal=false;
   function onAgreeSubmit(){
@@ -1326,7 +1276,7 @@
     var enableCTA = true;
     document.addEventListener('DOMContentLoaded', function(){
       document.body.classList.toggle('exp-cta', enableCTA);
-      var pressables = document.querySelectorAll('.btnPrimary, .videoCta');
+      var pressables = document.querySelectorAll('.btnPrimary, .videoCta, .videoChip');
       pressables.forEach(function(el){
         var add = function(){ el.classList.add('pressed'); };
         var remove = function(){ el.classList.remove('pressed'); };
@@ -1432,8 +1382,11 @@
         if (e.key !== 'Tab') return;
         const f = getFocusable(modal); if (f.length === 0) return;
         const first = f[0], last = f[f.length-1];
-        if (e.shiftKey){ if (document.activeElement === first || !modal.contains(document.activeElement)) { e.preventDefault(); last.focus(); } }
-        else { if (document.activeElement === last || !modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); } }
+        if (e.shiftKey){
+          if (document.activeElement === first || !modal.contains(document.activeElement)) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last || !modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+        }
       }
       modal.__trapHandler = onKeyDown; document.addEventListener('keydown', onKeyDown);
     }
@@ -1452,6 +1405,97 @@
       m.addEventListener('mousedown', (e)=>{ if(e.target===m) closeModal(m); });
     });
   })();
+
+  function focusFirstInteractive(scope){
+    const root = scope || document.querySelector('.screen.active');
+    if(!root) return;
+    const selectors = [ 'button.btnPrimary', 'input, select, textarea, button, a[href]' ];
+    for (const sel of selectors) { const el = root.querySelector(sel); if (el && typeof el.focus === 'function') { el.focus(); return; } }
+  }
+
+  /* --- ここから：保険オプション差分・簡易プラン関連（未定義エラー対策・復旧） --- */
+  const currentOptionBaseline = ['弁護士費用特約','代車費用特約'];
+  let optSummaryMode = 'dynamic';
+
+  function getSelectedOptionsLabels(){
+    const s=[];
+    if (document.getElementById('opt_law')?.checked) s.push('弁護士費用特約');
+    if (document.getElementById('opt_rental')?.checked) s.push('代車費用特約');
+    if (document.getElementById('opt_dap')?.checked) s.push('DAP（ドライブレコーダー）特約');
+    return s;
+  }
+  function arrayEqualIgnoreOrder(a,b){
+    if(a.length!==b.length) return false;
+    const aa=[...a].sort(), bb=[...b].sort();
+    return aa.every((v,i)=> v===bb[i]);
+  }
+  function renderOptionDiff(newList){
+    const curStr='弁護士費用・代車費用';
+    const newStr = newList.length ? newList.join(',') : 'なし';
+    const el=document.getElementById('optSummary');
+    if(!el) return;
+    if(arrayEqualIgnoreOrder(newList, currentOptionBaseline)){
+      el.textContent = `特約：${curStr}（変更なし）`;
+    }else{
+      el.textContent = `特約：${curStr} → ${newStr}`;
+    }
+  }
+  function updateOptionSummary(){
+    if(optSummaryMode==='fixedCurrent'){ renderOptionDiff([...currentOptionBaseline]); return; }
+    if(optSummaryMode==='fixedNone'){ renderOptionDiff([]); return; }
+    const sel=getSelectedOptionsLabels(); renderOptionDiff(sel);
+  }
+
+  function chooseSameFlow(){
+    optSummaryMode='fixedCurrent';
+    const curM = typeof cur==='number'?cur:5900;
+    const sameM = typeof same==='number'?same:6400;
+    const newM = sameM;
+    const newY = newM*12;
+    setCell('sumCurMonthly', money(curM));
+    setCell('sumCurYearly', money(curM*12));
+    setCell('sumNewMonthly', money(newM));
+    setCell('sumNewYearly', money(newY));
+    setDelta('sumDeltaMonthly', newM - curM);
+    setDelta('sumDeltaYearly', newY - curM*12);
+    const b=document.getElementById('diffBodily'), v=document.getElementById('diffVehicle');
+    if(b) b.textContent='変更なし（前年同条件で更新）';
+    if(v) v.textContent='—';
+    updateOptionSummary();
+    goToTitle('重要なご説明');
+  }
+
+  function openSimplePlans(){ goToTitle('別のプランから選ぶ'); }
+  function goStepByStep(){ optSummaryMode='dynamic'; goToTitle('人身傷害の金額を選ぶ'); }
+
+  function chooseSimplePlan(type){
+    const curM = typeof cur==='number'?cur:5900;
+    let newM = typeof same==='number'?same:6400;
+
+    if(type==='up'){
+      newM=6900;
+      const b=document.getElementById('diffBodily'); const v=document.getElementById('diffVehicle');
+      if(b) b.textContent='人身傷害：3,000万円 → 5,000万円';
+      if(v) v.textContent='車両保険：200万円（免責5万円） → 250万円（免責5万円）';
+      optSummaryMode='fixedCurrent';
+    }else{
+      newM=4800;
+      const b=document.getElementById('diffBodily'); const v=document.getElementById('diffVehicle');
+      if(b) b.textContent='人身傷害：3,000万円（変更なし）';
+      if(v) v.innerHTML='車両保険：あり → <span class="changeMinus">なし</span>';
+      optSummaryMode='fixedNone';
+    }
+    const newY=newM*12;
+    setCell('sumCurMonthly', money(curM));
+    setCell('sumCurYearly', money(curM*12));
+    setCell('sumNewMonthly', money(newM));
+    setCell('sumNewYearly', money(newY));
+    setDelta('sumDeltaMonthly', newM - curM);
+    setDelta('sumDeltaYearly', newY - curM*12);
+    updateOptionSummary();
+    goToTitle('重要なご説明');
+  }
+  /* --- ここまで：復旧関数群 --- */
 
   function focusFirstInteractive(scope){
     const root = scope || document.querySelector('.screen.active');
