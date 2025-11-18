@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>自動車保険 更新手続き（完全版・修正版・保存用）</title>
 <!-- Version: full-2025-11-17-apply-1114LAST-diff-prepMerged-webPaperChoice-added-progress25 -->
+
+<!-- START: styles -->
 <style>
   :root {
     --blue-900:#0f3d7a; --blue-800:#1f5fbf; --blue-700:#2b6fd6; --blue-600:#2562c1; --blue-500:#3c7fe6;
@@ -126,7 +128,7 @@
   .videoCta{display:flex;align-items:center;gap:10px;background:var(--blue-800);color:#fff;padding:10px 12px;border-radius:12px;text-decoration:none;font-weight:700;font-size:14px;margin-top:8px}
   .videoCta:active{opacity:.9}
 
-  .large .h1{font-size:18px !important}
+  .large .h1{fontサイズ:18px !important}
   .large .desc,.large .list,.large .label,.large .item,.large .link{font-size:17px !important}
   .large .input,.large select,.large .textarea{font-size:18px !important}
   .large .btnPrimary,.large header .btn,.large .toggleLarge,.large .aiLabel,.large .supportItem,.large .ghost{font-size:17px !important}
@@ -175,7 +177,6 @@
   .videoChip-icon { width:22px; height:22px; flex:0 0 22px; }
   .videoChip-icon rect{ fill:#2b6fd6; transition: fill .12s ease; }
   .videoChip-icon polygon{ fill:#ffffff; transition: transform .12s ease; transform-origin:center; }
-  .videoChip.pressed{ background:#dfe9ff; border-color:#93b8ff; transform:translateY(1px) scale(0.99); }
 
   /* 新規：WEBと書面の選択（免許証色UIと同系） */
   .choiceRow{display:flex; gap:6px; margin-top:6px;}
@@ -184,12 +185,13 @@
   .choiceToggle.active{outline:2px solid var(--blue-800); background:#eef4ff;}
 
 </style>
+<!-- END: styles -->
 </head>
 <body>
 <div class="wrap">
 
-  <!-- ヘッダー（2段） -->
   <header>
+    <!-- START: header-top -->
     <div class="headerTop">
       <div class="toolbar">
         <a href="#" class="btn" id="btnSpeak" onclick="toggleGuidedVoice()">音声で解説</a>
@@ -200,19 +202,25 @@
         <div class="aiLabel">AIと対話できます</div>
       </div>
     </div>
+    <!-- END: header-top -->
 
+    <!-- START: header-progress -->
     <div class="progress">
       <div id="progressText">進捗 1/25（最大）</div>
       <div class="bar"><div id="progressBar" role="progressbar" aria-label="進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4"></div></div>
       <div id="timeLeft">残り約11分</div>
     </div>
+    <!-- END: header-progress -->
+
+    <!-- START: header-bottom -->
+    <!-- 予備（将来拡張） -->
+    <!-- END: header-bottom -->
   </header>
 
   <main id="screens">
 
-    <!-- 1: 手続き開始（前編：事前準備まで） -->
+    <!-- START: screen-01-intro -->
     <section class="screen active" data-title="手続き開始">
-      <!-- 公式案内 -->
       <div class="officialInline" role="note" aria-label="公式案内と注意点">
         <div class="officialInline-row">
           <svg class="officialInline-bullet" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -242,7 +250,6 @@
         </a>
       </div>
 
-      <!-- 事前準備 -->
       <div class="card">
         <div class="h1">事前にご準備ください</div>
         <ul class="list">
@@ -253,13 +260,13 @@
         <div class="desc">所要時間は約10〜12分。途中保存していつでも再開できます。</div>
       </div>
 
-      <!-- 次へ（ログイン） -->
       <div class="card">
         <button class="btnPrimary" onclick="next()">次へ（ログイン）</button>
       </div>
     </section>
+    <!-- END: screen-01-intro -->
 
-    <!-- 1(続き): 手続き開始（ログイン） -->
+    <!-- START: screen-01b-login -->
     <section class="screen" data-title="手続き開始">
       <div class="card">
         <div class="h1">ログイン</div>
@@ -282,8 +289,9 @@
         <button class="btnPrimary" onclick="if(validateOtpLogin()) next()">認証して次へ</button>
       </div>
     </section>
+    <!-- END: screen-01b-login -->
 
-    <!-- 2: お車の情報 -->
+    <!-- START: screen-02-vehicle-summary -->
     <section class="screen" data-title="お車の情報">
       <div class="card">
         <div class="h1">ご契約中のお車情報</div>
@@ -297,8 +305,9 @@
         <button class="btnPrimary" onclick="goToTitle('車検証の情報')">変更する</button>
       </div>
     </section>
+    <!-- END: screen-02-vehicle-summary -->
 
-    <!-- 3: 車検証の情報 -->
+    <!-- START: screen-03-vehicle-shaken -->
     <section class="screen" data-title="車検証の情報">
       <div class="card">
         <div class="h1">車検証の情報</div>
@@ -379,8 +388,9 @@
         <button class="btnPrimary" onclick="if(validateVIN()) next()">次へ</button>
       </div>
     </section>
+    <!-- END: screen-03-vehicle-shaken -->
 
-    <!-- 4: 免許証の色 + 有効期限（統合） -->
+    <!-- START: screen-04-license -->
     <section class="screen" data-title="免許証の色">
       <div class="card">
         <div class="h1">免許証の色を選んでください</div>
@@ -430,8 +440,9 @@
         <button class="btnPrimary" onclick="if(validateDateSelect()) next()">次へ</button>
       </div>
     </section>
+    <!-- END: screen-04-license -->
 
-    <!-- 5: お客様情報の確認（以降は元の番号を維持） -->
+    <!-- START: screen-05-customer-summary -->
     <section class="screen" data-title="お客様情報の確認">
       <div class="card">
         <div class="h1">氏名・住所・電話番号・生年月日</div>
@@ -446,8 +457,9 @@
         <button class="btnPrimary" onclick="goToTitle('お客様情報の編集')">変更する</button>
       </div>
     </section>
+    <!-- END: screen-05-customer-summary -->
 
-    <!-- 6: お客様情報の編集 -->
+    <!-- START: screen-06-customer-edit -->
     <section class="screen" data-title="お客様情報の編集">
       <div class="card">
         <div class="h1">お客様情報の編集</div>
@@ -459,8 +471,9 @@
         <button class="btnPrimary" onclick="goToTitle('主に運転する方（記名被保険者）')">OK</button>
       </div>
     </section>
+    <!-- END: screen-06-customer-edit -->
 
-    <!-- 7: 主に運転する方 -->
+    <!-- START: screen-07-main-driver -->
     <section class="screen" data-title="主に運転する方（記名被保険者）">
       <div class="card">
         <div class="h1">主に運転する方</div>
@@ -470,8 +483,9 @@
         <button class="btnPrimary" onclick="goToTitle('主に運転する方の編集')">変更する</button>
       </div>
     </section>
+    <!-- END: screen-07-main-driver -->
 
-    <!-- 8: 主に運転する方の編集 -->
+    <!-- START: screen-08-main-driver-edit -->
     <section class="screen" data-title="主に運転する方の編集">
       <div class="card">
         <div class="h1">主に運転する方の編集</div>
@@ -479,8 +493,9 @@
         <button class="btnPrimary" onclick="goToTitle('運転者の範囲と年齢条件')">OK</button>
       </div>
     </section>
+    <!-- END: screen-08-main-driver-edit -->
 
-    <!-- 9: 運転者の範囲と年齢条件 -->
+    <!-- START: screen-09-driver-scope-age -->
     <section class="screen" data-title="運転者の範囲と年齢条件">
       <div class="card">
         <div class="h1">運転者の範囲と年齢条件</div>
@@ -493,8 +508,9 @@
         <button class="btnPrimary" onclick="goToTitle('運転者範囲・年齢条件の編集')">変更する</button>
       </div>
     </section>
+    <!-- END: screen-09-driver-scope-age -->
 
-    <!-- 10: 運転者範囲・年齢条件の編集 -->
+    <!-- START: screen-10-driver-scope-age-edit -->
     <section class="screen" data-title="運転者範囲・年齢条件の編集">
       <div class="card">
         <div class="h1">運転者範囲・年齢条件の編集</div>
@@ -518,8 +534,9 @@
         <button class="btnPrimary" onclick="goToTitle('使用目的・走行距離')">OK</button>
       </div>
     </section>
+    <!-- END: screen-10-driver-scope-age-edit -->
 
-    <!-- 11: 使用目的・走行距離 -->
+    <!-- START: screen-11-usage-mileage -->
     <section class="screen" data-title="使用目的・走行距離">
       <div class="card">
         <div class="h1">使用目的・走行距離</div>
@@ -545,8 +562,9 @@
         <button class="btnPrimary" onclick="next()">次へ</button>
       </div>
     </section>
+    <!-- END: screen-11-usage-mileage -->
 
-    <!-- 12: 現在の内容を確認 -->
+    <!-- START: screen-12-current-coverage -->
     <section class="screen" data-title="現在の内容を確認">
       <div class="card">
         <div class="h1">現在の補償内容と保険料</div>
@@ -574,8 +592,9 @@
         <button class="btnPrimary" onclick="next()">次へ（同じ補償内容で更新した場合の保険料）</button>
       </div>
     </section>
+    <!-- END: screen-12-current-coverage -->
 
-    <!-- 13: 現在と同じ補償内容で更新した場合の保険料 -->
+    <!-- START: screen-13-same-coverage-premium -->
     <section class="screen" data-title="現在と同じ補償内容で更新した場合の保険料">
       <div class="card">
         <div class="h1">現在と同じ補償内容で更新した場合の保険料</div>
@@ -598,8 +617,9 @@
         <button class="btnPrimary" onclick="goToTitle('更新方法の選択')">更新方法を選ぶ</button>
       </div>
     </section>
+    <!-- END: screen-13-same-coverage-premium -->
 
-    <!-- 14: 更新方法の選択 -->
+    <!-- START: screen-14-renewal-method -->
     <section class="screen" data-title="更新方法の選択">
       <div class="card">
         <div class="h1">更新方法をお選びください</div>
@@ -609,8 +629,9 @@
         <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
       </div>
     </section>
+    <!-- END: screen-14-renewal-method -->
 
-    <!-- 15: 別のプランから選ぶ -->
+    <!-- START: screen-15-simple-plans -->
     <section class="screen" data-title="別のプランから選ぶ">
       <div class="card">
         <div class="h1">別のプランから選ぶ</div>
@@ -656,8 +677,9 @@
         </div>
       </div>
     </section>
+    <!-- END: screen-15-simple-plans -->
 
-    <!-- 16: 人身傷害の金額を選ぶ -->
+    <!-- START: screen-16-bodily-amount -->
     <section class="screen" data-title="人身傷害の金額を選ぶ">
       <div class="card">
         <div class="h1">人身傷害の金額を選ぶ</div>
@@ -687,8 +709,9 @@
         <button class="btnPrimary" onclick="next()">次へ（車両保険の金額）</button>
       </div>
     </section>
+    <!-- END: screen-16-bodily-amount -->
 
-    <!-- 17: 車両保険の金額を選ぶ -->
+    <!-- START: screen-17-vehicle-amount -->
     <section class="screen" data-title="車両保険の金額を選ぶ">
       <div class="card">
         <div class="h1">車両保険の金額を選ぶ</div>
@@ -719,8 +742,9 @@
         <button class="btnPrimary" onclick="next()">次へ（特約の付け外し）</button>
       </div>
     </section>
+    <!-- END: screen-17-vehicle-amount -->
 
-    <!-- 18: 特約の付け外し -->
+    <!-- START: screen-18-riders -->
     <section class="screen" data-title="特約の付け外し">
       <div class="card">
         <div class="h1">特約の付け外し</div>
@@ -751,8 +775,9 @@
         <button class="btnPrimary" onclick="next()">次へ（最終見積のまとめ）</button>
       </div>
     </section>
+    <!-- END: screen-18-riders -->
 
-    <!-- 19: 最終見積のまとめ -->
+    <!-- START: screen-19-final-summary -->
     <section class="screen" data-title="最終見積のまとめ">
       <div class="card">
         <div class="h1">最終見積のまとめ</div>
@@ -774,8 +799,9 @@
         <button class="btnPrimary" onclick="goToTitle('人身傷害の金額を選ぶ')">修正へ戻る</button>
       </div>
     </section>
+    <!-- END: screen-19-final-summary -->
 
-    <!-- 20: 重要なご説明 -->
+    <!-- START: screen-20-important-info -->
     <section class="screen" data-title="重要なご説明">
       <div class="card foldCard">
         <div class="foldHeader">大切なポイント（短くまとめました）</div>
@@ -833,15 +859,15 @@
         <button class="btnPrimary" onclick="goToTitle('連絡方法を選ぶ')">次へ（連絡方法を選ぶ）</button>
       </div>
     </section>
+    <!-- END: screen-20-important-info -->
 
-    <!-- 21: 連絡方法を選ぶ -->
+    <!-- START: screen-21-contact-method -->
     <section class="screen" data-title="連絡方法を選ぶ">
       <div class="card">
         <div class="h1">連絡方法を選ぶ</div>
         <div class="desc">ご連絡方法をどちらか選び、メールアドレスか電話番号を入力してください</div>
         <div class="field">
           <div class="label">方法</div>
-          <!-- トグルUI（WEB/書面と同様） -->
           <div class="choiceRow">
             <button class="choiceToggle" id="choice_contact_email" onclick="toggleChoice('contact_email')">メール</button>
             <button class="choiceToggle" id="choice_contact_sms" onclick="toggleChoice('contact_sms')">SMS</button>
@@ -867,8 +893,9 @@
         <button class="btnPrimary" onclick="finishContactChoice()">次へ（WEBと書面の選択）</button>
       </div>
     </section>
+    <!-- END: screen-21-contact-method -->
 
-    <!-- 22: WEBと書面の選択 -->
+    <!-- START: screen-22-web-vs-paper -->
     <section class="screen" data-title="WEBと書面の選択">
       <div class="card">
         <div class="h1">WEBと書面の選択</div>
@@ -909,19 +936,20 @@
         <button class="btnPrimary" onclick="finishWebPaper()">次へ（同意と申込）</button>
       </div>
     </section>
+    <!-- END: screen-22-web-vs-paper -->
 
-    <!-- 23: 同意と申込 -->
+    <!-- START: screen-23-consent -->
     <section class="screen" data-title="同意と申込">
       <div class="card">
         <div class="h1">同意と申込</div>
         <div class="item"><label><input type="checkbox" id="agree1"> 入力内容を確認しました</label></div>
         <div class="item"><label><input type="checkbox" id="agree2"> 重要なご説明を読みました</label></div>
-        <!-- 「控えを受け取る」は不要のため削除 -->
         <button class="btnPrimary" style="margin-top:10px;" onclick="onAgreeSubmit()">内容に同意して申し込む</button>
       </div>
     </section>
+    <!-- END: screen-23-consent -->
 
-    <!-- 24: 申込完了 -->
+    <!-- START: screen-24-done -->
     <section class="screen" data-title="申込完了">
       <div class="card">
         <div class="h1">お申込みが完了しました</div>
@@ -934,9 +962,11 @@
         <button class="btnPrimary" onclick="openNotice('本番ではマイページ画面に推移します。デモ画面はここで終了です。')">次へ（マイページ手続き）</button>
       </div>
     </section>
+    <!-- END: screen-24-done -->
 
   </main>
 
+  <!-- START: footer -->
   <footer>
     <div class="footerRow">
       <div style="display:flex; gap:6px;">
@@ -949,9 +979,10 @@
       </div>
     </div>
   </footer>
+  <!-- END: footer -->
 </div>
 
-<!-- モーダル -->
+<!-- START: modal-notice -->
 <div class="modal" id="noticeModal" role="dialog" aria-modal="true" aria-labelledby="noticeTitle" tabindex="-1">
   <div class="box">
     <div class="h1" id="noticeTitle">お知らせ</div>
@@ -961,7 +992,9 @@
     </div>
   </div>
 </div>
+<!-- END: modal-notice -->
 
+<!-- START: modal-reason -->
 <div class="modal" id="reasonModal" role="dialog" aria-modal="true" aria-labelledby="reasonTitle" tabindex="-1">
   <div class="box">
     <div class="h1" id="reasonTitle">保険料が変わる主な理由（FAQ）</div>
@@ -985,9 +1018,11 @@
     </div>
   </div>
 </div>
-
+<!-- END: modal-reason -->
+<!-- START: toast -->
 <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
+<!-- END: toast -->
+<!-- START: js-core -->
 <script>
   /* 固定番号（x/25）マップ：変更なし */
   const TITLE_NO = {
@@ -1004,7 +1039,6 @@
   let step=0;
   const titles=()=>screens.map(s=>s.dataset.title);
 
-  /* 履歴スタック（戻る対策） */
   const historyStack = [];
   function pushHistory(idx){
     if (typeof idx!=='number') return;
@@ -1079,7 +1113,6 @@
     }catch(e){ openNotice('保存に失敗しました（デモ）。'); }
   }
 
-  /* 音声ガイド（既存） */
   let guidedSpeaking=false; let guidedCancelFn=null;
   const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=50;
 
@@ -1123,7 +1156,7 @@
   function buildAddressSegments(addr){
     const segs=[]; let rest=addr;
     if(rest.includes('東京都')){ segs.push('東京都'); rest=rest.replace('東京都',''); }
-    if(rest.includes('港区'))  { segs.push('港区');   rest=rest.replace('港区',''); }
+    if(rest.includes('港区'))  { segs推= '港区';   rest=rest.replace('港区',''); }
     if(rest.includes('赤坂')){ segs.push('アカサカ'); rest=rest.replace('赤坂',''); }
     rest = replaceMaruWords(rest);
     const normalized=normalizeDigitsAndDashes(rest);
@@ -1168,7 +1201,6 @@
     return [{text, pause:0}];
   }
 
-  /* OCR/通知/トースト */
   function showManual(){ ['ocrShoot','ocrGuide','ocrResult'].forEach(id=>{const el=document.getElementById(id); if(el) el.style.display='none';}); const m=document.getElementById('manualForm'); if(m) m.style.display='block'; }
   function showOCRGuide(){
     const s=document.getElementById('ocrShoot'),
@@ -1197,17 +1229,13 @@
     }catch(e){}
   }
 
-  /* 色選択 */
   function selectColor(name, el){
     try{ document.querySelectorAll('.colorBtn').forEach(b=> b.classList.remove('active')); if(el) el.classList.add('active'); }catch(e){}
     try{ showToast(`${name}を選択しました`);}catch(e){}
-    // 色選択時は即遷移しない（有効期限入力も同画面内のため）
   }
 
-  /* 郵便→住所 */
   function mockZipToAddress(zip){ const addr=document.getElementById('addr'); if(!addr) return; const z=(zip||'').replace(/[^\d]/g,''); if(z.length===7){ addr.value='東京都港区赤坂'; } }
 
-  /* OTP */
   let codeSent=false;
   function sendLoginCode(){
     const id=(document.getElementById('loginId')?.value||'').trim();
@@ -1231,7 +1259,6 @@
     return true;
   }
 
-  /* 保険料・差分 */
   let cur=5900, same=6400, bodily='3000';
   function money(n){ return '¥'+Math.round(n).toLocaleString(); }
   function setCell(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
@@ -1330,7 +1357,6 @@
     updateOptionSummary(); goToTitle('重要なご説明');
   }
 
-  /* 同意〜完了 */
   let flagSendPdf=false;
   function onAgreeSubmit(){
     const g1=document.getElementById('agree1'), g2=document.getElementById('agree2');
@@ -1351,7 +1377,6 @@
   function sendPdf(){ openNotice('本番ではＰＤＦ送付確認画面に推移します。'); }
   function openReasonDetail(){ const m=document.getElementById('reasonModal'); if(m) m.classList.add('show'); }
 
-  /* 押下演出 */
   (function(){
     var enableCTA = true;
     document.addEventListener('DOMContentLoaded', function(){
@@ -1373,7 +1398,6 @@
     });
   })();
 
-  /* 手入力・VINチェック */
   (function(){
     window.onMakerChange = function(){
       try{
@@ -1412,7 +1436,6 @@
     };
   })();
 
-  /* 日付プルダウン（統合画面でも初期化されるよう調整） */
   (function(){
     function populateDateSelectsSafe(){
       try{
@@ -1448,7 +1471,6 @@
     }
   })();
 
-  /* a11y: モーダル制御 */
   (function(){
     let lastFocus = null;
     function getFocusable(container){
@@ -1490,6 +1512,9 @@
 
   setActive(0);
 </script>
+<!-- END: js-core -->
+
+<!-- START: js-choice-toggles -->
 <script>
 /* WEBと書面の選択＋連絡方法選択：UIトグル＋必須選択チェック（変更なし） */
 (function(){
@@ -1575,5 +1600,5 @@
   };
 })();
 </script>
-</body>
+<!-- END: js-choice-toggles -->
 </html>
