@@ -1276,6 +1276,9 @@
   };
   const MAX_STEPS = 25;
 
+  // ブラウザの自動スクロール復元を無効化（戻る/進む時の不意な位置復元を防ぐ）
+  try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e){}
+
   const screens=[...document.querySelectorAll('.screen')];
   let step=0;
   const titles=()=>screens.map(s=>s.dataset.title);
@@ -1298,11 +1301,18 @@
     }
     return o;
   }
-  function showLoading(){
-    const o=ensureLoading(); o.style.display='flex';
-  }
-  function hideLoading(){
-    const o=document.getElementById('loadingOverlay'); if(o) o.style.display='none';
+  function showLoading(){ const o=ensureLoading(); o.style.display='flex'; }
+  function hideLoading(){ const o=document.getElementById('loadingOverlay'); if(o) o.style.display='none'; }
+
+  // 画面切替時に最上部にスクロール（prefers-reduced-motion に配慮）
+  function scrollToTop(targetScreen){
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // 画面タイトルの真上まで戻すシンプル実装（ページ先頭へ）
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
+    } catch(e){
+      window.scrollTo(0, 0);
+    }
   }
 
   function setActive(i){
@@ -1312,6 +1322,10 @@
       s.classList.toggle('active', isActive);
       s.classList.toggle('anim-in', isActive); // 軽いフェードイン
     });
+
+    // 画面切替直後に先頭へスクロール
+    scrollToTop(screens[i]);
+
     const curTitle=titles()[i]||'';
     const x = titleToNo(curTitle);
 
@@ -1335,7 +1349,6 @@
       ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
         const el=document.getElementById(id);
         if(!el) return;
-        const key=id.replace('chap','').toLowerCase();
         el.classList.toggle('active',
           (chap==='input'   && id==='chapInput') ||
           (chap==='estimate'&& id==='chapEstimate') ||
