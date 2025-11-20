@@ -680,11 +680,25 @@
 </section>
 <!-- END: screen-07-main-driver -->
 
- <!-- START: screen-08-main-driver-edit -->
+<!-- START: screen-08-main-driver-edit -->
 <section class="screen" data-title="主に運転する方の編集">
   <div class="card">
     <div class="h1">主に運転する方を変更する</div>
-    <div class="field"><div class="label">主に運転する方（記名被保険者）</div><input class="input" placeholder="山田 太郎"></div>
+    <div class="field">
+      <div class="label">主に運転する方（記名被保険者）</div>
+      <input class="input" id="mainDriverName" placeholder="山田 太郎">
+    </div>
+
+    <!-- 音声入力（任意） -->
+    <div class="field">
+      <div class="label">音声で入力（任意）</div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <button class="ghost" id="btnStartVoice" onclick="startNameVoice()" aria-label="音声で氏名を入力">音声で入力</button>
+        <button class="ghost" id="btnStopVoice" onclick="stopNameVoice()" style="display:none;">停止</button>
+        <span class="desc" id="voiceStatus" aria-live="polite">未開始</span>
+      </div>
+    </div>
+
     <button class="btnPrimary" onclick="goToTitle('運転者の範囲と年齢条件')">OK</button>
   </div>
 </section>
@@ -1265,7 +1279,7 @@
 
 <!-- START: js-core -->
 <script>
-  /* 固定番号（x/25）マップ：変更なし */
+  /* 既存のタイトル→番号マップ（goToTitleのため据え置き） */
   const TITLE_NO = {
     '手続き開始':1,'お車の情報':2,'車検証の情報':3,'免許証の色':4,'免許証の有効期限':5,
     'お客様情報の確認':6,'お客様情報の編集':7,'主に運転する方（記名被保険者）':8,'主に運転する方の編集':9,
@@ -1276,7 +1290,7 @@
   };
   const MAX_STEPS = 25;
 
-  // ブラウザの自動スクロール復元を無効化（戻る/進む時の不意な位置復元を防ぐ）
+  // ブラウザの自動スクロール復元を無効化
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e){}
 
   const screens=[...document.querySelectorAll('.screen')];
@@ -1289,9 +1303,8 @@
     if (historyStack.length && historyStack[historyStack.length-1]===idx) return;
     historyStack.push(idx);
   }
-  function titleToNo(title){ return TITLE_NO[title] || 1; }
 
-  /* 仕上げ：共通ローディング（必要時のみ短時間表示） */
+  /* 軽量ローディング */
   function ensureLoading(){
     let o=document.getElementById('loadingOverlay');
     if(!o){
@@ -1304,15 +1317,11 @@
   function showLoading(){ const o=ensureLoading(); o.style.display='flex'; }
   function hideLoading(){ const o=document.getElementById('loadingOverlay'); if(o) o.style.display='none'; }
 
-  // 画面切替時に最上部にスクロール（prefers-reduced-motion に配慮）
-  function scrollToTop(targetScreen){
+  // 画面切替時に最上部へ
+  function scrollToTop(){
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    // 画面タイトルの真上まで戻すシンプル実装（ページ先頭へ）
-    try {
-      window.scrollTo({ top: 0, left: 0, behavior: prefersReduced ? 'auto' : 'smooth' });
-    } catch(e){
-      window.scrollTo(0, 0);
-    }
+    try { window.scrollTo({ top: 0, left: 0, behavior: prefersReduced ? 'auto' : 'smooth' }); }
+    catch(e){ window.scrollTo(0, 0); }
   }
 
   function setActive(i){
@@ -1320,19 +1329,22 @@
     screens.forEach((s,idx)=>{
       const isActive = idx===i;
       s.classList.toggle('active', isActive);
-      s.classList.toggle('anim-in', isActive); // 軽いフェードイン
+      s.classList.toggle('anim-in', isActive);
     });
 
     // 画面切替直後に先頭へスクロール
-    scrollToTop(screens[i]);
+    scrollToTop();
 
-    const curTitle=titles()[i]||'';
-    const x = titleToNo(curTitle);
+    // 正しい進捗番号（x）をインデックスから算出
+    const x = i + 1;
 
+    // 進捗テキスト
     const progText = document.getElementById('progressText');
     if (progText) {
       progText.textContent = x===1 ? `進捗 ${x}/${MAX_STEPS}（最大）` : `進捗 ${x}/${MAX_STEPS}`;
     }
+
+    // 進捗バー（%は参考表示、ariaはxに連動）
     const pct=(x/MAX_STEPS)*100;
     const bar=document.getElementById('progressBar');
     if(bar){
@@ -1343,7 +1355,7 @@
       bar.setAttribute('aria-valuetext', `全${MAX_STEPS}ステップ中の${x}ステップ目`);
     }
 
-    // 章ラベルのactive
+    // 章ラベルのactive（従来ロジック据え置き）
     try{
       const chap = (x<=12) ? 'input' : (x<=20 ? 'estimate' : (x===21 ? 'explain' : 'apply'));
       ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
@@ -1358,11 +1370,15 @@
       });
     }catch(e){}
 
-    const remaining=Math.round(12 * (MAX_STEPS - x) / MAX_STEPS);
+    // 残り時間（(25-x)/25 × 12分）
+    const remaining = Math.round(12 * (MAX_STEPS - x) / MAX_STEPS);
     const timeLeftEl = document.getElementById('timeLeft');
     if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
 
+    // 完了画面の更新
+    const curTitle=titles()[i]||'';
     if (curTitle==='申込完了') updateCompletion();
+
     setTimeout(()=>{ focusFirstInteractive(); },0);
     step=i;
   }
@@ -1448,7 +1464,7 @@
   function buildAddressSegments(addr){
     const segs=[]; let rest=addr;
     if(rest.includes('東京都')){ segs.push('東京都'); rest=rest.replace('東京都',''); }
-    if(rest.includes('港区'))  { segs推= '港区';   rest=rest.replace('港区',''); }
+    if(rest.includes('港区'))  { segs.push('港区');   rest=rest.replace('港区',''); }
     if(rest.includes('赤坂')){ segs.push('アカサカ'); rest=rest.replace('赤坂',''); }
     rest = replaceMaruWords(rest);
     const normalized=normalizeDigitsAndDashes(rest);
@@ -1693,7 +1709,7 @@
         el.addEventListener('touchcancel', remove);
       });
 
-      /* 仕上げ：.h1 を見出し扱いとしてスクリーンリーダーに伝える */
+      /* .h1 を見出し扱いとしてスクリーンリーダーに伝える */
       try{
         document.querySelectorAll('.card .h1').forEach(function(h){
           if(!h.getAttribute('role')) h.setAttribute('role','heading');
@@ -2007,5 +2023,131 @@
 })();
 </script>
 <!-- END: js-ai-choice -->
+
+<!-- START: js-voice-input -->
+<script>
+(function(){
+  let recognition = null;
+  let recognizing = false;
+  let supported = false;
+
+  function getEl(id){ return document.getElementById(id); }
+  function setStatus(text){ const s=getEl('voiceStatus'); if(s){ s.textContent = String(text||''); } }
+  function toggleButtons(isRecording){
+    const start = getEl('btnStartVoice'), stop = getEl('btnStopVoice');
+    if(start) start.style.display = isRecording ? 'none' : '';
+    if(stop)  stop.style.display  = isRecording ? '' : 'none';
+  }
+  function putName(nameText){
+    const inp = getEl('mainDriverName');
+    if(inp){
+      // 余計な空白や改行を整理（氏名想定）
+      const normalized = String(nameText||'').replace(/\s+/g, ' ').trim();
+      inp.value = normalized;
+    }
+  }
+  function fallbackMock(reasonText){
+    try{ setStatus(reasonText || 'この端末では音声認識は未対応です。サンプルを入力します。'); }catch(e){}
+    putName('山田 花子');
+    try{ showToast('音声は未対応のため、サンプル名を入力しました'); }catch(e){}
+    toggleButtons(false);
+    recognizing = false;
+  }
+
+  function initRecognizer(){
+    try{
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if(!SR){ supported = false; return; }
+      recognition = new SR();
+      recognition.lang = 'ja-JP';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onstart = function(){
+        recognizing = true;
+        setStatus('録音中です。お名前をどうぞ…');
+        toggleButtons(true);
+      };
+      recognition.onerror = function(evt){
+        recognizing = false;
+        toggleButtons(false);
+        if(evt && evt.error === 'not-allowed'){
+          fallbackMock('マイク権限が拒否されました。サンプルを入力します。');
+        }else{
+          fallbackMock('音声認識でエラーが発生しました。サンプルを入力します。');
+        }
+      };
+      recognition.onend = function(){
+        recognizing = false;
+        toggleButtons(false);
+        if(!getEl('mainDriverName')?.value){
+          // 途中で終了して結果が空ならフォールバック
+          fallbackMock('入力が確認できませんでした。サンプルを入力します。');
+        }else{
+          setStatus('認識結果を入力しました。');
+        }
+      };
+      recognition.onresult = function(evt){
+        try{
+          let transcript = '';
+          for(let i=evt.resultIndex; i<evt.results.length; i++){
+            const res = evt.results[i];
+            transcript += res[0]?.transcript || '';
+            if(res.isFinal){
+              // 最終結果を優先
+              transcript = res[0]?.transcript || transcript;
+            }
+          }
+          // 記号・句読点を軽く整理
+          transcript = transcript.replace(/[、。.,]/g, ' ').replace(/\s+/g, ' ').trim();
+          if(transcript) putName(transcript);
+          // 中間結果でも状態更新
+          setStatus('認識中…');
+        }catch(e){
+          // 例外時はフォールバック
+          fallbackMock('認識結果の処理に失敗しました。サンプルを入力します。');
+        }
+      };
+
+      supported = true;
+    }catch(e){
+      supported = false;
+    }
+  }
+
+  window.startNameVoice = function(){
+    // UI準備
+    toggleButtons(true);
+    setStatus('準備中…');
+
+    // 初期化
+    if(recognition === null) initRecognizer();
+
+    if(!supported || !recognition){
+      fallbackMock('音声認識は未対応です。サンプルを入力します。');
+      return;
+    }
+    try{
+      recognition.start();
+      setStatus('録音中です。お名前をどうぞ…');
+    }catch(e){
+      fallbackMock('音声認識の開始に失敗しました。サンプルを入力します。');
+    }
+  };
+
+  window.stopNameVoice = function(){
+    try{
+      if(recognizing && recognition){ recognition.stop(); }
+      recognizing = false;
+      toggleButtons(false);
+      setStatus('停止しました。');
+    }catch(e){
+      toggleButtons(false);
+      setStatus('停止しました。');
+    }
+  };
+})();
+</script>
+<!-- END: js-voice-input -->
 
 </html>
