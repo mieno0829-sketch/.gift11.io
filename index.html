@@ -304,6 +304,30 @@
     #licenseYear, #dobYear, #firstRegYear { min-width: 148px; }
     #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth { flex-basis: 86px; max-width: 92px; }
   }
+
+  /* 追加：プラン選択／最終見積画面のリスト左側に1文字分のスペース（インデント）を付与 */
+  .screen[data-title="別のプランから選ぶ"] .foldCard .list,
+  .screen[data-title="最終見積のまとめ"] .foldCard .list {
+    padding-left: 1.6em !important; /* 既存の1emに+α（約1文字分） */
+  }
+
+  /* 申込完了画面：行頭記号を「少し広めの空白＋■＋本文」に統一 */
+  #donePostalUnder.doneLine,
+  #doneList .doneLine {
+    position: relative;
+    padding-left: 2em; /* 左側の余白を増やす（約2文字分） */
+  }
+  #donePostalUnder.doneLine::before,
+  #doneList .doneLine::before {
+    content: "■";        /* 行頭記号：黒四角 */
+    position: absolute;
+    left: 0.25em;         /* 左端から少し内側に配置（視認性のため） */
+    top: 0.15em;          /* ベースライン調整 */
+    color: var(--blue-900);
+    font-weight: 700;
+    font-size: 0.95em;    /* 本文に対してやや小さめで揃える */
+    line-height: 1;
+  }
 </style>
 <!-- END: styles-addon -->
 
@@ -844,6 +868,9 @@
       <li>車両保険：保険金額 200万円・免責5万円</li>
       <li>特約：弁護士費用・代車費用</li>
     </ul>
+    <div class="desc" style="margin-top:6px;">
+      <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償の詳細はコチラ</a>
+    </div>
     <table class="priceTable">
       <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
       <tbody>
@@ -897,21 +924,34 @@
   <div class="card">
     <div class="h1">別のプランから選ぶ</div>
 
-    <!-- タブヘッダー -->
     <div class="tabHeader" role="tablist" aria-label="プランの切り替え" style="display:flex; gap:6px; margin-top:6px;">
       <button id="tab_up" class="choiceToggle active" role="tab" aria-selected="true" aria-controls="panel_up" onclick="switchPlanTab('up')">安心重視</button>
       <button id="tab_down" class="choiceToggle" role="tab" aria-selected="false" aria-controls="panel_down" onclick="switchPlanTab('down')">保険料重視</button>
     </div>
 
-    <!-- タブパネル：安心重視 -->
+    <!-- 安心重視 -->
     <div id="panel_up" role="tabpanel" aria-labelledby="tab_up" style="margin-top:8px;">
-      <div class="label">補償を充実 <span class="badge">安心重視</span></div>
-      <ul class="list">
-        <li>対人・対物：無制限</li>
-        <li>人身傷害：<span class="changePlus">5,000万円</span>（現在:3,000万円）</li>
-        <li>車両保険：<span class="changePlus">250万円・免責5万円</span>（現在:200万円・免責5万円）</li>
-        <li>特約：弁護士費用・代車費用（現在と同じ）</li>
-      </ul>
+      <div class="label">補償を充実 安心重視</div>
+      <div class="desc">※変更した補償：人身傷害、特約</div>
+
+      <div class="foldCard" style="margin-top:8px;">
+        <div class="foldHeader" style="font-size:13px; font-weight:600; color:var(--blue-900); padding-bottom: var(--sp-8); border-bottom:1px solid rgba(215,224,240,0.8);">
+          補償内容に変更がある場合は➡で表示
+        </div>
+        <div class="foldBody">
+          <ul class="list" style="margin-top:0; padding-left:1em; list-style:disc;">
+            <li>対人・対物：無制限</li>
+            <li>人身傷害：3,000万円➡ 5,000万円</li>
+            <li>車両保険：200万円・免責5万円</li>
+            <li>特約：弁護士費用／代車費用➡ 弁護士費用／代車費用／DAP（ドライブレコーダー）</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="desc" style="margin-top:6px;">
+        <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償の詳細はコチラ</a>
+      </div>
+
       <table class="priceTable">
         <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
         <tbody>
@@ -920,19 +960,37 @@
           <tr class="rowDelta"><td class="rowLabel">差額</td><td id="planUpDeltaM">+¥1,000</td><td id="planUpDeltaY">+¥12,000</td></tr>
         </tbody>
       </table>
-      <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償内容の詳細はコチラ</a></div>
+
       <button class="btnPrimary" onclick="chooseSimplePlan('up')">このプランで進む</button>
+      <!-- 1行空白行 -->
+      <div aria-hidden="true" style="height:8px;"></div>
+      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両保険・特約） -->
+      <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両保険・特約）</button>
     </div>
 
-    <!-- タブパネル：保険料重視 -->
+    <!-- 保険料重視 -->
     <div id="panel_down" role="tabpanel" aria-labelledby="tab_down" style="margin-top:8px; display:none;">
-      <div class="label">補償を控えめ <span class="badge">保険料重視</span></div>
-      <ul class="list">
-        <li>対人・対物：無制限</li>
-        <li>人身傷害：3,000万円（現在と同じ）</li>
-        <li>車両保険：<span class="changeMinus">なし</span>（現在:200万円・免責5万円）</li>
-        <li>特約：なし（現在:弁護士費用・代車費用）</li>
-      </ul>
+      <div class="label">補償を控えめ 保険料重視</div>
+      <div class="desc">※変更した補償：車両保険、特約</div>
+
+      <div class="foldCard" style="margin-top:8px;">
+        <div class="foldHeader" style="font-size:13px; font-weight:600; color:var(--blue-900); padding-bottom: var(--sp-8); border-bottom:1px solid rgba(215,224,240,0.8);">
+          補償内容に変更がある場合は➡で表示
+        </div>
+        <div class="foldBody">
+          <ul class="list" style="margin-top:0; padding-left:1em; list-style:disc;">
+            <li>対人・対物：無制限</li>
+            <li>人身傷害：3,000万円</li>
+            <li>車両保険：200万円・免責5万円➡ なし</li>
+            <li>特約：弁護士費用／代車費用➡ なし</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="desc" style="margin上:6px;">
+        <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償の詳細はコチラ</a>
+      </div>
+
       <table class="priceTable">
         <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
         <tbody>
@@ -941,8 +999,12 @@
           <tr class="rowDelta"><td class="rowLabel">差額</td><td id="planDownDeltaM">-¥1,100</td><td id="planDownDeltaY">-¥13,200</td></tr>
         </tbody>
       </table>
-      <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償内容の詳細はコチラ</a></div>
+
       <button class="btnPrimary" onclick="chooseSimplePlan('down')">このプランで進む</button>
+      <!-- 1行空白行 -->
+      <div aria-hidden="true" style="height:8px;"></div>
+      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両保険・特約） -->
+      <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両保険・特約）</button>
     </div>
   </div>
 
@@ -1070,7 +1132,31 @@
 <section class="screen" data-title="最終見積のまとめ">
   <div class="card">
     <div class="h1">最終見積を確認する</div>
-    <table class="priceTable">
+
+    <!-- 要約行は削除（自動連動は行わない） -->
+
+    <!-- 四角の枠内（ビフォーアフター：単一行表示） -->
+    <div class="foldCard" style="margin-top:8px;">
+      <div class="foldHeader" style="font-size:13px; font-weight:600; color:var(--blue-900); padding-bottom: var(--sp-8); border-bottom:1px solid rgba(215,224,240,0.8);">
+        ※補償内容に変更がある場合は➡で表示
+      </div>
+      <div class="foldBody">
+        <ul class="list" style="margin-top:0; padding-left:1em; list-style:disc;">
+          <li>対人・対物：無制限</li>
+          <li id="diffBodily">人身傷害：3,000万円 ➡ 5,000万円</li>
+          <li id="diffVehicle">車両保険：200万円・免責5万円 ➡ 200万円・免責5万円</li>
+          <li id="optSummary">特約：弁護士費用／代車費用 ➡ 弁護士費用／代車費用／DAP（ドライブレコーダー）</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 枠の下のリンク -->
+    <div class="desc" style="margin-top:6px;">
+      <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償の詳細はコチラ</a>
+    </div>
+
+    <!-- 保険料表 -->
+    <table class="priceTable" style="margin-top:6px;">
       <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
       <tbody>
         <tr class="rowCurrent"><td class="rowLabel">現在</td><td id="sumCurMonthly">¥5,900</td><td id="sumCurYearly">¥70,800</td></tr>
@@ -1078,15 +1164,61 @@
         <tr class="rowDelta"><td class="rowLabel">差額</td><td id="sumDeltaMonthly">+¥1,130</td><td id="sumDeltaYearly">+¥13,560</td></tr>
       </tbody>
     </table>
-    <ul class="list" id="diffList">
-      <li>対人・対物：無制限</li>
-      <li id="diffBodily">人身傷害：3,000万円 → 5,000万円</li>
-      <li id="diffVehicle">車両保険：200万円（免責5万円） → 200万円（免責5万円）</li>
-      <li id="optSummary">特約：弁護士費用・代車費用（変更なし）</li>
-    </ul>
+
     <button class="btnPrimary" onclick="goToTitle('重要なご説明')">OK</button>
     <button class="btnPrimary" onclick="goToTitle('人身傷害の金額を選ぶ')">修正へ戻る</button>
   </div>
+
+  <!-- 表示正規化のみ（改行は行わず、矢印・免責・DAP表記統一） -->
+  <script>
+    (function(){
+      function normalizeVehicle(val){
+        // 「（免責5万円）」→「・免責5万円」 / 「免責：5万円」→「免責5万円」
+        return val
+          .replace(/（免責(\d+万円)）/,'・免責$1')
+          .replace(/免責：/,'免責');
+      }
+      function normalizeLine(el, label){
+        if (!el) return;
+        let txt = el.innerText || '';
+        // 矢印を➡へ統一
+        txt = txt.replace(/→/g,'➡');
+        // DAP表記統一
+        txt = txt.replace(/DAP（ドライブレコーダー）特約/g,'DAP（ドライブレコーダー）');
+        // 車両保険内の免責表記統一
+        if (label.includes('車両保険')) {
+          // 「車両保険：値」部分から値側を取り出して正規化
+          const parts = txt.split('：');
+          const valueAll = parts.slice(1).join('：');
+          const bp = valueAll.split('➡');
+          let before = (bp[0]||'').trim();
+          let after  = (bp[1]||'').trim();
+          before = normalizeVehicle(before);
+          after  = normalizeVehicle(after);
+          // 単一行に再構成（改行は挿入しない）
+          txt = `${label}：${before}` + (after ? ` ➡ ${after}` : '');
+        }
+        el.textContent = txt;
+      }
+      function updateFinalSummary(){
+        try{
+          normalizeLine(document.getElementById('diffBodily'), '人身傷害');
+          normalizeLine(document.getElementById('diffVehicle'), '車両保険');
+          normalizeLine(document.getElementById('optSummary'),  '特約');
+        }catch(e){}
+      }
+      // 初期実行
+      updateFinalSummary();
+      // recalcAll実行毎に追従（改行は行わない）
+      try{
+        const orig = window.recalcAll;
+        window.recalcAll = function(){
+          try{ orig && orig(); }catch(e){}
+          updateFinalSummary();
+        };
+      }catch(e){}
+    })();
+  </script>
 </section>
 <!-- END: screen-19-final-summary -->
 
@@ -1238,20 +1370,22 @@
 </section>
 <!-- END: screen-23-consent -->
 
-    <!-- START: screen-24-done -->
-    <section class="screen" data-title="申込完了">
-      <div class="card">
-        <div class="h1">お申込みが完了しました</div>
-        <div class="item" id="receiptNo">受付番号：ABC12345</div>
-        <div class="item" id="donePostalUnder" style="display:none;margin-top:6px;">✔継続証を郵送いたします。</div>
-        <ul class="list" id="doneList" style="margin-top:6px;">
-          <li id="donePdf" style="display:none;">✔控え（PDF）を送信しました。</li>
-          <li id="donePostal" style="display:none;">✔継続証を郵送いたします。</li>
-        </ul>
-        <button class="btnPrimary" onclick="openNotice('本番ではマイページ画面に推移します。デモ画面はここで終了です。')">次へ（マイページ手続き）</button>
-      </div>
-    </section>
-    <!-- END: screen-24-done -->
+<!-- START: screen-24-done -->
+<section class="screen" data-title="申込完了">
+  <div class="card">
+    <div class="h1">お申込みが完了しました</div>
+    <div class="item" id="receiptNo">受付番号：ABC12345</div>
+    <!-- 単独表示時も「1文字分空白＋ㇾ＋本文」に統一 -->
+    <div class="item doneLine" id="donePostalUnder" style="display:none; margin-top:6px;">継続証を郵送いたします。</div>
+    <!-- リストは行頭記号をCSSで表示（list-styleは無効のまま） -->
+    <ul class="list" id="doneList" style="margin-top:6px; list-style:none; padding-left:0;">
+      <li class="doneLine" id="donePdf" style="display:none;">控え（PDF）を送信しました。</li>
+      <li class="doneLine" id="donePostal" style="display:none;">継続証を郵送いたします。</li>
+    </ul>
+    <button class="btnPrimary" onclick="openNotice('本番ではマイページ画面に推移します。デモ画面はここで終了です。')">次へ（マイページ手続き）</button>
+  </div>
+</section>
+<!-- END: screen-24-done -->
 
   </main>
 
@@ -1557,6 +1691,9 @@
 
     const curTitle=titles()[i]||'';
     if (curTitle==='申込完了') updateCompletion();
+    if (curTitle==='最終見積のまとめ') {
+      try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
+    }
 
     try{
       if (curTitle==='免許証の有効期限' || curTitle==='免許証の色'){ populateDateSelectsSafe(); }
@@ -1593,7 +1730,6 @@
 
   function applyLarge(on){
     document.body.classList.toggle('large',on);
-    // ラベルのみ更新（アイコンは維持）
     const l=document.getElementById('lblLarge');
     if(l) l.textContent = on ? '文字を小さく' : '文字を大きく';
   }
@@ -1695,7 +1831,6 @@
       q.push({text:'内容に変更はございますか。変更がある場合は、変更するボタンを押してください。', pause:0});
       return q;
     }
-    // 改行ごとに短い無音を挿入
     const raw = (screens[step]?.innerText || '');
     const lines = raw.split('\n').map(s=> s.trim()).filter(Boolean);
     const queue = [];
@@ -1772,6 +1907,13 @@
   function setCell(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
   function setDelta(id,v){ const el=document.getElementById(id); if(!el) return; const sign=v>=0?'+':'-'; const abs=Math.abs(v); el.textContent=`${sign}¥${Math.round(abs).toLocaleString()}`; el.classList.toggle('dpos',v>=0); el.classList.toggle('dneg',v<0); }
   function onBodilyChange(val){ bodily=val||'3000'; recalcAll(); }
+
+  function normalizeVehicleText(amount, deduct){
+    const dMText = (deduct === 0) ? '0万円' : (deduct === 100000 ? '10万円' : '5万円');
+    if (amount === 0) return 'なし';
+    return `${amount}万円・免責${dMText}`;
+  }
+
   function recalcSamePage(){
     const sameM=same, sameY=same*12, curM=cur, curY=cur*12;
     setCell('curMonthly12', money(curM)); setCell('curYearly12', money(curY));
@@ -1783,25 +1925,33 @@
     setCell('planDownCurM', money(curM)); setCell('planDownCurY', money(curY));
     setCell('planDownNewM', money(4800)); setCell('planDownNewY', money(4800*12)); setDelta('planDownDeltaM', 4800-curM); setDelta('planDownDeltaY', 4800*12-curY);
   }
+
+  /* 最終見積の差分行（人身傷害・車両保険）：同一内容時は単一行、変更時は➡を表示 */
   function updateDiffLinesDynamic(){
     const bEl = document.getElementById('diffBodily');
     if (bEl){
-      const curB = '3,000万円'; let newB = '3,000万円';
-      if (bodily === '5000') newB = '5,000万円'; else if (bodily === '8000') newB = '8,000万円';
-      else if (bodily === '10000') newB = '1億円'; else if (bodily === 'unlimited') newB = '無制限';
-      bEl.textContent = (newB === curB)? `人身傷害：${curB}（変更なし）` : `人身傷害：${curB} → ${newB}`;
+      const curB = '3,000万円';
+      let newB = '3,000万円';
+      if (bodily === '5000') newB = '5,000万円';
+      else if (bodily === '8000') newB = '8,000万円';
+      else if (bodily === '10000') newB = '1億円';
+      else if (bodily === 'unlimited') newB = '無制限';
+      bEl.textContent = (newB === curB)
+        ? `人身傷害：${curB}`
+        : `人身傷害：${curB} ➡ ${newB}`;
     }
     const vEl = document.getElementById('diffVehicle');
     if (vEl){
       const vehA = Number(document.getElementById('vehicleAmount')?.value || 200);
       const deduct = Number(document.getElementById('deduct')?.value || 50000);
-      const curV = `200万円（免責5万円）`;
-      let newV = '';
-      if (vehA === 0) newV = 'なし';
-      else { const dMText = (deduct === 0) ? '0万円' : (deduct === 100000 ? '10万円' : '5万円'); newV = `${vehA}万円（免責${dMText}）`; }
-      vEl.textContent = (newV === curV)? `車両保険：${curV}（変更なし）` : `車両保険：${curV} → ${newV}`;
+      const curV = `200万円・免責5万円`;
+      const newV = normalizeVehicleText(vehA, deduct);
+      vEl.textContent = (newV === curV)
+        ? `車両保険：${curV}`
+        : `車両保険：${curV} ➡ ${newV}`;
     }
   }
+
   function recalcAll(){
     recalcSamePage();
     let bodilyAdj=0;
@@ -1822,13 +1972,41 @@
     setCell('kpiCur3', money(cur)); setCell('kpiCur3Y', money(cur*12)); setCell('kpiNew3', money(newMonthly)); setCell('kpiNew3Y', money(newYearly)); setDelta('kpiDelta3', newMonthly-cur); setDelta('kpiDelta3Y', newYearly - cur*12);
     setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12)); setCell('sumNewMonthly', money(newMonthly)); setCell('sumNewYearly', money(newYearly)); setDelta('sumDeltaMonthly', newMonthly-cur); setDelta('sumDeltaYearly', newYearly - cur*12);
     updateOptionSummary(); updateDiffLinesDynamic();
+    try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
   }
 
-  const currentOptionBaseline=['弁護士費用特約','代車費用特約']; let optSummaryMode='dynamic';
-  function getSelectedOptionsLabels(){ const s=[]; if(document.getElementById('opt_law')?.checked) s.push('弁護士費用特約'); if(document.getElementById('opt_rental')?.checked) s.push('代車費用特約'); if(document.getElementById('opt_dap')?.checked) s.push('DAP（ドライブレコーダー）特約'); return s; }
+  /* 特約の表示：同一内容時は単一行、変更時は➡で表示。DAPの表記統一。 */
+  const currentOptionBaseline=['弁護士費用','代車費用'];
+  let optSummaryMode='dynamic';
+  function normalizeOptionLabel(lbl){
+    return String(lbl || '')
+      .replace(/特約/g, '')
+      .replace(/DAP（ドライブレコーダー）特約/g, 'DAP（ドライブレコーダー）');
+  }
+  function getSelectedOptionsLabels(){
+    const s=[];
+    if(document.getElementById('opt_law')?.checked)    s.push('弁護士費用');
+    if(document.getElementById('opt_rental')?.checked) s.push('代車費用');
+    if(document.getElementById('opt_dap')?.checked)    s.push('DAP（ドライブレコーダー）');
+    return s;
+  }
   function arrayEqualIgnoreOrder(a,b){ if(a.length!==b.length) return false; const aa=[...a].sort(), bb=[...b].sort(); return aa.every((v,i)=> v===bb[i]); }
-  function renderOptionDiff(newList){ const curStr='弁護士費用・代車費用'; const newStr = newList.length ? newList.join(',') : 'なし'; const el=document.getElementById('optSummary'); if(!el) return; if(arrayEqualIgnoreOrder(newList, currentOptionBaseline)){ el.textContent = `特約：${curStr}（変更なし）`; }else{ el.textContent = `特約：${curStr} → ${newStr}`; } }
-  function updateOptionSummary(){ if(optSummaryMode==='fixedCurrent'){ renderOptionDiff([...currentOptionBaseline]); return; } if(optSummaryMode==='fixedNone'){ renderOptionDiff([]); return; } const sel=getSelectedOptionsLabels(); renderOptionDiff(sel); }
+  function renderOptionDiff(newList){
+    const curStr='弁護士費用／代車費用';
+    const newStr = newList.length ? newList.map(normalizeOptionLabel).join('／') : 'なし';
+    const el=document.getElementById('optSummary'); if(!el) return;
+    if(arrayEqualIgnoreOrder(newList, currentOptionBaseline)){
+      el.textContent = `特約：${curStr}`;
+    }else{
+      el.textContent = `特約：${curStr} ➡ ${newStr}`;
+    }
+  }
+  function updateOptionSummary(){
+    if(optSummaryMode==='fixedCurrent'){ renderOptionDiff([...currentOptionBaseline]); return; }
+    if(optSummaryMode==='fixedNone'){ renderOptionDiff([]); return; }
+    const sel=getSelectedOptionsLabels(); renderOptionDiff(sel);
+  }
+
   function chooseSameFlow(){
     optSummaryMode='fixedCurrent';
     const newM=same, newY=newM*12;
@@ -1836,36 +2014,39 @@
     setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
     setDelta('sumDeltaMonthly', newM-cur); setDelta('sumDeltaYearly', newY - cur*12);
     const b=document.getElementById('diffBodily'), v=document.getElementById('diffVehicle');
-    if(b) b.textContent='変更なし（前年同条件で更新）';
-    if(v) v.textContent='—';
+    if(b) b.textContent='人身傷害：3,000万円';
+    if(v) v.textContent='車両保険：200万円・免責5万円';
     updateOptionSummary();
+    try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
     goToTitle('重要なご説明');
   }
   function openSimplePlans(){ goToTitle('別のプランから選ぶ'); }
   function goStepByStep(){ optSummaryMode='dynamic'; goToTitle('人身傷害の金額を選ぶ'); }
   function chooseSimplePlan(type){
     let newM=same;
+    const b=document.getElementById('diffBodily');
+    const v=document.getElementById('diffVehicle');
     if(type==='up'){
       newM=6900;
-      const b=document.getElementById('diffBodily'); const v=document.getElementById('diffVehicle');
-      if(b) b.textContent='人身傷害：3,000万円 → 5,000万円';
-      if(v) v.textContent='車両保険：200万円（免責5万円） → 250万円（免責5万円）';
+      if(b) b.textContent='人身傷害：3,000万円 ➡ 5,000万円';
+      if(v) v.textContent='車両保険：200万円・免責5万円 ➡ 250万円・免責5万円';
       optSummaryMode='fixedCurrent';
     }else{
       newM=4800;
-      const b=document.getElementById('diffBodily'); const v=document.getElementById('diffVehicle');
-      if(b) b.textContent='人身傷害：3,000万円（変更なし）';
-      if(v) v.innerHTML='車両保険：あり → <span class="changeMinus">なし</span>';
+      if(b) b.textContent='人身傷害：3,000万円';
+      if(v) v.textContent='車両保険：あり ➡ なし';
       optSummaryMode='fixedNone';
     }
     const newY=newM*12;
     setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
     setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
     setDelta('sumDeltaMonthly', newM - cur); setDelta('sumDeltaYearly', newY - cur*12);
-    updateOptionSummary(); goToTitle('重要なご説明');
+    updateOptionSummary();
+    try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
+    goToTitle('重要なご説明');
   }
 
-  let flagSendPdf=false;
+  let flagSendPdf=false; // 重要事項のPDF選択フラグ（最終表示の判定では使わない）
   function onAgreeSubmit(){
     const g1=document.getElementById('agree1'), g2=document.getElementById('agree2');
     if(!g1.checked||!g2.checked){ openNotice('同意のチェックを入れてください。'); return; }
@@ -1875,12 +2056,22 @@
   function updateCompletion(){
     const list=document.getElementById('doneList'), pdf=document.getElementById('donePdf'), postal=document.getElementById('donePostal'), postalUnder=document.getElementById('donePostalUnder');
     if(!list||!pdf||!postal||!postalUnder) return;
+    // いったん全て非表示
     list.style.display='none'; pdf.style.display='none'; postal.style.display='none'; postalUnder.style.display='none';
-    const pdfSelected = flagSendPdf || !!document.getElementById('choice_pdf_yes')?.classList.contains('active') || !!document.getElementById('imp_choice_pdf')?.classList.contains('active');
+
+    // PDF送付は「WEBと書面の選択」画面の『申込書控えのPDF送付』＝必要 のみで判定（重要事項のPDF選択は参照しない）
+    const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');
+
+    // 継続証の郵送は「保険証券」＝書面 で判定
     const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active');
-    if(pdfSelected && paperCertSelected){ list.style.display='block'; pdf.style.display='list-item'; postal.style.display='list-item'; }
-    else if(pdfSelected){ list.style.display='block'; pdf.style.display='list-item'; }
-    else if(paperCertSelected){ postalUnder.style.display='block'; }
+
+    if(pdfSelected && paperCertSelected){
+      list.style.display='block'; pdf.style.display='list-item'; postal.style.display='list-item';
+    } else if(pdfSelected){
+      list.style.display='block'; pdf.style.display='list-item';
+    } else if(paperCertSelected){
+      postalUnder.style.display='block';
+    }
   }
 
   function sendPdf(){ openNotice('本番ではＰＤＦ送付確認画面に推移します。'); }
@@ -1941,8 +2132,6 @@
         const vin = document.getElementById('vin')?.value?.trim() || '';
         const plateEl = document.getElementById('plate');
         const plate = plateEl?.value?.trim() || '';
-        const y=document.getElementById('firstRegYear')?.value || '';
-        const m=document.getElementById('firstRegMonth')?.value || '';
         if(vin.length<8){ openNotice('車台番号を入力してください（例：ZVW50-1234567）'); return false; }
         const digits = plate.replace(/[^0-9]/g,'').slice(-4);
         if(digits.length<4){ openNotice('ナンバー（数字4桁）を入力してください（例：12-34）'); return false; }
@@ -1954,13 +2143,11 @@
 
   (function(){
     document.addEventListener('DOMContentLoaded', function(){
-      populateDateSelectsSafe(); // 免許証
-      populateDobSelectsSafe();  // 生年月日
-      populateFirstRegSelectsSafe(); // 初度登録年月
-      // 初期表示時に「文字を大きく」のラベルを再設定（アイコン維持）
+      populateDateSelectsSafe();
+      populateDobSelectsSafe();
+      populateFirstRegSelectsSafe();
       const l=document.getElementById('lblLarge');
       if(l) l.textContent = document.body.classList.contains('large') ? '文字を小さく' : '文字を大きく';
-      // 初期表示時に「音声で解説」のラベルを設定（アイコン維持）
       setGuidedBtn();
     });
   })();
