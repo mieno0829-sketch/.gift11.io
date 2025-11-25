@@ -190,111 +190,54 @@
 <!-- START: styles-addon -->
 <style>
   /* ヒーロー導入（横並び・改行抑制・小さめ） */
-  .heroStrip{
-    display:flex; align-items:center; gap:10px;
-    flex-wrap:nowrap;
-    padding:0; margin:8px 0 0 0; background:none; border:none;
-  }
+  .heroStrip{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; padding:0; margin:8px 0 0 0; background:none; border:none; }
   .heroStrip svg{ display:block; width:18px; height:18px; }
-  .heroChip{
-    display:inline-flex; align-items:center; gap:6px;
-    background:transparent; border:none; padding:0; box-shadow:none;
-    color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap;
-  }
+  .heroChip{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
 
-  /* ヘッダーのボタン（アイコン＋ラベル） */
-  .headerTop .btn{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:4px 6px; border:none; background:transparent;
-    color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none;
-    white-space:nowrap;
-  }
+  /* ヘッダーのボタン（アイコン＋ラベル）小さめ固定・改行抑制・28pxアイコン */
+  .headerTop .btn{ display:inline-flex; align-items:center; gap:6px; padding:4px 6px; border:none; background:transparent; color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap; }
   .headerTop .btn svg{ width:28px; height:28px; display:block; }
-  .headerTop .toggleLarge{
-    border:1px solid var(--border); border-radius:6px; background:#fff;
-    padding:4px 8px; color:var(--blue-900); font-size:13px; white-space:nowrap;
-  }
-  .large .headerTop .btn,
-  .large .headerTop .toggleLarge,
-  .large .aiLabel,
-  .large #lblSpeak,
-  .large #lblLarge{ font-size:13px !important; }
+  .headerTop .toggleLarge{ border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 8px; color:var(--blue-900); font-size:13px; white-space:nowrap; }
+  .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
   /* 公式バッジ（小さなピル型） */
-  .badgeOfficial{
-    display:inline-flex; align-items:center; justify-content:center;
-    padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
-    background:#eef4ff; color:var(--blue-800);
-    font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
-  }
+  .badgeOfficial{ display:inline-flex; align-items:center; justify-content:center; padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px; background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap; }
 
   /* リスト左側インデント（約1文字分） */
   .screen[data-title="別のプランから選ぶ"] .foldCard .list,
-  .screen[data-title="最終見積のまとめ"] .foldCard .list {
-    padding-left: 1.6em !important;
-  }
+  .screen[data-title="最終見積のまとめ"] .foldCard .list { padding-left: 1.6em !important; }
 
   /* 申込完了：行頭記号「■」＋広め余白（約2文字分） */
-  #donePostalUnder.doneLine,
-  #doneList .doneLine { position: relative; padding-left: 2em; }
-  #donePostalUnder.doneLine::before,
-  #doneList .doneLine::before {
-    content: "■"; position: absolute; left: 0.25em; top: 0.15em;
-    color: var(--blue-900); font-weight: 700; font-size: 0.95em; line-height: 1;
-  }
+  #donePostalUnder.doneLine, #doneList .doneLine{ position: relative; padding-left: 2em; }
+  #donePostalUnder.doneLine::before, #doneList .doneLine::before{ content:"■"; position:absolute; left:0.25em; top:0.15em; color: var(--blue-900); font-weight:700; font-size:0.95em; line-height:1; }
 
-  /* カバー（表紙）ページ：淡い青背景、ヘッダー白背景透明化 */
+  /* カバー（表紙）ページ：淡い青背景、ヘッダー白背景透明化、ツール類非表示、中央寄せ */
   body.cover{ background: #e6f0ff !important; }
-  body.cover header{
-    background: transparent !important;
-    border-bottom: none !important;
-    padding: 0 !important;
-    position: static !important;
-  }
-  body.cover .headerTop,
-  body.cover .chapters,
-  body.cover .progress,
-  body.cover footer{ display:none !important; }
+  body.cover header{ background: transparent !important; border-bottom: none !important; padding: 0 !important; position: static !important; }
+  body.cover .headerTop, body.cover .chapters, body.cover .progress, body.cover footer{ display:none !important; }
 
-  .coverWrap{
-    min-height: 100vh; min-height: 100svh;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding:24px 16px; color:#111;
-  }
+  .coverWrap{ min-height: 100vh; min-height: 100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 16px; color:#111; }
   .coverCar svg{ width: 72%; max-width: 320px; height: auto; margin-bottom: 18px; }
-
-  /* 表紙タイトル：黒文字＋行頭の黒四角（■） */
-  .coverTitle .coverLine{
-    position: relative;
-    color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em;
-    padding-left: 1.6em;
-  }
-  .coverTitle .coverLine::before{
-    content:"■"; position:absolute; left:0.2em; top:0.15em;
-    color:#000; font-weight:700; font-size:0.95em; line-height:1;
-  }
-
-  /* 表紙ボタン：背景青・文字白 */
-  .coverStartBtn{
-    margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px;
-    background:#3c7fe6; color:#fff; font-size:16px; font-weight:800; border:none; cursor:pointer;
-    box-shadow:0 2px 0 rgba(15,61,122,.12);
-    transition:transform .06s ease, filter .12s ease;
-  }
+  .coverTitle .coverLine{ position: relative; color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em; padding-left: 1.6em; }
+  .coverTitle .coverLine::before{ content:"■"; position:absolute; left:0.2em; top:0.15em; color:#000; font-weight:700; font-size:0.95em; line-height:1; }
+  .coverStartBtn{ margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px; background:#3c7fe6; color:#fff; font-size:16px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 0 rgba(15,61,122,.12); transition:transform .06s ease, filter .12s ease; }
   .coverStartBtn:hover{ filter:brightness(1.02); }
   .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
-  /* 年・月・日セレクトの幅最適化（復旧） */
-  #licenseYear, #dobYear, #firstRegYear { flex: 1 1 54%; min-width: 155px; }
-  #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth { flex: 0 0 92px; max-width: 100px; }
+  /* 年・月・日セレクトの幅最適化（復旧）＋主運転者側も同様 */
+  #licenseYear, #dobYear, #firstRegYear{ flex: 1 1 54%; min-width: 155px; }
+  #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex: 0 0 92px; max-width: 100px; }
+  #md_dobYear{ flex: 1 1 54%; min-width: 155px; }
+  #md_dobMonth, #md_dobDay{ flex: 0 0 92px; max-width: 100px; }
   @media (max-width:360px){
-    #licenseYear, #dobYear, #firstRegYear { min-width: 148px; }
-    #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth { flex-basis: 86px; max-width: 92px; }
+    #licenseYear, #dobYear, #firstRegYear{ min-width: 148px; }
+    #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex-basis: 86px; max-width: 92px; }
+    #md_dobYear{ min-width: 148px; }
+    #md_dobMonth, #md_dobDay{ flex-basis: 86px; max-width: 92px; }
   }
 
   @media (prefers-reduced-motion: reduce){
-    .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast,
-    .coverCar svg, .coverStartBtn{ transition:none !important; }
+    .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast, .coverCar svg, .coverStartBtn{ transition:none !important; }
   }
 </style>
 <!-- END: styles-addon -->
@@ -352,16 +295,17 @@
     <!-- 予備（将来拡張） -->
     <!-- END: header-bottom -->
 
+
 <!-- START: screen-00-cover -->
 <section class="screen active" data-title="表紙" data-role="cover" aria-label="プロトタイプの表紙">
   <div class="coverWrap">
     <!-- 自動車のシルエット（白） -->
     <div class="coverCar" aria-hidden="true">
-      <svg viewBox="0 0 280 120" role="img" aria-label="車のシルエット">
-        <path fill="#ffffff" d="M30 80c0-18 14-30 32-30h48c8 0 18-8 24-14 10-9 22-14 36-14h28c18 0 34 12 40 30l8 28c10 3 16 10 16 20 0 6-4 10-10 10H40c-6 0-10-4-10-10 0-8 6-15 16-20l-6 0c-6 0-10-4-10-10zM68 100a16 16 0 1 0 0-32 16 16 0 0 0 0 32zm132 0a16 16 0 1 0 0-32 16 16 0 0 0 0 32z"/>
-        <circle cx="68" cy="100" r="8" fill="#3c7fe6"/>
-        <circle cx="200" cy="100" r="8" fill="#3c7fe6"/>
-      </svg>
+<svg viewBox="0 0 280 120" role="img" aria-label="セダンのシルエット">
+  <path fill="#ffffff" d="M24 80c0-16 14-28 34-28h58c10 0 18-8 26-14 10-8 22-12 34-12h26c20 0 36 12 42 30l8 26c10 3 16 10 16 20 0 6-4 10-10 10H38c-6 0-10-4-10-10 0-8 6-15 16-20h-8c-6 0-12-4-12-12zM70 100a16 16 0 1 0 0-32 16 16 0 0 0 0 32zm132 0a16 16 0 1 0 0-32 16 16 0 0 0 0 32z"/>
+  <circle cx="70" cy="85" r="9" fill="none" stroke="#3c7fe6" stroke-width="3"/>
+  <circle cx="202" cy="85" r="9" fill="none" stroke="#3c7fe6" stroke-width="3"/>
+</svg>
     </div>
 
     <!-- タイトル群（センタリング／行間広め） -->
@@ -654,9 +598,11 @@
     <div class="h1">お客様情報を確認する</div>
     <ul class="list" id="custList">
       <li>氏名：山田 太郎</li>
+      <li>性別：男性</li>
       <li>住所：東京都港区赤坂1-1-1 〇〇マンション101</li>
       <li>電話番号：090-0000-000</li>
       <li>生年月日：1965年04月12日</li>
+      <li>勤務先：ABC株式会社</li>
     </ul>
     <div class="desc">変更はございますか？</div>
     <button class="btnPrimary" onclick="goToTitle('主に運転する方（記名被保険者）')">変更なし</button>
@@ -665,7 +611,7 @@
 </section>
 <!-- END: screen-05-customer-summary -->
 
- <!-- START: screen-06-customer-edit -->
+<!-- START: screen-06-customer-edit -->
 <section class="screen" data-title="お客様情報の編集">
   <div class="card">
     <div class="h1">お客様情報を変更する</div>
@@ -681,6 +627,15 @@
         </button>
       </div>
       <input class="input" id="cust_name" placeholder="山田 太郎">
+    </div>
+
+    <!-- 性別：男性／女性（choiceトグル形式） -->
+    <div class="field">
+      <div class="label">性別</div>
+      <div class="choiceRow" role="radiogroup" aria-label="性別">
+        <button class="choiceToggle" id="choice_gender_m" onclick="toggleChoice('gender_m')">男性</button>
+        <button class="choiceToggle" id="choice_gender_f" onclick="toggleChoice('gender_f')">女性</button>
+      </div>
     </div>
 
     <div class="field">
@@ -732,6 +687,20 @@
       </div>
     </div>
 
+    <!-- 勤務先（音声入力・未認識時のフォールバック：ABC株式会社） -->
+    <div class="field">
+      <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
+        <span>勤務先</span>
+        <button class="ghost" onclick="startVoiceForField('company')" aria-label="音声で勤務先を入力">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
+            <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
+          </svg>
+          音声で入力
+        </button>
+      </div>
+      <input class="input" id="company" placeholder="ABC株式会社">
+    </div>
+
     <button class="btnPrimary" onclick="goToTitle('主に運転する方（記名被保険者）')">OK</button>
   </div>
 </section>
@@ -754,19 +723,93 @@
   <div class="card">
     <div class="h1">主に運転する方を変更する</div>
 
+    <!-- 氏名（音声入力対応／初期空白・未開始は削除） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
-        <span>主に運転する方（記名被保険者）</span>
-        <button class="ghost" id="btnStartVoice" onclick="startNameVoice()" aria-label="音声で氏名を入力">
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false" style="margin-right:6px;">
+        <span>氏名</span>
+        <button class="ghost" onclick="startVoiceForField('mainDriverName')" aria-label="音声で氏名を入力">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
             <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
           </svg>
           音声で入力
         </button>
       </div>
-      <input class="input" id="mainDriverName" placeholder="山田 太郎">
-      <!-- 状態表示は入力欄の下で統一 -->
-      <span class="desc" id="voiceStatus" aria-live="polite">未開始</span>
+      <input class="input" id="mainDriverName" placeholder="">
+    </div>
+
+    <!-- 性別（トグルUIは既存のまま） -->
+    <div class="field">
+      <div class="label">性別</div>
+      <div class="choiceRow" role="radiogroup" aria-label="性別">
+        <button class="choiceToggle" id="choice_gender_m2" onclick="toggleChoice('gender_m2')">男性</button>
+        <button class="choiceToggle" id="choice_gender_f2" onclick="toggleChoice('gender_f2')">女性</button>
+      </div>
+    </div>
+
+    <!-- 郵便番号（音声入力対応／初期空白） -->
+    <div class="field">
+      <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
+        <span>郵便番号</span>
+        <button class="ghost" onclick="startVoiceForField('md_zip','digits')" aria-label="音声で郵便番号を入力">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
+            <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
+          </svg>
+          音声で入力
+        </button>
+      </div>
+      <input class="input" id="md_zip" placeholder="">
+    </div>
+
+    <!-- 住所（音声入力対応／初期空白） -->
+    <div class="field">
+      <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
+        <span>住所</span>
+        <button class="ghost" onclick="startVoiceForField('md_addr')" aria-label="音声で住所を入力">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
+            <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
+          </svg>
+          音声で入力
+        </button>
+      </div>
+      <input class="input" id="md_addr" placeholder="">
+    </div>
+
+    <!-- 電話番号（音声入力対応／初期空白） -->
+    <div class="field">
+      <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
+        <span>電話番号</span>
+        <button class="ghost" onclick="startVoiceForField('md_phone','digits')" aria-label="音声で電話番号を入力">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
+            <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
+          </svg>
+          音声で入力
+        </button>
+      </div>
+      <input class="input" id="md_phone" placeholder="">
+    </div>
+
+    <!-- 生年月日（横幅はお客様情報と同等に） -->
+    <div class="field">
+      <div class="label">生年月日</div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <select id="md_dobYear"><option value="">年</option></select>
+        <select id="md_dobMonth"><option value="">月</option></select>
+        <select id="md_dobDay"><option value="">日</option></select>
+      </div>
+    </div>
+
+    <!-- 勤務先（音声入力対応／初期空白） -->
+    <div class="field">
+      <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
+        <span>勤務先</span>
+        <button class="ghost" onclick="startVoiceForField('md_company')" aria-label="音声で勤務先を入力">
+          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
+            <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
+          </svg>
+          音声で入力
+        </button>
+      </div>
+      <input class="input" id="md_company" placeholder="">
     </div>
 
     <button class="btnPrimary" onclick="goToTitle('運転者の範囲と年齢条件')">OK</button>
@@ -861,7 +904,10 @@
       <li>人身傷害：3,000万円</li>
       <li>車両保険：保険金額 200万円・免責5万円</li>
       <li>特約：弁護士費用・代車費用</li>
+      <li>保険期間：令和8年11月1日午後4時から<br>令和9年11月1日午後4時まで（1年間）</li>
+      <li>等級：7F等級</li>
     </ul>
+
     <div class="desc" style="margin-top:6px;">
       <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償の詳細はコチラ</a>
     </div>
@@ -958,8 +1004,8 @@
       <button class="btnPrimary" onclick="chooseSimplePlan('up')">このプランで進む</button>
       <!-- 1行空白行 -->
       <div aria-hidden="true" style="height:8px;"></div>
-      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両保険・特約） -->
-      <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両保険・特約）</button>
+      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両・特約） -->
+      <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
     </div>
 
     <!-- 保険料重視 -->
@@ -997,8 +1043,8 @@
       <button class="btnPrimary" onclick="chooseSimplePlan('down')">このプランで進む</button>
       <!-- 1行空白行 -->
       <div aria-hidden="true" style="height:8px;"></div>
-      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両保険・特約） -->
-      <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両保険・特約）</button>
+      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両・特約） -->
+      <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
     </div>
   </div>
 
@@ -1357,7 +1403,12 @@
 <section class="screen" data-title="同意と申込">
   <div class="card">
     <div class="h1">内容に同意して申し込む</div>
-    <div class="item"><label><input type="checkbox" id="agree1"> 入力内容を確認しました</label></div>
+
+    <div class="desc" style="margin-bottom:6px;">
+      <a href="#" class="link" onclick="openNotice('本番では最終のお申込内容の確認画面に推移します')">最終のお申込内容はコチラ</a>
+    </div>
+
+    <div class="item"><label><input type="checkbox" id="agree1"> お申込内容を確認しました</label></div>
     <div class="item"><label><input type="checkbox" id="agree2"> 重要なご説明を読みました</label></div>
     <button class="btnPrimary" style="margin-top:10px;" onclick="onAgreeSubmit()">内容に同意して申し込む</button>
   </div>
@@ -1368,15 +1419,16 @@
 <section class="screen" data-title="申込完了">
   <div class="card">
     <div class="h1">お申込みが完了しました</div>
+
+    <div class="desc">お申込みありがとうございました。</div>
+
     <div class="item" id="receiptNo">受付番号：ABC12345</div>
-    <!-- 単独表示時も「1文字分空白＋ㇾ＋本文」に統一 -->
     <div class="item doneLine" id="donePostalUnder" style="display:none; margin-top:6px;">継続証を郵送いたします。</div>
-    <!-- リストは行頭記号をCSSで表示（list-styleは無効のまま） -->
     <ul class="list" id="doneList" style="margin-top:6px; list-style:none; padding-left:0;">
       <li class="doneLine" id="donePdf" style="display:none;">控え（PDF）を送信しました。</li>
       <li class="doneLine" id="donePostal" style="display:none;">継続証を郵送いたします。</li>
     </ul>
-    <button class="btnPrimary" onclick="openNotice('本番ではマイページ画面に推移します。デモ画面はここで終了です。')">次へ（マイページ手続き）</button>
+    <button class="btnPrimary" onclick="openNotice('本番では払込方法の確認・変更の画面に推移します。デモ画面はここで終了です。')">次へ（払込方法の確認）</button>
   </div>
 </section>
 <!-- END: screen-24-done -->
@@ -2217,11 +2269,10 @@
     {keys:['pdf_yes','pdf_no'],          label:'申込書控えPDF送付'}
   ];
 
-  // a11y初期化：choiceRowにradiogroup/各ボタンにradio相当を付与（排他の行のみ）
   function initA11y(){
     document.querySelectorAll('.choiceRow').forEach(row=>{
       const btns = row.querySelectorAll('.choiceToggle');
-      const isImportantRow = btns[0]?.id?.startsWith('imp_choice_'); // 重要事項は非排他
+      const isImportantRow = btns[0]?.id?.startsWith('imp_choice_');
       if (!isImportantRow){
         row.setAttribute('role','radiogroup');
         if(!row.getAttribute('aria-label')){
@@ -2252,7 +2303,6 @@
           });
         });
       } else {
-        // 非排他（重要事項）：チェックボックス相当
         row.setAttribute('role','group');
         btns.forEach(b=>{
           b.setAttribute('role','button');
@@ -2262,7 +2312,6 @@
     });
   }
 
-  // ペアマップ（排他のみ）
   function pairKey(key){
     if (key==='contact_email') return 'contact_sms';
     if (key==='contact_sms')   return 'contact_email';
@@ -2274,10 +2323,14 @@
     if (key==='notice_paper')  return 'notice_web';
     if (key==='pdf_yes')       return 'pdf_no';
     if (key==='pdf_no')        return 'pdf_yes';
+    // 追加：性別トグル（2箇所）
+    if (key==='gender_m')      return 'gender_f';
+    if (key==='gender_f')      return 'gender_m';
+    if (key==='gender_m2')     return 'gender_f2';
+    if (key==='gender_f2')     return 'gender_m2';
     return '';
   }
 
-  // 切り替え（白→淡青）排他
   window.toggleChoice = function(key){
     try{
       const btn = document.getElementById('choice_'+key);
@@ -2289,11 +2342,10 @@
         const other = document.getElementById('choice_'+otherKey);
         if (other) other.classList.remove('active');
       }
-      // a11y更新（aria-checked/tabindex）
       const row = btn.closest('.choiceRow');
       if(row){
         const list = row.querySelectorAll('.choiceToggle');
-        list.forEach((b,idx)=>{
+        list.forEach((b)=>{
           const isOn = b.classList.contains('active');
           b.setAttribute('aria-checked', isOn ? 'true' : 'false');
           b.setAttribute('tabindex', isOn ? '0' : '-1');
@@ -2302,17 +2354,15 @@
     }catch(e){}
   };
 
-  // 非排他トグル（重要事項）：クリック時にアクティブ化した場合のみお知らせ表示
   window.toggleMultiChoice = function(key){
     try{
       const id = key==='imp_full' ? 'imp_choice_full' : (key==='imp_pdf' ? 'imp_choice_pdf' : '');
       const btn = document.getElementById(id);
       if(!btn) return;
 
-      const willActivate = !btn.classList.contains('active'); // 現在の状態を確認
-      btn.classList.toggle('active'); // トグル実行
+      const willActivate = !btn.classList.contains('active');
+      btn.classList.toggle('active');
 
-      // アクティブ化（青になる）時のみお知らせ表示、非アクティブ化時は表示しない
       if (willActivate && typeof openNotice === 'function') {
         if (key === 'imp_full') {
           openNotice('本番では全文表示画面に推移します');
@@ -2323,7 +2373,6 @@
     }catch(e){}
   };
 
-  // 連絡方法の検証（行動提案型の文言）
   window.finishContactChoice = function(){
     try{
       const email = document.getElementById('choice_contact_email');
@@ -2338,12 +2387,16 @@
     }catch(e){}
   };
 
-  // WEB/書面の検証（行動提案型の文言）
   window.finishWebPaper = function(){
     try{
+      const groups = [
+        {keys:['terms_web','terms_paper'],   label:'約款'},
+        {keys:['cert_web','cert_paper'],     label:'保険証券'},
+        {keys:['notice_web','notice_paper'], label:'次回更新案内'},
+        {keys:['pdf_yes','pdf_no'],          label:'申込書控えPDF送付'}
+      ];
       const missing = [];
       groups.forEach(g=>{
-        if (g.label==='連絡方法') return; // この画面では対象外
         const a = document.getElementById('choice_'+g.keys[0]);
         const b = document.getElementById('choice_'+g.keys[1]);
         const selected = (a && a.classList.contains('active')) || (b && b.classList.contains('active'));
@@ -2358,11 +2411,9 @@
 
       try{
         window.choiceState = window.choiceState || {};
-        groups.forEach(g=>{
-          g.keys.forEach(k=>{
-            const el = document.getElementById('choice_'+k);
-            window.choiceState[k] = !!(el && el.classList.contains('active'));
-          });
+        ['terms_web','terms_paper','cert_web','cert_paper','notice_web','notice_paper','pdf_yes','pdf_no'].forEach(k=>{
+          const el = document.getElementById('choice_'+k);
+          window.choiceState[k] = !!(el && el.classList.contains('active'));
         });
       }catch(e){}
 
@@ -2370,7 +2421,6 @@
     }catch(e){}
   };
 
-  // 重要事項の選択確認
   window.finishImportantNext = function(){
     try{
       const full = document.getElementById('imp_choice_full')?.classList.contains('active');
@@ -2463,7 +2513,6 @@
       inp.value = v;
       if (fieldId === 'zip') mockZipToAddress(v);
       if (fieldId === 'plate' && v){
-        // plate は4桁の数字想定。自動整形（12-34）を既存validateVINで実施するためここでは入力のみ。
         const digits = v.replace(/[^\d]/g,'').slice(-4);
         inp.value = digits;
       }
@@ -2481,8 +2530,9 @@
       else if (targetFieldId === 'zip') { putValue(targetFieldId, '1234567'); }
       else if (targetFieldId === 'addr') { putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); }
       else if (targetFieldId === 'cust_phone') { putValue(targetFieldId, '09012345678'); }
-      else if (targetFieldId === 'vin') { putValue(targetFieldId, 'A000000000'); } /* VINは決め打ち */
-      else if (targetFieldId === 'plate') { putValue(targetFieldId, '1234'); } /* ナンバーは4桁にフォールバック */
+      else if (targetFieldId === 'vin') { putValue(targetFieldId, 'A000000000'); }
+      else if (targetFieldId === 'plate') { putValue(targetFieldId, '1234'); }
+      else if (targetFieldId === 'company') { putValue(targetFieldId, 'ABC株式会社'); }
       else { putValue(targetFieldId, 'サンプル'); }
     } else {
       putName('山田 花子');
@@ -2505,7 +2555,7 @@
 
       recognition.onstart = function(){
         recognizing = true;
-        setStatus('録音中です。お名前をどうぞ…');
+        setStatus('録音中です。お話しください…');
         toggleButtons(true);
       };
       recognition.onerror = function(evt){
