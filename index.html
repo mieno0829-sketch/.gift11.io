@@ -189,115 +189,102 @@
 
 <!-- START: styles-addon -->
 <style>
-  /* ヒーロー導入（フラット／1段） */
-  .heroStrip{ display:flex; align-items:center; flex-wrap:nowrap; gap:12px; padding:0; margin:0 0 6px 0; background:none; border:none; }
-  .heroStrip svg{ display:block; }
-  .heroChip{ display:flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
-
-  @keyframes fadeInUp { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: translateY(0); } }
-  .screen.anim-in .card{ animation: fadeInUp .22s ease both; }
-  .screen.anim-in .card:nth-of-type(2){ animation-delay: .03s; }
-  .screen.anim-in .card:nth-of-type(3){ animation-delay: .06s; }
-  .screen.anim-in .card:nth-of-type(4){ animation-delay: .09s; }
-
-  .choiceToggle{
-    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .06s ease;
-    box-shadow:0 1px 0 rgba(31,95,191,.06);
-    background-image: linear-gradient(180deg, #ffffff 0%, #fdfdff 100%);
+  /* ヒーロー導入（横並び・改行抑制・小さめ） */
+  .heroStrip{
+    display:flex; align-items:center; gap:10px;
+    flex-wrap:nowrap;
+    padding:0; margin:8px 0 0 0; background:none; border:none;
   }
-  .choiceToggle:hover{ border-color:#aecdff; box-shadow:0 2px 0 rgba(31,95,191,.08); }
-  .choiceToggle:focus-visible{ outline:3px solid #3c7fe6; outline-offset:2px; border-radius:8px; }
-  .choiceToggle.active{ background:#eef4ff; outline:2px solid var(--blue-800); border-color: var(--blue-800); box-shadow:0 2px 0 rgba(31,95,191,.10); transform: translateY(0); }
-  .choiceToggle:active{ transform: translateY(1px) scale(0.995); box-shadow:0 1px 0 rgba(31,95,191,.08); }
-
-  .bar{ position:relative; }
-  .bar::before{
-    content:""; position:absolute; inset:0; pointer-events:none; border-radius:999px;
-    background:
-      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 24.5%, rgba(31,95,191,.18) 25%, rgba(0,0,0,0) 25.5%),
-      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 49.5%, rgba(31,95,191,.18) 50%, rgba(0,0,0,0) 50.5%),
-      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 74.5%, rgba(31,95,191,.18) 75%, rgba(0,0,0,0) 75.5%);
+  .heroStrip svg{ display:block; width:18px; height:18px; }
+  .heroChip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:transparent; border:none; padding:0; box-shadow:none;
+    color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap;
   }
 
-  .chapters{ display:flex; gap:6px; justify-content:space-between; margin:2px 10px 0 10px; font-size:11px; color:#5b6470; }
-  .chapter{ flex:1; text-align:center; opacity:.75; }
-  .chapter.active{ color:#1f5fbf; font-weight:700; opacity:1; }
-
-  .foldCard .btnPrimary{ padding:9px 12px; font-size:14px; line-height:1.25; }
-  .foldCard .choiceToggle{ padding:7px 10px; white-space:nowrap; }
-
-  /* ヘッダーのボタンをアイコン＋ラベルのフラットに統一 */
+  /* ヘッダーのボタン（アイコン＋ラベル） */
   .headerTop .btn{
     display:inline-flex; align-items:center; gap:6px;
     padding:4px 6px; border:none; background:transparent;
     color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none;
+    white-space:nowrap;
   }
   .headerTop .btn svg{ width:28px; height:28px; display:block; }
-
   .headerTop .toggleLarge{
-    border:none !important; border-radius:0 !important; background:transparent !important;
-    padding:4px 6px !important; color:var(--blue-800) !important;
+    border:1px solid var(--border); border-radius:6px; background:#fff;
+    padding:4px 8px; color:var(--blue-900); font-size:13px; white-space:nowrap;
   }
+  .large .headerTop .btn,
+  .large .headerTop .toggleLarge,
+  .large .aiLabel,
+  .large #lblSpeak,
+  .large #lblLarge{ font-size:13px !important; }
 
-  .aiRobot{
-    width:28px; height:28px; border-radius:8px;
-    background-color:#3c7fe6 !important;
-    border:2px solid #d7e0f0;
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>');
-    background-repeat:no-repeat; background-position:center; background-size:70% 70%;
-  }
-
+  /* 公式バッジ（小さなピル型） */
   .badgeOfficial{
     display:inline-flex; align-items:center; justify-content:center;
     padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
-    background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700;
+    background:#eef4ff; color:var(--blue-800);
+    font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
   }
 
-  #toast{
-    position:fixed; left:50%; bottom:90px; transform:translateX(-50%) translateY(6px);
-    background:rgba(15,61,122,.95); color:#fff;
-    padding:8px 12px 8px 32px; border-radius:8px; font-size:13px; display:none; z-index:9999;
-    box-shadow:0 4px 12px rgba(0,0,0,.22);
-    opacity:0; transition: opacity .2s ease-out, transform .2s ease-out;
-  }
-  #toast[style*="display: block"]{ opacity:1; transform:translateX(-50%) translateY(0); }
-  #toast::before{
-    content:""; position:absolute; left:10px; top:50%; transform:translateY(-50%);
-    width:16px; height:16px; background-repeat:no-repeat; background-size:16px 16px; opacity:.95;
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"><circle cx="8" cy="8" r="8" fill="%23ffffff"/><path fill="%233c7fe6" d="M7.25 4.25a.75.75 0 1 1 1.5 0 .75.75 0 0 1-1.5 0Zm.25 2.25h1v5h-1z"/></svg>');
+  /* リスト左側インデント（約1文字分） */
+  .screen[data-title="別のプランから選ぶ"] .foldCard .list,
+  .screen[data-title="最終見積のまとめ"] .foldCard .list {
+    padding-left: 1.6em !important;
   }
 
-  .footerNote{ font-size:12px; color:#5b6470; text-align:center; padding:4px 10px 0 10px; }
-
-  .btnPrimary{ white-space:nowrap; line-height:1.25; }
-  .btnPrimary:hover{ filter:brightness(0.98); }
-  .btnPrimary:focus-visible{ outline:3px solid #3c7fe6; outline-offset:2px; }
-
-  .loadingOverlay{
-    position:fixed; inset:0; background:rgba(255,255,255,.65);
-    display:flex; align-items:center; justify-content:center;
-    z-index:9998; backdrop-filter:saturate(120%) blur(1px);
-  }
-  .loadingSpinner{
-    width:28px; height:28px; border-radius:50%;
-    border:3px solid rgba(31,95,191,.25); border-top-color:#1f5fbf;
-    animation: spin .8s linear infinite;
-  }
-  @keyframes spin{ to { transform:rotate(360deg); } }
-
-  @media (prefers-reduced-motion: reduce){
-    .screen.anim-in .card{ animation:none !important; }
-    .videoChip, .choiceToggle, .btnPrimary, #toast{ transition:none !important; }
+  /* 申込完了：行頭記号「■」＋広め余白（約2文字分） */
+  #donePostalUnder.doneLine,
+  #doneList .doneLine { position: relative; padding-left: 2em; }
+  #donePostalUnder.doneLine::before,
+  #doneList .doneLine::before {
+    content: "■"; position: absolute; left: 0.25em; top: 0.15em;
+    color: var(--blue-900); font-weight: 700; font-size: 0.95em; line-height: 1;
   }
 
-  @media (max-width:375px){
-    .headerTop .toolbar .btn{ font-size:12px; }
+  /* カバー（表紙）ページ：淡い青背景、ヘッダー白背景透明化 */
+  body.cover{ background: #e6f0ff !important; }
+  body.cover header{
+    background: transparent !important;
+    border-bottom: none !important;
+    padding: 0 !important;
+    position: static !important;
+  }
+  body.cover .headerTop,
+  body.cover .chapters,
+  body.cover .progress,
+  body.cover footer{ display:none !important; }
+
+  .coverWrap{
+    min-height: 100vh; min-height: 100svh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px 16px; color:#111;
+  }
+  .coverCar svg{ width: 72%; max-width: 320px; height: auto; margin-bottom: 18px; }
+
+  /* 表紙タイトル：黒文字＋行頭の黒四角（■） */
+  .coverTitle .coverLine{
+    position: relative;
+    color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em;
+    padding-left: 1.6em;
+  }
+  .coverTitle .coverLine::before{
+    content:"■"; position:absolute; left:0.2em; top:0.15em;
+    color:#000; font-weight:700; font-size:0.95em; line-height:1;
   }
 
-  /* AIモーダルの選択ボタンの文字を少し大きく */
-  #aiChoiceModal .choiceToggle{ font-size:15px; }
+  /* 表紙ボタン：背景青・文字白 */
+  .coverStartBtn{
+    margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px;
+    background:#3c7fe6; color:#fff; font-size:16px; font-weight:800; border:none; cursor:pointer;
+    box-shadow:0 2px 0 rgba(15,61,122,.12);
+    transition:transform .06s ease, filter .12s ease;
+  }
+  .coverStartBtn:hover{ filter:brightness(1.02); }
+  .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
-  /* 年・月・日セレクトの幅最適化（年をやや狭く、月・日を広く） */
+  /* 年・月・日セレクトの幅最適化（復旧） */
   #licenseYear, #dobYear, #firstRegYear { flex: 1 1 54%; min-width: 155px; }
   #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth { flex: 0 0 92px; max-width: 100px; }
   @media (max-width:360px){
@@ -305,28 +292,9 @@
     #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth { flex-basis: 86px; max-width: 92px; }
   }
 
-  /* 追加：プラン選択／最終見積画面のリスト左側に1文字分のスペース（インデント）を付与 */
-  .screen[data-title="別のプランから選ぶ"] .foldCard .list,
-  .screen[data-title="最終見積のまとめ"] .foldCard .list {
-    padding-left: 1.6em !important; /* 既存の1emに+α（約1文字分） */
-  }
-
-  /* 申込完了画面：行頭記号を「少し広めの空白＋■＋本文」に統一 */
-  #donePostalUnder.doneLine,
-  #doneList .doneLine {
-    position: relative;
-    padding-left: 2em; /* 左側の余白を増やす（約2文字分） */
-  }
-  #donePostalUnder.doneLine::before,
-  #doneList .doneLine::before {
-    content: "■";        /* 行頭記号：黒四角 */
-    position: absolute;
-    left: 0.25em;         /* 左端から少し内側に配置（視認性のため） */
-    top: 0.15em;          /* ベースライン調整 */
-    color: var(--blue-900);
-    font-weight: 700;
-    font-size: 0.95em;    /* 本文に対してやや小さめで揃える */
-    line-height: 1;
+  @media (prefers-reduced-motion: reduce){
+    .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast,
+    .coverCar svg, .coverStartBtn{ transition:none !important; }
   }
 </style>
 <!-- END: styles-addon -->
@@ -383,6 +351,32 @@
     <!-- START: header-bottom -->
     <!-- 予備（将来拡張） -->
     <!-- END: header-bottom -->
+
+<!-- START: screen-00-cover -->
+<section class="screen active" data-title="表紙" data-role="cover" aria-label="プロトタイプの表紙">
+  <div class="coverWrap">
+    <!-- 自動車のシルエット（白） -->
+    <div class="coverCar" aria-hidden="true">
+      <svg viewBox="0 0 280 120" role="img" aria-label="車のシルエット">
+        <path fill="#ffffff" d="M30 80c0-18 14-30 32-30h48c8 0 18-8 24-14 10-9 22-14 36-14h28c18 0 34 12 40 30l8 28c10 3 16 10 16 20 0 6-4 10-10 10H40c-6 0-10-4-10-10 0-8 6-15 16-20l-6 0c-6 0-10-4-10-10zM68 100a16 16 0 1 0 0-32 16 16 0 0 0 0 32zm132 0a16 16 0 1 0 0-32 16 16 0 0 0 0 32z"/>
+        <circle cx="68" cy="100" r="8" fill="#3c7fe6"/>
+        <circle cx="200" cy="100" r="8" fill="#3c7fe6"/>
+      </svg>
+    </div>
+
+    <!-- タイトル群（センタリング／行間広め） -->
+    <div class="coverTitle">
+      <div class="coverLine">プロトタイプ</div>
+      <div class="coverLine">スマらく改修</div>
+      <div class="coverLine">e-Auto改修</div>
+    </div>
+
+    <!-- 開始ボタン（背景青・文字白） -->
+    <button class="coverStartBtn" onclick="startDemo()" aria-label="デモを開始する">デモ開始</button>
+  </div>
+</section>
+<!-- END: screen-00-cover -->
+
   </header>
 
   <main id="screens">
@@ -1493,7 +1487,6 @@
 
 <!-- START: js-core -->
 <script>
-  /* 既存のタイトル→番号マップ（goToTitleのため据え置き） */
   const TITLE_NO = {
     '手続き開始':1,'お車の情報':2,'車検証の情報':3,'免許証の色':4,'免許証の有効期限':5,
     'お客様情報の確認':6,'お客様情報の編集':7,'主に運転する方（記名被保険者）':8,'主に運転する方の編集':9,
@@ -1509,6 +1502,7 @@
   const screens=[...document.querySelectorAll('.screen')];
   let step=0;
   const titles=()=>screens.map(s=>s.dataset.title);
+  const isCover=(i)=> !!(screens[i] && screens[i].dataset.role==='cover');
 
   const historyStack = [];
   function pushHistory(idx){
@@ -1535,7 +1529,6 @@
     catch(e){ window.scrollTo(0, 0); }
   }
 
-  // 和暦表記（令和/平成/昭和の簡易対応）
   function formatYearWithEra(y){
     const year = Number(y);
     if (isNaN(year)) return `${y}年`;
@@ -1547,8 +1540,7 @@
     return era ? `${year}年（${era}）` : `${year}年`;
   }
 
-  function populateDateSelectsSafe(){
-    try{
+  function populateDateSelectsSafe(){ try{
       const ySel = document.getElementById('licenseYear');
       const mSel = document.getElementById('licenseMonth');
       const dSel = document.getElementById('licenseDay');
@@ -1565,20 +1557,16 @@
       if (dSel.options.length <= 1){
         for(let d=1;d<=31;d++){ const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; dSel.appendChild(o); }
       }
-    }catch(e){ console.error('populateDateSelectsSafe error:', e); }
-  }
-  function validateDateSelect(){
-    try{
+    }catch(e){ console.error('populateDateSelectsSafe error:', e); } }
+  function validateDateSelect(){ try{
       const y=document.getElementById('licenseYear')?.value || '';
       const m=document.getElementById('licenseMonth')?.value || '';
       const d=document.getElementById('licenseDay')?.value || '';
       if(!y||!m||!d){ openNotice('有効期限を「年・月・日」の3つから選んでください'); return false; }
       return true;
-    }catch(e){ openNotice('有効期限の選択でエラーが発生しました。再度お試しください。'); return false; }
-  }
+    }catch(e){ openNotice('有効期限の選択でエラーが発生しました。再度お試しください。'); return false; } }
 
-  function populateDobSelectsSafe(){
-    try{
+  function populateDobSelectsSafe(){ try{
       const ySel = document.getElementById('dobYear');
       const mSel = document.getElementById('dobMonth');
       const dSel = document.getElementById('dobDay');
@@ -1597,20 +1585,16 @@
       if (dSel.options.length <= 1){
         for(let d=1;d<=31;d++){ const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; dSel.appendChild(o); }
       }
-    }catch(e){ console.error('populateDobSelectsSafe error:', e); }
-  }
-  function validateDobSelect(){
-    try{
+    }catch(e){ console.error('populateDobSelectsSafe error:', e); } }
+  function validateDobSelect(){ try{
       const y=document.getElementById('dobYear')?.value || '';
       const m=document.getElementById('dobMonth')?.value || '';
       const d=document.getElementById('dobDay')?.value || '';
       if(!y||!m||!d){ openNotice('生年月日を「年・月・日」の3つから選んでください'); return false; }
       return true;
-    }catch(e){ openNotice('生年月日の選択でエラーが発生しました。再度お試しください。'); return false; }
-  }
+    }catch(e){ openNotice('生年月日の選択でエラーが発生しました。再度お試しください。'); return false; } }
 
-  function populateFirstRegSelectsSafe(){
-    try{
+  function populateFirstRegSelectsSafe(){ try{
       const ySel = document.getElementById('firstRegYear');
       const mSel = document.getElementById('firstRegMonth');
       if (!ySel || !mSel) return;
@@ -1630,10 +1614,8 @@
         const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; mSel.appendChild(o);
       }
       ySel.addEventListener('change', populateFirstRegSelectsSafe, { once:true });
-    }catch(e){ console.error('populateFirstRegSelectsSafe error:', e); }
-  }
-  function validateFirstRegSelect(){
-    try{
+    }catch(e){ console.error('populateFirstRegSelectsSafe error:', e); } }
+  function validateFirstRegSelect(){ try{
       const y=document.getElementById('firstRegYear')?.value || '';
       const m=document.getElementById('firstRegMonth')?.value || '';
       if(!y||!m){ openNotice('初度登録年月を「年・月」から選んでください'); return false; }
@@ -1643,8 +1625,7 @@
         openNotice('初度登録年月は未来を選べません'); return false;
       }
       return true;
-    }catch(e){ openNotice('初度登録年月の選択でエラーが発生しました。再度お試しください。'); return false; }
-  }
+    }catch(e){ openNotice('初度登録年月の選択でエラーが発生しました。再度お試しください。'); return false; } }
 
   function setActive(i){
     stopGuidedVoice();
@@ -1654,40 +1635,51 @@
       s.classList.toggle('anim-in', isActive);
     });
 
+    // カバー表示切替（背景・ヘッダー/フッター/進捗の非表示）
+    document.body.classList.toggle('cover', isCover(i));
+
     scrollToTop();
 
-    const x = i + 1;
-    const progText = document.getElementById('progressText');
-    if (progText) {
-      progText.textContent = x===1 ? `進捗 ${x}/${MAX_STEPS}（最大）` : `進捗 ${x}/${MAX_STEPS}`;
-    }
-    const pct=(x/MAX_STEPS)*100;
-    const bar=document.getElementById('progressBar');
-    if(bar){
-      bar.style.width=`${pct}%`;
-      bar.setAttribute('aria-valuemin','0');
-      bar.setAttribute('aria-valuemax', String(MAX_STEPS));
-      bar.setAttribute('aria-valuenow', String(x));
-      bar.setAttribute('aria-valuetext', `全${MAX_STEPS}ステップ中の${x}ステップ目`);
-    }
+    // カバーは進捗表示を更新しない
+    if (!isCover(i)){
+      const visualStep = (() => {
+        // 先頭から現在までのカバー数を差し引き、1始まりで算出
+        const coverCount = screens.slice(0, i+1).filter(s=> s.dataset.role==='cover').length;
+        return Math.max(1, Math.min(MAX_STEPS, i+1 - coverCount));
+      })();
 
-    try{
-      const chap = (x<=12) ? 'input' : (x<=20 ? 'estimate' : (x===21 ? 'explain' : 'apply'));
-      ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
-        const el=document.getElementById(id);
-        if(!el) return;
-        el.classList.toggle('active',
-          (chap==='input'   && id==='chapInput') ||
-          (chap==='estimate'&& id==='chapEstimate') ||
-          (chap==='explain' && id==='chapExplain') ||
-          (chap==='apply'   && id==='chapApply')
-        );
-      });
-    }catch(e){}
+      const progText = document.getElementById('progressText');
+      if (progText) {
+        progText.textContent = visualStep===1 ? `進捗 ${visualStep}/${MAX_STEPS}（最大）` : `進捗 ${visualStep}/${MAX_STEPS}`;
+      }
+      const pct=(visualStep/MAX_STEPS)*100;
+      const bar=document.getElementById('progressBar');
+      if(bar){
+        bar.style.width=`${pct}%`;
+        bar.setAttribute('aria-valuemin','0');
+        bar.setAttribute('aria-valuemax', String(MAX_STEPS));
+        bar.setAttribute('aria-valuenow', String(visualStep));
+        bar.setAttribute('aria-valuetext', `全${MAX_STEPS}ステップ中の${visualStep}ステップ目`);
+      }
 
-    const remaining = Math.round(12 * (MAX_STEPS - x) / MAX_STEPS);
-    const timeLeftEl = document.getElementById('timeLeft');
-    if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
+      try{
+        const chap = (visualStep<=12) ? 'input' : (visualStep<=20 ? 'estimate' : (visualStep===21 ? 'explain' : 'apply'));
+        ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(!el) return;
+          el.classList.toggle('active',
+            (chap==='input'   && id==='chapInput') ||
+            (chap==='estimate'&& id==='chapEstimate') ||
+            (chap==='explain' && id==='chapExplain') ||
+            (chap==='apply'   && id==='chapApply')
+          );
+        });
+      }catch(e){}
+
+      const remaining = Math.round(12 * (MAX_STEPS - visualStep) / MAX_STEPS);
+      const timeLeftEl = document.getElementById('timeLeft');
+      if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
+    }
 
     const curTitle=titles()[i]||'';
     if (curTitle==='申込完了') updateCompletion();
@@ -1926,7 +1918,6 @@
     setCell('planDownNewM', money(4800)); setCell('planDownNewY', money(4800*12)); setDelta('planDownDeltaM', 4800-curM); setDelta('planDownDeltaY', 4800*12-curY);
   }
 
-  /* 最終見積の差分行（人身傷害・車両保険）：同一内容時は単一行、変更時は➡を表示 */
   function updateDiffLinesDynamic(){
     const bEl = document.getElementById('diffBodily');
     if (bEl){
@@ -1975,7 +1966,6 @@
     try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
   }
 
-  /* 特約の表示：同一内容時は単一行、変更時は➡で表示。DAPの表記統一。 */
   const currentOptionBaseline=['弁護士費用','代車費用'];
   let optSummaryMode='dynamic';
   function normalizeOptionLabel(lbl){
@@ -2046,7 +2036,7 @@
     goToTitle('重要なご説明');
   }
 
-  let flagSendPdf=false; // 重要事項のPDF選択フラグ（最終表示の判定では使わない）
+  let flagSendPdf=false;
   function onAgreeSubmit(){
     const g1=document.getElementById('agree1'), g2=document.getElementById('agree2');
     if(!g1.checked||!g2.checked){ openNotice('同意のチェックを入れてください。'); return; }
@@ -2056,13 +2046,9 @@
   function updateCompletion(){
     const list=document.getElementById('doneList'), pdf=document.getElementById('donePdf'), postal=document.getElementById('donePostal'), postalUnder=document.getElementById('donePostalUnder');
     if(!list||!pdf||!postal||!postalUnder) return;
-    // いったん全て非表示
     list.style.display='none'; pdf.style.display='none'; postal.style.display='none'; postalUnder.style.display='none';
 
-    // PDF送付は「WEBと書面の選択」画面の『申込書控えのPDF送付』＝必要 のみで判定（重要事項のPDF選択は参照しない）
     const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');
-
-    // 継続証の郵送は「保険証券」＝書面 で判定
     const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active');
 
     if(pdfSelected && paperCertSelected){
@@ -2149,6 +2135,19 @@
       const l=document.getElementById('lblLarge');
       if(l) l.textContent = document.body.classList.contains('large') ? '文字を小さく' : '文字を大きく';
       setGuidedBtn();
+
+      // 初期表示：カバー（表紙）を表示
+      try{
+        const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
+        if(coverIdx>=0){
+          setActive(coverIdx);
+          // 初期フォーカスは「デモ開始」ボタンへ
+          setTimeout(()=>{ const btn=document.querySelector('.coverStartBtn'); if(btn) btn.focus(); },0);
+        }else{
+          // カバー無しなら従来どおり
+          setActive(0);
+        }
+      }catch(e){ setActive(0); }
     });
   })();
 
@@ -2187,11 +2186,22 @@
   function focusFirstInteractive(scope){
     const root = scope || document.querySelector('.screen.active');
     if(!root) return;
-    const selectors = [ 'button.btnPrimary', 'input, select, textarea, button, a[href]' ];
+    const selectors = [ 'button.btnPrimary', 'input, select, textarea, button, a[href]', '.coverStartBtn' ];
     for (const sel of selectors) { const el = root.querySelector(sel); if (el && typeof el.focus === 'function') { el.focus(); return; } }
   }
 
-  setActive(0);
+  // 「デモ開始」：カバーから通常1画面目（手続き開始）へ
+  function startDemo(){
+    try{
+      const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
+      const firstIdx = titles().indexOf('手続き開始'); // 既存1画面目
+      if (firstIdx>=0){
+        // 履歴にカバーを積んでおけば「戻る」でカバーに戻れる（既存prevのまま）
+        if (coverIdx>=0){ pushHistory(coverIdx); }
+        setActive(firstIdx);
+      }
+    }catch(e){ setActive(0); }
+  }
 </script>
 <!-- END: js-core -->
 
