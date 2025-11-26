@@ -194,23 +194,30 @@
   .heroStrip svg{ display:block; width:18px; height:18px; }
   .heroChip{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
 
-  /* ヘッダー：ボタン・ラベル統一（13px固定／1行維持） */
-  .headerTop{ display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:nowrap; }
-  .toolbar{ display:flex; gap:6px; align-items:center; flex-wrap:nowrap; }
+  /* ヘッダー：左寄せ（1行維持）、ボタン・ラベル統一（13px/600） */
+  .headerTop{ display:flex; align-items:center; justify-content:flex-start; gap:6px; flex-wrap:nowrap; }
+  .toolbar{ display:flex; gap:6px; align-items:center; flex-wrap:nowrap; flex:0 0 auto; }
   .headerTop .btn{
     display:inline-flex; align-items:center; gap:6px;
     padding:4px 6px; border:none; background:transparent;
     color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;
   }
   .headerTop .btn svg{ width:28px; height:28px; display:block; }
-  .aiAgent{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
-  .aiLabel{ font-size:13px; color:var(--blue-900); white-space:nowrap; }
+
+  /* AIと対話：ラベル見た目を「文字を大きく」と揃える＋左寄せ維持 */
+  .aiAgent{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-left:6px; }
+  .aiLabel{ font-size:13px; font-weight:600; color:var(--blue-800); white-space:nowrap; }
+
+  /* 文字を大きく：ボーダーなし・透過背景（安定版準拠） */
   .headerTop .toggleLarge{
     border:none !important; border-radius:0 !important; background:transparent !important;
     padding:4px 6px !important; color:var(--blue-800) !important; font-size:13px; white-space:nowrap;
   }
+
+  /* 拡大時もラベルは13px固定（ヘッダーのみ） */
   .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
+  /* 公式バッジ（小さなピル型） */
   .badgeOfficial{
     display:inline-flex; align-items:center; justify-content:center;
     padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
@@ -226,13 +233,13 @@
     background-repeat:no-repeat; background-position:center; background-size:70% 70%;
   }
 
-  /* 狭幅端末向け微調整：アイコン縮小＆余白詰め */
+  /* 狭幅端末向け微調整：アイコン縮小＆余白詰め（1行維持） */
   @media (max-width:360px){
     .headerTop .btn svg{ width:24px; height:24px; }
     .aiRobot{ width:24px; height:24px; }
     .toolbar{ gap:4px; }
     .headerTop .btn{ gap:4px; padding:4px 4px; }
-    .aiAgent{ gap:4px; }
+    .aiAgent{ gap:4px; margin-left:4px; }
   }
 
   /* 進捗バー：四分割ガイド（25/50/75%）を表示 */
@@ -276,7 +283,6 @@
     line-height:1.75; letter-spacing:.02em; padding-left: 0;
   }
   .coverTitle .coverLine::before{ content:none !important; }
-  /* 「noBullet」指定は互換のため維持（効果は同じ） */
   .coverTitle .coverLine.noBullet{ padding-left:0 !important; }
   .coverTitle .coverLine.noBullet::before{ content:none !important; }
 
@@ -652,7 +658,7 @@
   </div>
 
   <div class="card">
-    <div class="h1">免許証の有効期限</div>
+    <div class="h1">免許証の有効期限を入力する</div>
     <div class="desc">・免許証の有効期限の記載場所</div>
 
     <div class="licenseSheet" aria-hidden="true" style="margin-top:8px;">
