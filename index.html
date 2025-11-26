@@ -195,13 +195,52 @@
   .heroChip{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
 
   /* ヘッダーのボタン（アイコン＋ラベル）小さめ固定・改行抑制・28pxアイコン */
-  .headerTop .btn{ display:inline-flex; align-items:center; gap:6px; padding:4px 6px; border:none; background:transparent; color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap; }
+  .headerTop .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 6px; border:none; background:transparent;
+    color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;
+  }
   .headerTop .btn svg{ width:28px; height:28px; display:block; }
-  .headerTop .toggleLarge{ border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 8px; color:var(--blue-900); font-size:13px; white-space:nowrap; }
+
+  /* 文字を大きく：ボーダーなし・透過背景（安定版準拠） */
+  .headerTop .toggleLarge{
+    border:none !important; border-radius:0 !important; background:transparent !important;
+    padding:4px 6px !important; color:var(--blue-800) !important; font-size:13px; white-space:nowrap;
+  }
+
+  /* 拡大時もラベルは13px固定（ヘッダーのみ） */
   .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
   /* 公式バッジ（小さなピル型） */
-  .badgeOfficial{ display:inline-flex; align-items:center; justify-content:center; padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px; background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap; }
+  .badgeOfficial{
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
+    background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
+  }
+
+  /* AIと対話：青地＋白シルエットに統一（「文字を大きく」と同系の青） */
+  .aiRobot{
+    width:28px; height:28px; border-radius:8px;
+    background-color:#3c7fe6 !important;
+    border:2px solid #d7e0f0;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>');
+    background-repeat:no-repeat; background-position:center; background-size:70% 70%;
+  }
+
+  /* 進捗バー：四分割ガイド（25/50/75%）を表示 */
+  .bar{ position:relative; }
+  .bar::before{
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:999px;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 24.5%, rgba(31,95,191,.18) 25%, rgba(0,0,0,0) 25.5%),
+      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 49.5%, rgba(31,95,191,.18) 50%, rgba(0,0,0,0) 50.5%),
+      linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 74.5%, rgba(31,95,191,.18) 75%, rgba(0,0,0,0) 75.5%);
+  }
+
+  /* 章ラベル：等間隔・中央揃え（安定版準拠） */
+  .chapters{ display:flex; gap:6px; justify-content:space-between; margin:2px 10px 0 10px; font-size:11px; color:#5b6470; }
+  .chapter{ flex:1; text-align:center; opacity:.75; }
+  .chapter.active{ color:#1f5fbf; font-weight:700; opacity:1; }
 
   /* リスト左側インデント（約1文字分） */
   .screen[data-title="別のプランから選ぶ"] .foldCard .list,
@@ -209,18 +248,40 @@
 
   /* 申込完了：行頭記号「■」＋広め余白（約2文字分） */
   #donePostalUnder.doneLine, #doneList .doneLine{ position: relative; padding-left: 2em; }
-  #donePostalUnder.doneLine::before, #doneList .doneLine::before{ content:"■"; position:absolute; left:0.25em; top:0.15em; color: var(--blue-900); font-weight:700; font-size:0.95em; line-height:1; }
+  #donePostalUnder.doneLine::before, #doneList .doneLine::before{
+    content:"■"; position:absolute; left:0.25em; top:0.15em;
+    color: var(--blue-900); font-weight:700; font-size:0.95em; line-height:1; }
 
   /* カバー（表紙）ページ：淡い青背景、ヘッダー白背景透明化、ツール類非表示、中央寄せ */
   body.cover{ background: #e6f0ff !important; }
   body.cover header{ background: transparent !important; border-bottom: none !important; padding: 0 !important; position: static !important; }
   body.cover .headerTop, body.cover .chapters, body.cover .progress, body.cover footer{ display:none !important; }
 
-  .coverWrap{ min-height: 100vh; min-height: 100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 16px; color:#111; }
+  .coverWrap{ min-height: 100vh; min-height: 100svh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:24px 16px; color:#111; }
   .coverCar svg{ width: 72%; max-width: 320px; height: auto; margin-bottom: 18px; }
-  .coverTitle .coverLine{ position: relative; color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em; padding-left: 1.6em; }
-  .coverTitle .coverLine::before{ content:"■"; position:absolute; left:0.2em; top:0.15em; color:#000; font-weight:700; font-size:0.95em; line-height:1; }
-  .coverStartBtn{ margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px; background:#3c7fe6; color:#fff; font-size:16px; font-weight:800; border:none; cursor:pointer; box-shadow:0 2px 0 rgba(15,61,122,.12); transition:transform .06s ease, filter .12s ease; }
+
+  /* 表紙タイトル：黒文字。行頭記号は2行目・3行目のみ（1行目は無し） */
+  .coverTitle .coverLine{
+    position: relative; color:#000; font-size:20px; font-weight:700;
+    line-height:1.75; letter-spacing:.02em; padding-left: 1.6em;
+  }
+  .coverTitle .coverLine:first-child{ padding-left: 0; }
+  .coverTitle .coverLine:not(:first-child)::before{
+    content:"■"; position:absolute; left:0.2em; top:0.15em;
+    color:#000; font-weight:700; font-size:0.95em; line-height:1;
+  }
+  /* 特定行（noBullet）は行頭記号を非表示にする */
+  .coverTitle .coverLine.noBullet{ padding-left:0 !important; }
+  .coverTitle .coverLine.noBullet::before{ content:none !important; }
+
+  .coverStartBtn{
+    margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px;
+    background:#3c7fe6; color:#fff; font-size:16px; font-weight:800; border:none; cursor:pointer;
+    box-shadow:0 2px 0 rgba(15,61,122,.12);
+    transition:transform .06s ease, filter .12s ease;
+  }
   .coverStartBtn:hover{ filter:brightness(1.02); }
   .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
@@ -239,8 +300,30 @@
   @media (prefers-reduced-motion: reduce){
     .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast, .coverCar svg, .coverStartBtn{ transition:none !important; }
   }
+
+  /* フッターの注記：中央寄せ＋フォント12px（残り時間と同等） */
+  .footerNote{
+    text-align:center; font-size:12px !important; line-height:1.5;
+    margin-top:6px; color:var(--blue-900);
+  }
+  .large .footerNote{ font-size:12px !important; }
 </style>
 <!-- END: styles-addon -->
+
+<!-- START: styles-override-airobot -->
+<style>
+  /* AIと対話のアイコンを青地＋白シルエットに統一（「文字を大きく」アイコンと同系の青） */
+  .aiRobot{
+    width:28px; height:28px; border-radius:8px;
+    background-color:#3c7fe6 !important;
+    border:2px solid #d7e0f0;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>') !important;
+    background-repeat:no-repeat !important;
+    background-position:center !important;
+    background-size:70% 70% !important;
+  }
+</style>
+<!-- END: styles-override-airobot -->
 
 </head>
 <body>
@@ -299,10 +382,16 @@
 <!-- START: screen-00-cover -->
 <section class="screen active" data-title="表紙" data-role="cover" aria-label="プロトタイプの表紙">
   <div class="coverWrap">
-    <!-- 自動車のシルエット（白） -->
+    <!-- 自動車のシルエット（白）下側をカットしてタイヤ下の白を非表示 -->
     <div class="coverCar" aria-hidden="true">
 <svg viewBox="0 0 280 120" role="img" aria-label="セダンのシルエット">
-  <path fill="#ffffff" d="M24 80c0-16 14-28 34-28h58c10 0 18-8 26-14 10-8 22-12 34-12h26c20 0 36 12 42 30l8 26c10 3 16 10 16 20 0 6-4 10-10 10H38c-6 0-10-4-10-10 0-8 6-15 16-20h-8c-6 0-12-4-12-12zM70 100a16 16 0 1 0 0-32 16 16 0 0 0 0 32zm132 0a16 16 0 1 0 0-32 16 16 0 0 0 0 32z"/>
+  <defs>
+    <!-- y=92 まで表示（ホイール下は非表示） -->
+    <clipPath id="clipCut"><rect x="0" y="0" width="280" height="92"/></clipPath>
+  </defs>
+  <g clip-path="url(#clipCut)">
+    <path fill="#ffffff" d="M24 80c0-16 14-28 34-28h58c10 0 18-8 26-14 10-8 22-12 34-12h26c20 0 36 12 42 30l8 26c10 3 16 10 16 20 0 6-4 10-10 10H38c-6 0-10-4-10-10 0-8 6-15 16-20h-8c-6 0-12-4-12-12z"/>
+  </g>
   <circle cx="70" cy="85" r="9" fill="none" stroke="#3c7fe6" stroke-width="3"/>
   <circle cx="202" cy="85" r="9" fill="none" stroke="#3c7fe6" stroke-width="3"/>
 </svg>
@@ -311,6 +400,11 @@
     <!-- タイトル群（センタリング／行間広め） -->
     <div class="coverTitle">
       <div class="coverLine">プロトタイプ</div>
+      <!-- 空白行（1行） -->
+      <div aria-hidden="true" style="height:1.75em;"></div>
+      <!-- 追加行：狙い（この行のみ行頭記号を非表示） -->
+      <div class="coverLine noBullet">狙い：以下のイメージ共有</div>
+      <!-- 既存行：行頭記号は表示 -->
       <div class="coverLine">スマらく改修</div>
       <div class="coverLine">e-Auto改修</div>
     </div>
@@ -387,7 +481,7 @@
       <li>車検証（お車情報の確認に使います）</li>
       <li>メールアドレス（控え送付・お知らせ用）</li>
     </ul>
-    <div class="desc">所要時間は約10〜12分。途中保存していつでも再開できます。</div>
+    <div class="desc">所要時間は約10〜12分。途中保存して再開できます。</div>
   </div>
 
   <div class="card">
@@ -723,7 +817,7 @@
   <div class="card">
     <div class="h1">主に運転する方を変更する</div>
 
-    <!-- 氏名（音声入力対応／初期空白・未開始は削除） -->
+    <!-- 氏名（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>氏名</span>
@@ -734,10 +828,10 @@
           音声で入力
         </button>
       </div>
-      <input class="input" id="mainDriverName" placeholder="">
+      <input class="input" id="mainDriverName" placeholder="山田 花子">
     </div>
 
-    <!-- 性別（トグルUIは既存のまま） -->
+    <!-- 性別（choiceトグル形式：男性／女性） -->
     <div class="field">
       <div class="label">性別</div>
       <div class="choiceRow" role="radiogroup" aria-label="性別">
@@ -746,7 +840,7 @@
       </div>
     </div>
 
-    <!-- 郵便番号（音声入力対応／初期空白） -->
+    <!-- 郵便番号（音声入力対応／自動で住所補完） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>郵便番号</span>
@@ -757,10 +851,10 @@
           音声で入力
         </button>
       </div>
-      <input class="input" id="md_zip" placeholder="">
+      <input class="input" id="md_zip" placeholder="1234567" oninput="mdZipToAddress(this.value)">
     </div>
 
-    <!-- 住所（音声入力対応／初期空白） -->
+    <!-- 住所（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>住所</span>
@@ -771,10 +865,10 @@
           音声で入力
         </button>
       </div>
-      <input class="input" id="md_addr" placeholder="">
+      <input class="input" id="md_addr" placeholder="東京都港区赤坂1-1-1 〇〇マンション101">
     </div>
 
-    <!-- 電話番号（音声入力対応／初期空白） -->
+    <!-- 電話番号（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>電話番号</span>
@@ -785,10 +879,10 @@
           音声で入力
         </button>
       </div>
-      <input class="input" id="md_phone" placeholder="">
+      <input class="input" id="md_phone" placeholder="09012345678">
     </div>
 
-    <!-- 生年月日（横幅はお客様情報と同等に） -->
+    <!-- 生年月日（年・月・日セレクト） -->
     <div class="field">
       <div class="label">生年月日</div>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -798,7 +892,7 @@
       </div>
     </div>
 
-    <!-- 勤務先（音声入力対応／初期空白） -->
+    <!-- 勤務先（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>勤務先</span>
@@ -809,7 +903,7 @@
           音声で入力
         </button>
       </div>
-      <input class="input" id="md_company" placeholder="">
+      <input class="input" id="md_company" placeholder="ABC株式会社">
     </div>
 
     <button class="btnPrimary" onclick="goToTitle('運転者の範囲と年齢条件')">OK</button>
@@ -1435,7 +1529,7 @@
 
   </main>
 
- <!-- START: footer -->
+<!-- START: footer -->
 <footer>
   <div class="footerRow">
     <div style="display:flex; gap:6px;">
@@ -1447,7 +1541,7 @@
       <button class="supportItem" onclick="openNotice('本番ではチャット画面に推移します。')">チャット</button>
     </div>
   </div>
-  <div class="footerNote">サポート受付：平日 9:00–18:00（年末年始を除く）</div>
+  <div class="footerNote">受付時間：平日 9:00–18:00（年末年始を除く）</div>
 </footer>
 <!-- END: footer -->
 </div>
@@ -1646,6 +1740,28 @@
       return true;
     }catch(e){ openNotice('生年月日の選択でエラーが発生しました。再度お試しください。'); return false; } }
 
+  // 主運転者（9番）の生年月日プルダウン（現在年まで）
+  function populateMdDobSelectsSafe(){ try{
+      const ySel = document.getElementById('md_dobYear');
+      const mSel = document.getElementById('md_dobMonth');
+      const dSel = document.getElementById('md_dobDay');
+      if (!ySel || !mSel || !dSel) return;
+      if (ySel.options.length <= 1){
+        const now=new Date(), endY=now.getFullYear(), startY=endY-100;
+        for(let y=startY;y<=endY;y++){
+          const o=document.createElement('option'); o.value=String(y);
+          o.textContent=formatYearWithEra(y);
+          ySel.appendChild(o);
+        }
+      }
+      if (mSel.options.length <= 1){
+        for(let m=1;m<=12;m++){ const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; mSel.appendChild(o); }
+      }
+      if (dSel.options.length <= 1){
+        for(let d=1;d<=31;d++){ const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; dSel.appendChild(o); }
+      }
+    }catch(e){ console.error('populateMdDobSelectsSafe error:', e); } }
+
   function populateFirstRegSelectsSafe(){ try{
       const ySel = document.getElementById('firstRegYear');
       const mSel = document.getElementById('firstRegMonth');
@@ -1687,15 +1803,11 @@
       s.classList.toggle('anim-in', isActive);
     });
 
-    // カバー表示切替（背景・ヘッダー/フッター/進捗の非表示）
     document.body.classList.toggle('cover', isCover(i));
-
     scrollToTop();
 
-    // カバーは進捗表示を更新しない
     if (!isCover(i)){
       const visualStep = (() => {
-        // 先頭から現在までのカバー数を差し引き、1始まりで算出
         const coverCount = screens.slice(0, i+1).filter(s=> s.dataset.role==='cover').length;
         return Math.max(1, Math.min(MAX_STEPS, i+1 - coverCount));
       })();
@@ -1742,6 +1854,7 @@
     try{
       if (curTitle==='免許証の有効期限' || curTitle==='免許証の色'){ populateDateSelectsSafe(); }
       if (curTitle==='お客様情報の編集'){ populateDobSelectsSafe(); }
+      if (curTitle==='主に運転する方の編集'){ populateMdDobSelectsSafe(); }
       if (curTitle==='車検証の情報'){ populateFirstRegSelectsSafe(); }
     }catch(e){}
 
@@ -1796,7 +1909,8 @@
     if (guidedSpeaking) { stopGuidedVoice(); showToast('音声を停止しました'); return; }
     const queue=buildGuidedQueue();
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-    const opts={ rate:0.88, volume:1.0 };
+    // 話速をやや早めに
+    const opts={ rate:1.0, volume:1.0 };
     const merged=isIOS && (titles()[step] !== 'お客様情報の確認')
       ? [{text:queue.map(q=>q.text).join('。'), pause:0}] : queue;
     speakQueue(merged, opts); showToast('音声で解説を開始しました（再タップで停止）');
@@ -1859,19 +1973,45 @@
       const list=document.getElementById('custList');
       const lines=(list?.innerText||'').split('\n').map(s=>s.trim()).filter(Boolean);
       const name=(lines.find(v=>v.startsWith('氏名：'))||'').replace('氏名：','').trim();
+      const gender=(lines.find(v=>v.startsWith('性別：'))||'').replace('性別：','').trim();
       const addr=(lines.find(v=>v.startsWith('住所：'))||'').replace('住所：','').trim();
       const phone=(lines.find(v=>v.startsWith('電話番号：'))||'').replace('電話番号：','').trim();
       const dob=(lines.find(v=>v.startsWith('生年月日：'))||'').replace('生年月日：','').trim();
+      const company=(lines.find(v=>v.startsWith('勤務先：'))||'').replace('勤務先：','').trim();
       const q=[];
       q.push({text:'変更はございますか？ご登録内容を読み上げます。', pause:ITEM_PAUSE});
-      if(name){ q.push({text:`氏名は、${name}`, pause:NAME_BRIEF_PAUSE}); q.push({text:'サマ。', pause:ITEM_PAUSE}); }
+
+      if(name){
+        q.push({text:`氏名は、${name}`, pause:NAME_BRIEF_PAUSE});
+        // 「サマ。」を氏名の直後に復活
+        q.push({text:'サマ。', pause:ITEM_PAUSE});
+        // 性別を氏名の後に読み上げ
+        const g = gender.includes('女性') ? 'ジョセイ' : 'ダンセイ';
+        q.push({text:`セイベツワ　${g}`, pause:ITEM_PAUSE});
+      }
+
       if(addr){
         const addrSegs=buildAddressSegments(addr);
-        if(addrSegs.length){ q.push({text:'住所は、', pause:SUB_PAUSE}); addrSegs.forEach((s,i)=> q.push({text:s+(i===addrSegs.length-1?'':'、'), pause:SUB_PAUSE})); q.push({text:'。', pause:ITEM_PAUSE}); }
-        else{ q.push({text:`住所は、${addr}。`, pause:ITEM_PAUSE}); }
+        if(addrSegs.length){
+          q.push({text:'住所は、', pause:SUB_PAUSE});
+          addrSegs.forEach((s,i)=> q.push({text:s+(i===addrSegs.length-1?'':'、'), pause:SUB_PAUSE}));
+          q.push({text:'。', pause:ITEM_PAUSE});
+        }else{
+          q.push({text:`住所は、${addr}。`, pause:ITEM_PAUSE});
+        }
       }
+
       if(phone){ q.push({text:`電話番号は、${formatPhoneNo(phone)}。`, pause:ITEM_PAUSE}); }
-      if(dob){ q.push({text:`生年月日は${dob.replace('日','')}ニチ`, pause:ITEM_PAUSE}); }
+
+      if(dob){
+        q.push({text:`生年月日は${dob.replace('日','')}ニチ`, pause:ITEM_PAUSE});
+        // 勤務先を生年月日の後に読み上げ
+        if(company){
+          const compReading = (company==='ABC株式会社') ? 'エービーシーカブシキガイシャ' : company;
+          q.push({text:`キンムサキワ　${compReading}`, pause:ITEM_PAUSE});
+        }
+      }
+
       q.push({text:'内容に変更はございますか。変更がある場合は、変更するボタンを押してください。', pause:0});
       return q;
     }
@@ -2183,6 +2323,7 @@
     document.addEventListener('DOMContentLoaded', function(){
       populateDateSelectsSafe();
       populateDobSelectsSafe();
+      populateMdDobSelectsSafe();
       populateFirstRegSelectsSafe();
       const l=document.getElementById('lblLarge');
       if(l) l.textContent = document.body.classList.contains('large') ? '文字を小さく' : '文字を大きく';
@@ -2193,10 +2334,8 @@
         const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
         if(coverIdx>=0){
           setActive(coverIdx);
-          // 初期フォーカスは「デモ開始」ボタンへ
           setTimeout(()=>{ const btn=document.querySelector('.coverStartBtn'); if(btn) btn.focus(); },0);
         }else{
-          // カバー無しなら従来どおり
           setActive(0);
         }
       }catch(e){ setActive(0); }
@@ -2248,7 +2387,6 @@
       const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
       const firstIdx = titles().indexOf('手続き開始'); // 既存1画面目
       if (firstIdx>=0){
-        // 履歴にカバーを積んでおけば「戻る」でカバーに戻れる（既存prevのまま）
         if (coverIdx>=0){ pushHistory(coverIdx); }
         setActive(firstIdx);
       }
@@ -2511,7 +2649,9 @@
       let v = String(valueText||'').trim();
       if (modeDigitsOnly) v = v.replace(/[^\d]/g,'');
       inp.value = v;
-      if (fieldId === 'zip') mockZipToAddress(v);
+      // 自動補完・整形
+      if (fieldId === 'zip') { mockZipToAddress(v); }
+      if (fieldId === 'md_zip' && typeof window.mdZipToAddress === 'function') { mdZipToAddress(v); }
       if (fieldId === 'plate' && v){
         const digits = v.replace(/[^\d]/g,'').slice(-4);
         inp.value = digits;
@@ -2533,6 +2673,11 @@
       else if (targetFieldId === 'vin') { putValue(targetFieldId, 'A000000000'); }
       else if (targetFieldId === 'plate') { putValue(targetFieldId, '1234'); }
       else if (targetFieldId === 'company') { putValue(targetFieldId, 'ABC株式会社'); }
+      // 主運転者（md_系）のサンプル値
+      else if (targetFieldId === 'md_zip') { putValue(targetFieldId, '1234567'); }
+      else if (targetFieldId === 'md_addr') { putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); }
+      else if (targetFieldId === 'md_phone') { putValue(targetFieldId, '09012345678'); }
+      else if (targetFieldId === 'md_company') { putValue(targetFieldId, 'ABC株式会社'); }
       else { putValue(targetFieldId, 'サンプル'); }
     } else {
       putName('山田 花子');
@@ -2628,5 +2773,22 @@
 })();
 </script>
 <!-- END: js-voice-input -->
+
+<!-- START: js-md-zip-helper -->
+<script>
+/* 主運転者（md_）向け 郵便番号→住所の簡易自動補完 */
+(function(){
+  window.mdZipToAddress = function(zip){
+    try{
+      const z = String(zip || '').replace(/[^\d]/g,'');
+      if (z.length === 7){
+        const addr = document.getElementById('md_addr');
+        if (addr) addr.value = '東京都港区赤坂';
+      }
+    }catch(e){}
+  };
+})();
+</script>
+<!-- END: js-md-zip-helper -->
 
 </html>
