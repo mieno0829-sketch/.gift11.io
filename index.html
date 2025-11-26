@@ -194,37 +194,45 @@
   .heroStrip svg{ display:block; width:18px; height:18px; }
   .heroChip{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
 
-  /* ヘッダーのボタン（アイコン＋ラベル）小さめ固定・改行抑制・28pxアイコン */
+  /* ヘッダー：ボタン・ラベル統一（13px固定／1行維持） */
+  .headerTop{ display:flex; align-items:center; justify-content:space-between; gap:6px; flex-wrap:nowrap; }
+  .toolbar{ display:flex; gap:6px; align-items:center; flex-wrap:nowrap; }
   .headerTop .btn{
     display:inline-flex; align-items:center; gap:6px;
     padding:4px 6px; border:none; background:transparent;
     color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;
   }
   .headerTop .btn svg{ width:28px; height:28px; display:block; }
-
-  /* 文字を大きく：ボーダーなし・透過背景（安定版準拠） */
+  .aiAgent{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; }
+  .aiLabel{ font-size:13px; color:var(--blue-900); white-space:nowrap; }
   .headerTop .toggleLarge{
     border:none !important; border-radius:0 !important; background:transparent !important;
     padding:4px 6px !important; color:var(--blue-800) !important; font-size:13px; white-space:nowrap;
   }
-
-  /* 拡大時もラベルは13px固定（ヘッダーのみ） */
   .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
-  /* 公式バッジ（小さなピル型） */
   .badgeOfficial{
     display:inline-flex; align-items:center; justify-content:center;
     padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
     background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
   }
 
-  /* AIと対話：青地＋白シルエットに統一（「文字を大きく」と同系の青） */
+  /* AIと対話アイコン：青地＋白い人型（ヘッダーと統一） */
   .aiRobot{
     width:28px; height:28px; border-radius:8px;
     background-color:#3c7fe6 !important;
     border:2px solid #d7e0f0;
     background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>');
     background-repeat:no-repeat; background-position:center; background-size:70% 70%;
+  }
+
+  /* 狭幅端末向け微調整：アイコン縮小＆余白詰め */
+  @media (max-width:360px){
+    .headerTop .btn svg{ width:24px; height:24px; }
+    .aiRobot{ width:24px; height:24px; }
+    .toolbar{ gap:4px; }
+    .headerTop .btn{ gap:4px; padding:4px 4px; }
+    .aiAgent{ gap:4px; }
   }
 
   /* 進捗バー：四分割ガイド（25/50/75%）を表示 */
@@ -237,7 +245,7 @@
       linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 74.5%, rgba(31,95,191,.18) 75%, rgba(0,0,0,0) 75.5%);
   }
 
-  /* 章ラベル：等間隔・中央揃え（安定版準拠） */
+  /* 章ラベル：等間隔・中央揃え */
   .chapters{ display:flex; gap:6px; justify-content:space-between; margin:2px 10px 0 10px; font-size:11px; color:#5b6470; }
   .chapter{ flex:1; text-align:center; opacity:.75; }
   .chapter.active{ color:#1f5fbf; font-weight:700; opacity:1; }
@@ -252,7 +260,7 @@
     content:"■"; position:absolute; left:0.25em; top:0.15em;
     color: var(--blue-900); font-weight:700; font-size:0.95em; line-height:1; }
 
-  /* カバー（表紙）ページ：淡い青背景、ヘッダー白背景透明化、ツール類非表示、中央寄せ */
+  /* カバー（表紙）ページ：淡い青背景、ツール非表示、中央寄せ */
   body.cover{ background: #e6f0ff !important; }
   body.cover header{ background: transparent !important; border-bottom: none !important; padding: 0 !important; position: static !important; }
   body.cover .headerTop, body.cover .chapters, body.cover .progress, body.cover footer{ display:none !important; }
@@ -262,17 +270,13 @@
     text-align:center; padding:24px 16px; color:#111; }
   .coverCar svg{ width: 72%; max-width: 320px; height: auto; margin-bottom: 18px; }
 
-  /* 表紙タイトル：黒文字。行頭記号は2行目・3行目のみ（1行目は無し） */
+  /* 表紙タイトル：行頭■は廃止（本文で「・」を入力） */
   .coverTitle .coverLine{
     position: relative; color:#000; font-size:20px; font-weight:700;
-    line-height:1.75; letter-spacing:.02em; padding-left: 1.6em;
+    line-height:1.75; letter-spacing:.02em; padding-left: 0;
   }
-  .coverTitle .coverLine:first-child{ padding-left: 0; }
-  .coverTitle .coverLine:not(:first-child)::before{
-    content:"■"; position:absolute; left:0.2em; top:0.15em;
-    color:#000; font-weight:700; font-size:0.95em; line-height:1;
-  }
-  /* 特定行（noBullet）は行頭記号を非表示にする */
+  .coverTitle .coverLine::before{ content:none !important; }
+  /* 「noBullet」指定は互換のため維持（効果は同じ） */
   .coverTitle .coverLine.noBullet{ padding-left:0 !important; }
   .coverTitle .coverLine.noBullet::before{ content:none !important; }
 
@@ -285,7 +289,7 @@
   .coverStartBtn:hover{ filter:brightness(1.02); }
   .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
-  /* 年・月・日セレクトの幅最適化（復旧）＋主運転者側も同様 */
+  /* 年・月・日セレクトの幅最適化＋md_*も同様 */
   #licenseYear, #dobYear, #firstRegYear{ flex: 1 1 54%; min-width: 155px; }
   #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex: 0 0 92px; max-width: 100px; }
   #md_dobYear{ flex: 1 1 54%; min-width: 155px; }
@@ -301,7 +305,7 @@
     .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast, .coverCar svg, .coverStartBtn{ transition:none !important; }
   }
 
-  /* フッターの注記：中央寄せ＋フォント12px（残り時間と同等） */
+  /* フッター注記：中央寄せ＋フォント12px（残り時間と同一） */
   .footerNote{
     text-align:center; font-size:12px !important; line-height:1.5;
     margin-top:6px; color:var(--blue-900);
@@ -404,9 +408,9 @@
       <div aria-hidden="true" style="height:1.75em;"></div>
       <!-- 追加行：狙い（この行のみ行頭記号を非表示） -->
       <div class="coverLine noBullet">狙い：以下のイメージ共有</div>
-      <!-- 既存行：行頭記号は表示 -->
-      <div class="coverLine">スマらく改修</div>
-      <div class="coverLine">e-Auto改修</div>
+      <!-- 行頭記号は本文に「・」を明示 -->
+      <div class="coverLine">・スマらく改修</div>
+      <div class="coverLine">・e-Auto改修</div>
     </div>
 
     <!-- 開始ボタン（背景青・文字白） -->
@@ -459,7 +463,9 @@
       </div>
     </div>
 
-    <div class="h1">できます！</div>
+    <!-- 「できます！」は削除し、空白行を挿入 -->
+    <div aria-hidden="true" style="height:0.9em;"></div>
+
     <div class="list">・スマホまたはPCで手続きできます（途中保存OK）</div>
     <div class="list">・紙の継続証の郵送も選べます（完了画面で指定）</div>
     <div class="list">・困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
