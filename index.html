@@ -194,7 +194,7 @@
   .heroStrip svg{ display:block; width:18px; height:18px; }
   .heroChip{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
 
-  /* ヘッダー：左寄せ（1行維持）、ボタン・ラベル統一（13px/600） */
+  /* ヘッダー：左寄せで1行維持、ラベル13px/600の統一 */
   .headerTop{ display:flex; align-items:center; justify-content:flex-start; gap:6px; flex-wrap:nowrap; }
   .toolbar{ display:flex; gap:6px; align-items:center; flex-wrap:nowrap; flex:0 0 auto; }
   .headerTop .btn{
@@ -202,47 +202,35 @@
     padding:4px 6px; border:none; background:transparent;
     color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;
   }
-  .headerTop .btn svg{ width:28px; height:28px; display:block; }
+  .headerTop .btn svg{ width:28px; height:28px; display:block; } /* アイコン維持 */
 
-  /* AIと対話：ラベル見た目を「文字を大きく」と揃える＋左寄せ維持 */
+  /* AIと対話（右肩） */
   .aiAgent{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-left:6px; }
   .aiLabel{ font-size:13px; font-weight:600; color:var(--blue-800); white-space:nowrap; }
 
-  /* 文字を大きく：ボーダーなし・透過背景（安定版準拠） */
+  /* 文字拡大トグル */
   .headerTop .toggleLarge{
     border:none !important; border-radius:0 !important; background:transparent !important;
     padding:4px 6px !important; color:var(--blue-800) !important; font-size:13px; white-space:nowrap;
   }
-
-  /* 拡大時もラベルは13px固定（ヘッダーのみ） */
   .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
-  /* 公式バッジ（小さなピル型） */
+  /* 公式バッジ */
   .badgeOfficial{
     display:inline-flex; align-items:center; justify-content:center;
     padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
     background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
   }
 
-  /* AIと対話アイコン：青地＋白い人型（ヘッダーと統一） */
+  /* AIアイコン（青地＋白） */
   .aiRobot{
     width:28px; height:28px; border-radius:8px;
-    background-color:#3c7fe6 !important;
-    border:2px solid #d7e0f0;
+    background-color:#3c7fe6 !important; border:2px solid #d7e0f0;
     background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>');
     background-repeat:no-repeat; background-position:center; background-size:70% 70%;
   }
 
-  /* 狭幅端末向け微調整：アイコン縮小＆余白詰め（1行維持） */
-  @media (max-width:360px){
-    .headerTop .btn svg{ width:24px; height:24px; }
-    .aiRobot{ width:24px; height:24px; }
-    .toolbar{ gap:4px; }
-    .headerTop .btn{ gap:4px; padding:4px 4px; }
-    .aiAgent{ gap:4px; margin-left:4px; }
-  }
-
-  /* 進捗バー：四分割ガイド（25/50/75%）を表示 */
+  /* 進捗バー：四分割ガイド */
   .bar{ position:relative; }
   .bar::before{
     content:""; position:absolute; inset:0; pointer-events:none; border-radius:999px;
@@ -252,39 +240,24 @@
       linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 74.5%, rgba(31,95,191,.18) 75%, rgba(0,0,0,0) 75.5%);
   }
 
-  /* 章ラベル：等間隔・中央揃え */
+  /* 章ラベル */
   .chapters{ display:flex; gap:6px; justify-content:space-between; margin:2px 10px 0 10px; font-size:11px; color:#5b6470; }
   .chapter{ flex:1; text-align:center; opacity:.75; }
   .chapter.active{ color:#1f5fbf; font-weight:700; opacity:1; }
 
-  /* リスト左側インデント（約1文字分） */
-  .screen[data-title="別のプランから選ぶ"] .foldCard .list,
-  .screen[data-title="最終見積のまとめ"] .foldCard .list { padding-left: 1.6em !important; }
-
-  /* 申込完了：行頭記号「■」＋広め余白（約2文字分） */
-  #donePostalUnder.doneLine, #doneList .doneLine{ position: relative; padding-left: 2em; }
-  #donePostalUnder.doneLine::before, #doneList .doneLine::before{
-    content:"■"; position:absolute; left:0.25em; top:0.15em;
-    color: var(--blue-900); font-weight:700; font-size:0.95em; line-height:1; }
-
-  /* カバー（表紙）ページ：淡い青背景、ツール非表示、中央寄せ */
-  body.cover{ background: #e6f0ff !important; }
-  body.cover header{ background: transparent !important; border-bottom: none !important; padding: 0 !important; position: static !important; }
+  /* カバー（表紙） */
+  body.cover{ background:#e6f0ff !important; }
+  body.cover header{ background:transparent !important; border-bottom:none !important; padding:0 !important; position:static !important; }
   body.cover .headerTop, body.cover .chapters, body.cover .progress, body.cover footer{ display:none !important; }
 
-  .coverWrap{ min-height: 100vh; min-height: 100svh;
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; padding:24px 16px; color:#111; }
-  .coverCar svg{ width: 72%; max-width: 320px; height: auto; margin-bottom: 18px; }
+  .coverWrap{ min-height:100vh; min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 16px; color:#111; }
+  .coverCar svg{ width:72%; max-width:320px; height:auto; margin-bottom:18px; }
 
-  /* 表紙タイトル：行頭■は廃止（本文で「・」を入力） */
-  .coverTitle .coverLine{
-    position: relative; color:#000; font-size:20px; font-weight:700;
-    line-height:1.75; letter-spacing:.02em; padding-left: 0;
-  }
+  /* 表紙タイトル（本文で「・」記載方式） */
+  .coverTitle .coverLine{ position:relative; color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em; padding-left:0; }
   .coverTitle .coverLine::before{ content:none !important; }
   .coverTitle .coverLine.noBullet{ padding-left:0 !important; }
-  .coverTitle .coverLine.noBullet::before{ content:none !important; }
+  .coverTitle .coverLine.noBullet::before{ content:none !重要; }
 
   .coverStartBtn{
     margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px;
@@ -295,28 +268,44 @@
   .coverStartBtn:hover{ filter:brightness(1.02); }
   .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
-  /* 年・月・日セレクトの幅最適化＋md_*も同様 */
-  #licenseYear, #dobYear, #firstRegYear{ flex: 1 1 54%; min-width: 155px; }
-  #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex: 0 0 92px; max-width: 100px; }
-  #md_dobYear{ flex: 1 1 54%; min-width: 155px; }
-  #md_dobMonth, #md_dobDay{ flex: 0 0 92px; max-width: 100px; }
+  /* 年・月・日セレクト（年縮小／狭幅で更に微縮） */
+  #licenseYear, #dobYear, #firstRegYear{ flex:1 1 48%; min-width:136px; }
+  #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex:0 0 92px; max-width:100px; }
+  #md_dobYear{ flex:1 1 48%; min-width:136px; }
+  #md_dobMonth, #md_dobDay{ flex:0 0 92px; max-width:100px; }
+
   @media (max-width:360px){
-    #licenseYear, #dobYear, #firstRegYear{ min-width: 148px; }
-    #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex-basis: 86px; max-width: 92px; }
-    #md_dobYear{ min-width: 148px; }
-    #md_dobMonth, #md_dobDay{ flex-basis: 86px; max-width: 92px; }
+    .toolbar{ gap:2px; }
+    .headerTop .btn{ gap:2px; padding:3px 4px; }
+    .headerTop .toggleLarge{ padding:3px 4px !important; }
+    .aiAgent{ gap:2px; margin-left:2px; flex-shrink:1; }
+
+    #licenseYear, #dobYear, #firstRegYear, #md_dobYear{ min-width:126px; flex-basis:46%; }
+    #licenseMonth, #licenseDay, #dobMonth, #dobDay, #md_dobMonth, #md_dobDay, #firstRegMonth{ flex-basis:82px; max-width:88px; }
+    select#licenseMonth, select#licenseDay, select#dobMonth, select#dobDay, select#md_dobMonth, select#md_dobDay, select#firstRegMonth{ font-size:15px; padding:7px; }
   }
 
   @media (prefers-reduced-motion: reduce){
     .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast, .coverCar svg, .coverStartBtn{ transition:none !important; }
   }
 
-  /* フッター注記：中央寄せ＋フォント12px（残り時間と同一） */
-  .footerNote{
-    text-align:center; font-size:12px !important; line-height:1.5;
-    margin-top:6px; color:var(--blue-900);
-  }
+  /* フッター注記 */
+  .footerNote{ text-align:center; font-size:12px !important; line-height:1.5; margin-top:6px; color:var(--blue-900); }
   .large .footerNote{ font-size:12px !important; }
+
+  /* フッター左側ボタン同幅（グリッド） */
+  .footerActions{ display:grid; grid-template-columns: 1fr 1fr; gap:6px; width:100%; }
+  .footerActions .ghost{ width:100%; }
+
+  /* 申込完了：行頭記号「■」の復活（各行） */
+  #donePostalUnder.doneLine, #doneList .doneLine{ position:relative; padding-left:1.8em; }
+  #donePostalUnder.doneLine::before, #doneList .doneLine::before{
+    content:"■"; position:absolute; left:0.25em; top:0.1em; color:var(--blue-900);
+    font-weight:700; font-size:0.95em; line-height:1;
+  }
+
+  /* 進捗の1行化用：進捗テキストと残り時間を横並びに */
+  .progressTop{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 </style>
 <!-- END: styles-addon -->
 
@@ -343,11 +332,9 @@
 <!-- START: header-top -->
 <div class="headerTop">
   <div class="toolbar">
-    <!-- 公式バッジ（復活） -->
     <span class="badgeOfficial" aria-label="公式バッジ">公式</span>
 
     <a href="#" class="btn" id="btnSpeak" onclick="toggleGuidedVoice()">
-      <!-- 波形アイコン（音声ガイド） -->
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <path fill="#3c7fe6" d="M2 12h2c.4 0 .7-.3.8-.7l.5-3.2c.1-.6 1-.6 1.1 0l.7 4.2c.1.6 1 .6 1.1 0l1.1-6.4c.1-.6 1-.6 1.1 0l1.2 8c.1.6 1 .6 1.1 0l1-5.4c.1-.6 1-.6 1.1 0l.8 4.5c.1.4.4.7.8.7h3c.6 0 1 .4 1 1s-.4 1-1 1h-3c-.4 0-.7.3-.8.7l-.8 4.5c-.1.6-1 .6-1.1 0l-1-5.4c-.1-.6-1-.6-1.1 0l-1.2 8c-.1.6-1 .6-1.1 0l-1.1-6.4c-.1-.6-1-.6-1.1 0l-.7 4.2c-.1.6-1 .6-1.1 0l-.5-3.2c-.1-.4-.4-.7-.8-.7H2c-.6 0-1-.4-1-1s.4-1 1-1z"/>
       </svg>
@@ -355,14 +342,14 @@
     </a>
 
     <a href="#" class="btn toggleLarge" onclick="toggleLarge()">
-      <!-- “あ”アイコン風（角丸の中に文字） -->
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <rect x="2" y="3" width="20" height="18" rx="4" fill="#3c7fe6"></rect>
         <text x="12" y="16" text-anchor="middle" font-size="12" fill="#ffffff" font-weight="700">あ</text>
       </svg>
-      <span id="lblLarge">文字を大きく</span>
+      <span id="lblLarge">文字拡大</span>
     </a>
   </div>
+
   <div class="aiAgent" onclick="openAiChoice()">
     <div class="aiRobot" aria-hidden="true" title="AIエージェント"></div>
     <div class="aiLabel">AIと対話</div>
@@ -372,7 +359,10 @@
 
 <!-- START: header-progress -->
 <div class="progress">
-  <div id="progressText">進捗 1/25（最大）</div>
+  <div class="progressTop">
+    <div id="progressText">進捗 1/25（最大）</div>
+    <div id="timeLeft">残り約11分</div>
+  </div>
   <div class="bar"><div id="progressBar" role="progressbar" aria-label="進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4"></div></div>
   <div class="chapters" aria-label="進捗の章">
     <span id="chapInput" class="chapter">お車情報</span>
@@ -380,7 +370,6 @@
     <span id="chapExplain" class="chapter">更新手続</span>
     <span id="chapApply" class="chapter">申込</span>
   </div>
-  <div id="timeLeft">残り約11分</div>
 </div>
 <!-- END: header-progress -->
 
@@ -390,36 +379,28 @@
 
 
 <!-- START: screen-00-cover -->
-<section class="screen active" data-title="表紙" data-role="cover" aria-label="プロトタイプの表紙">
+<section class="screen active" data-title="表紙" data-role="cover" aria-label="プロトタイプの表紙（セダン・ラインアート／タイヤ重ね＋青塗り）">
   <div class="coverWrap">
-    <!-- 自動車のシルエット（白）下側をカットしてタイヤ下の白を非表示 -->
+    <!-- セダン：青のアウトライン。タイヤは車体ラインに少し重ね、青で塗りつぶし -->
     <div class="coverCar" aria-hidden="true">
-<svg viewBox="0 0 280 120" role="img" aria-label="セダンのシルエット">
-  <defs>
-    <!-- y=92 まで表示（ホイール下は非表示） -->
-    <clipPath id="clipCut"><rect x="0" y="0" width="280" height="92"/></clipPath>
-  </defs>
-  <g clip-path="url(#clipCut)">
-    <path fill="#ffffff" d="M24 80c0-16 14-28 34-28h58c10 0 18-8 26-14 10-8 22-12 34-12h26c20 0 36 12 42 30l8 26c10 3 16 10 16 20 0 6-4 10-10 10H38c-6 0-10-4-10-10 0-8 6-15 16-20h-8c-6 0-12-4-12-12z"/>
-  </g>
-  <circle cx="70" cy="85" r="9" fill="none" stroke="#3c7fe6" stroke-width="3"/>
-  <circle cx="202" cy="85" r="9" fill="none" stroke="#3c7fe6" stroke-width="3"/>
+<svg viewBox="0 0 280 120" role="img" aria-label="セダンのラインアート（タイヤ青塗り）">
+  <!-- 車体輪郭線：線幅は視認性を確保 -->
+  <path d="M30 78c0-10 12-22 28-26h60c10 0 18-6 26-12 12-8 24-12 36-12h26c20 0 34 12 40 28l6 16c6 2 10 8 10 14 0 6-4 10-10 10H42c-6 0-10-4-10-10 0-6 4-12 10-16h-4c-6 0-8-2-8-6z"
+        fill="none" stroke="#3c7fe6" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <!-- タイヤ：少し大きく＆位置をわずかに下げて車体輪郭に重ね、青で塗りつぶし -->
+  <circle cx="82" cy="91" r="10.5" fill="#3c7fe6" stroke="#3c7fe6" stroke-width="3"/>
+  <circle cx="204" cy="91" r="10.5" fill="#3c7fe6" stroke="#3c7fe6" stroke-width="3"/>
 </svg>
     </div>
 
-    <!-- タイトル群（センタリング／行間広め） -->
     <div class="coverTitle">
       <div class="coverLine">プロトタイプ</div>
-      <!-- 空白行（1行） -->
       <div aria-hidden="true" style="height:1.75em;"></div>
-      <!-- 追加行：狙い（この行のみ行頭記号を非表示） -->
       <div class="coverLine noBullet">狙い：以下のイメージ共有</div>
-      <!-- 行頭記号は本文に「・」を明示 -->
       <div class="coverLine">・スマらく改修</div>
-      <div class="coverLine">・e-Auto改修</div>
+      <div class="coverLine">・e-Auto更新</div>
     </div>
 
-    <!-- 開始ボタン（背景青・文字白） -->
     <button class="coverStartBtn" onclick="startDemo()" aria-label="デモを開始する">デモ開始</button>
   </div>
 </section>
@@ -460,7 +441,6 @@
         所要時間約12分
       </div>
       <div class="heroChip">
-        <!-- ヘッダーと統一：青四角に白い人型 -->
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
           <rect x="1" y="1" width="22" height="22" rx="5" fill="#3c7fe6"/>
           <path fill="#ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/>
@@ -469,12 +449,10 @@
       </div>
     </div>
 
-    <!-- 「できます！」は削除し、空白行を挿入 -->
+    <!-- 空白行 -->
     <div aria-hidden="true" style="height:0.9em;"></div>
 
-    <div class="list">・スマホまたはPCで手続きできます（途中保存OK）</div>
-    <div class="list">・紙の継続証の郵送も選べます（完了画面で指定）</div>
-    <div class="list">・困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
+    <!-- 「はじめての方はコチラ（使い方の1分動画）」をリストの上に移動 -->
     <a href="#" class="videoChip" role="button"
        onclick="openNotice('本番では１分動画に推移します')"
        aria-label="はじめての方はコチラ（使い方の1分動画）">
@@ -484,6 +462,10 @@
       </svg>
       はじめての方はコチラ（使い方の1分動画）
     </a>
+
+    <div class="list" style="margin-top:8px;">・スマホまたはPCで手続きできます（途中保存OK）</div>
+    <div class="list">・紙の継続証の郵送も選べます（完了画面で指定）</div>
+    <div class="list">・困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
   </div>
 
   <div class="card">
@@ -1462,7 +1444,7 @@
     </section>
     <!-- END: screen-21-contact-method -->
 
- <!-- START: screen-22-web-vs-paper -->
+<!-- START: screen-22-web-vs-paper -->
 <section class="screen" data-title="WEBと書面の選択">
   <div class="card">
     <div class="h1">WEBと書面の受け取り方法を選ぶ</div>
@@ -1495,8 +1477,9 @@
     <div class="field">
       <div class="label">申込書控えのPDF送付</div>
       <div class="choiceRow">
-        <button class="choiceToggle" id="choice_pdf_yes" onclick="toggleChoice('pdf_yes')">必要</button>
+        <!-- ボタンの左右順を入れ替え：不要 → 必要 -->
         <button class="choiceToggle" id="choice_pdf_no" onclick="toggleChoice('pdf_no')">不要</button>
+        <button class="choiceToggle" id="choice_pdf_yes" onclick="toggleChoice('pdf_yes')">必要</button>
       </div>
     </div>
 
@@ -1531,7 +1514,8 @@
     <div class="item" id="receiptNo">受付番号：ABC12345</div>
     <div class="item doneLine" id="donePostalUnder" style="display:none; margin-top:6px;">継続証を郵送いたします。</div>
     <ul class="list" id="doneList" style="margin-top:6px; list-style:none; padding-left:0;">
-      <li class="doneLine" id="donePdf" style="display:none;">控え（PDF）を送信しました。</li>
+      <li class="doneLine" id="donePdf" style="display:none;">申込書控え（PDF）を送信しました。</li>
+      <li class="doneLine" id="doneImpPdf" style="display:none;">重要事項全文（PDF）を送信しました。</li>
       <li class="doneLine" id="donePostal" style="display:none;">継続証を郵送いたします。</li>
     </ul>
     <button class="btnPrimary" onclick="openNotice('本番では払込方法の確認・変更の画面に推移します。デモ画面はここで終了です。')">次へ（払込方法の確認）</button>
@@ -1544,9 +1528,10 @@
 <!-- START: footer -->
 <footer>
   <div class="footerRow">
-    <div style="display:flex; gap:6px;">
-      <button class="ghost" onclick="saveDraft()">途中保存</button>
+    <!-- 左側の2ボタンをグリッドで同幅化 -->
+    <div class="footerActions">
       <button class="ghost" onclick="prev()">戻る</button>
+      <button class="ghost" onclick="saveDraft()">途中保存</button>
     </div>
     <div style="display:flex; gap:6px;">
       <button class="supportItem" onclick="openNotice('本番では電話予約画面に推移します。')">電話予約</button>
@@ -1752,7 +1737,6 @@
       return true;
     }catch(e){ openNotice('生年月日の選択でエラーが発生しました。再度お試しください。'); return false; } }
 
-  // 主運転者（9番）の生年月日プルダウン（現在年まで）
   function populateMdDobSelectsSafe(){ try{
       const ySel = document.getElementById('md_dobYear');
       const mSel = document.getElementById('md_dobMonth');
@@ -1795,17 +1779,6 @@
       }
       ySel.addEventListener('change', populateFirstRegSelectsSafe, { once:true });
     }catch(e){ console.error('populateFirstRegSelectsSafe error:', e); } }
-  function validateFirstRegSelect(){ try{
-      const y=document.getElementById('firstRegYear')?.value || '';
-      const m=document.getElementById('firstRegMonth')?.value || '';
-      if(!y||!m){ openNotice('初度登録年月を「年・月」から選んでください'); return false; }
-      const now = new Date();
-      const sel = new Date(Number(y), Number(m)-1, 1);
-      if (sel > new Date(now.getFullYear(), now.getMonth(), 1)){
-        openNotice('初度登録年月は未来を選べません'); return false;
-      }
-      return true;
-    }catch(e){ openNotice('初度登録年月の選択でエラーが発生しました。再度お試しください。'); return false; } }
 
   function setActive(i){
     stopGuidedVoice();
@@ -1921,7 +1894,6 @@
     if (guidedSpeaking) { stopGuidedVoice(); showToast('音声を停止しました'); return; }
     const queue=buildGuidedQueue();
     const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-    // 話速をやや早めに
     const opts={ rate:1.0, volume:1.0 };
     const merged=isIOS && (titles()[step] !== 'お客様情報の確認')
       ? [{text:queue.map(q=>q.text).join('。'), pause:0}] : queue;
@@ -1995,9 +1967,7 @@
 
       if(name){
         q.push({text:`氏名は、${name}`, pause:NAME_BRIEF_PAUSE});
-        // 「サマ。」を氏名の直後に復活
         q.push({text:'サマ。', pause:ITEM_PAUSE});
-        // 性別を氏名の後に読み上げ
         const g = gender.includes('女性') ? 'ジョセイ' : 'ダンセイ';
         q.push({text:`セイベツワ　${g}`, pause:ITEM_PAUSE});
       }
@@ -2017,7 +1987,6 @@
 
       if(dob){
         q.push({text:`生年月日は${dob.replace('日','')}ニチ`, pause:ITEM_PAUSE});
-        // 勤務先を生年月日の後に読み上げ
         if(company){
           const compReading = (company==='ABC株式会社') ? 'エービーシーカブシキガイシャ' : company;
           q.push({text:`キンムサキワ　${compReading}`, pause:ITEM_PAUSE});
@@ -2042,7 +2011,10 @@
           g=document.getElementById('ocrGuide'),
           r=document.getElementById('ocrResult'),
           m=document.getElementById('manualForm');
-    if(s) s.style.display='block'; if(g) g.style.display='block'; if(r) r.style.display='none'; if(m) m.style.display='none';
+    if(s) s.style.display='block';
+    if(g) g.style.display='block';
+    if(r) r.style.display='none';
+    if(m) m.style.display='none';
   }
   function startShooting(){
     showLoading();
@@ -2054,7 +2026,10 @@
           g=document.getElementById('ocrGuide'),
           r=document.getElementById('ocrResult'),
           m=document.getElementById('manualForm');
-    if(s) s.style.display='none'; if(g) g.style.display='none'; if(r) r.style.display='block'; if(m) m.style.display='none';
+    if(s) s.style.display='none';
+    if(g) g.style.display='none';
+    if(r) r.style.display='block';
+    if(m) m.style.display='none';
   }
 
   function openNotice(msg){ const b=document.getElementById('noticeBody'); if(b) b.textContent=msg; const modal=document.getElementById('noticeModal'); if(modal) openModal(modal); }
@@ -2073,8 +2048,6 @@
     try{ showToast(`${name}を選択しました`);}catch(e){}
   }
 
-  function mockZipToAddress(zip){ const addr=document.getElementById('addr'); if(!addr) return; const z=(zip||'').replace(/[^\d]/g,''); if(z.length===7){ addr.value='東京都港区赤坂'; } }
-
   let codeSent=false;
   function sendLoginCode(){
     const id=(document.getElementById('loginId')?.value||'').trim();
@@ -2088,7 +2061,10 @@
     if(!cur) return;
     cur.value=cur.value.replace(/[^0-9０-９]/g,'').slice(-1).replace(/[０-９]/g, d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0));
     if(cur.value && idx<4){ document.getElementById('otp'+(idx+1))?.focus(); }
-    if(idx===4){ const filled=['otp1','otp2','otp3','otp4'].every(id=> (document.getElementById(id)?.value||'').length===1); if(filled) cur.blur(); }
+    if(idx===4){
+      const filled=['otp1','otp2','otp3','otp4'].every(id=> (document.getElementById(id)?.value||'').length===1);
+      if(filled) cur.blur();
+    }
   }
   function validateOtpLogin(){
     const id=(document.getElementById('loginId')?.value||'').trim();
@@ -2247,30 +2223,50 @@
     showLoading();
     setTimeout(()=>{ hideLoading(); goToTitle('申込完了'); }, 600);
   }
+
+  /* 完了画面の表示ロジック（PDF/重要事項PDF/郵送） */
   function updateCompletion(){
-    const list=document.getElementById('doneList'), pdf=document.getElementById('donePdf'), postal=document.getElementById('donePostal'), postalUnder=document.getElementById('donePostalUnder');
+    const list=document.getElementById('doneList'),
+          pdf=document.getElementById('donePdf'),
+          impPdf=document.getElementById('doneImpPdf'),
+          postal=document.getElementById('donePostal'),
+          postalUnder=document.getElementById('donePostalUnder');
     if(!list||!pdf||!postal||!postalUnder) return;
-    list.style.display='none'; pdf.style.display='none'; postal.style.display='none'; postalUnder.style.display='none';
 
-    const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');
-    const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active');
+    // 初期化
+    list.style.display='none';
+    pdf.style.display='none';
+    postal.style.display='none';
+    postalUnder.style.display='none';
+    if(impPdf) impPdf.style.display='none';
 
-    if(pdfSelected && paperCertSelected){
-      list.style.display='block'; pdf.style.display='list-item'; postal.style.display='list-item';
-    } else if(pdfSelected){
-      list.style.display='block'; pdf.style.display='list-item';
-    } else if(paperCertSelected){
+    // 選択状態
+    const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');        // 申込書控えPDF＝必要
+    const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active'); // 保険証券＝書面
+    const importantPdfSelected = !!window.flagSendPdf;  // 重要事項全文PDFメール
+
+    let showList=false;
+    if(pdfSelected){ pdf.style.display='list-item'; showList=true; }
+    if(importantPdfSelected && impPdf){ impPdf.style.display='list-item'; showList=true; }
+    if(paperCertSelected){ postal.style.display='list-item'; showList=true; }
+
+    if(showList){
+      list.style.display='block';
+    }else if(paperCertSelected){
       postalUnder.style.display='block';
     }
   }
 
-  function sendPdf(){ openNotice('本番ではＰＤＦ送付確認画面に推移します。'); }
+  function sendPdf(){ openNotice('本番ではPDF送付確認画面に推移します。'); }
   function openReasonDetail(){ const m=document.getElementById('reasonModal'); if(m) m.classList.add('show'); }
 
   (function(){
     var enableCTA = true;
     document.addEventListener('DOMContentLoaded', function(){
+      // CTA色（青）へ
       document.body.classList.toggle('exp-cta', enableCTA);
+
+      // 押下演出
       var pressables = document.querySelectorAll('.btnPrimary, .videoCta, .videoChip');
       pressables.forEach(function(el){
         var add = function(){ el.classList.add('pressed'); };
@@ -2293,42 +2289,6 @@
         });
       }catch(e){}
     });
-  })();
-
-  (function(){
-    window.onMakerChange = function(){
-      try{
-        const maker = document.getElementById('maker')?.value || '';
-        const modelField = document.getElementById('modelField');
-        const typeField = document.getElementById('typeField');
-        if(modelField) modelField.style.display = 'block';
-        if(typeField) typeField.style.display = 'block';
-        const modelSel = document.getElementById('model');
-        const typeSel = document.getElementById('type');
-        if(!maker){ if(modelSel) modelSel.value=''; if(typeSel) typeSel.value=''; }
-      }catch(e){ console.warn('onMakerChange error:', e); }
-    };
-    window.onModelChange = function(){
-      try{
-        const model = document.getElementById('model')?.value || '';
-        const typeField = document.getElementById('typeField');
-        if(typeField) typeField.style.display = 'block';
-        const typeSel = document.getElementById('type');
-        if(typeSel && model==='prius' && !typeSel.value){ typeSel.value='ZVW50'; }
-      }catch(e){ console.warn('onModelChange error:', e); }
-    };
-    window.validateVIN = function(){
-      try{
-        const vin = document.getElementById('vin')?.value?.trim() || '';
-        const plateEl = document.getElementById('plate');
-        const plate = plateEl?.value?.trim() || '';
-        if(vin.length<8){ openNotice('車台番号を入力してください（例：ZVW50-1234567）'); return false; }
-        const digits = plate.replace(/[^0-9]/g,'').slice(-4);
-        if(digits.length<4){ openNotice('ナンバー（数字4桁）を入力してください（例：12-34）'); return false; }
-        if(plateEl) plateEl.value = digits.slice(0,2)+'-'+digits.slice(2);
-        return true;
-      }catch(e){ openNotice('入力内容の確認でエラーが発生しました。再度お試しください。'); return false; }
-    };
   })();
 
   (function(){
@@ -2406,6 +2366,112 @@
   }
 </script>
 <!-- END: js-core -->
+<!-- START: js-vehicle-handlers -->
+<script>
+/* 車情報手入力画面の補助（未定義関数を安全に補完） */
+(function(){
+  if (typeof window.onMakerChange !== 'function') {
+    window.onMakerChange = function(){
+      try{
+        const maker = document.getElementById('maker')?.value || '';
+        const modelField = document.getElementById('modelField');
+        const typeField  = document.getElementById('typeField');
+        if (modelField) modelField.style.display = 'block';
+        if (typeField)  typeField.style.display  = 'block';
+        const modelSel = document.getElementById('model');
+        const typeSel  = document.getElementById('type');
+        if (!maker){
+          if (modelSel) modelSel.value = '';
+          if (typeSel)  typeSel.value  = '';
+        }
+      }catch(e){}
+    };
+  }
+
+  if (typeof window.onModelChange !== 'function') {
+    window.onModelChange = function(){
+      try{
+        const model = document.getElementById('model')?.value || '';
+        const typeField = document.getElementById('typeField');
+        if (typeField) typeField.style.display = 'block';
+        // 例：プリウスの場合は型式初期値を補助（任意）
+        const typeSel = document.getElementById('type');
+        if (typeSel && model === 'prius' && !typeSel.value){
+          typeSel.value = 'ZVW50';
+        }
+      }catch(e){}
+    };
+  }
+
+  // 郵便番号→住所の簡易補完（お客様情報側）
+  if (typeof window.mockZipToAddress !== 'function') {
+    window.mockZipToAddress = function(zip){
+      try{
+        const z = String(zip || '').replace(/[^\d]/g,'');
+        if (z.length === 7){
+          const addr = document.getElementById('addr');
+          if (addr) addr.value = '東京都港区赤坂';
+        }
+      }catch(e){}
+    };
+  }
+
+  // 初度登録年月のチェック（年・月必須／未来不可）
+  if (typeof window.validateFirstRegSelect !== 'function') {
+    window.validateFirstRegSelect = function(){
+      try{
+        const y = document.getElementById('firstRegYear')?.value || '';
+        const m = document.getElementById('firstRegMonth')?.value || '';
+        if (!y || !m){
+          if (typeof openNotice === 'function') openNotice('初度登録年月を「年・月」から選んでください');
+          return false;
+        }
+        const now = new Date();
+        const sel = new Date(Number(y), Number(m)-1, 1);
+        // 当月以降（未来）選択不可
+        const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        if (sel > thisMonth){
+          if (typeof openNotice === 'function') openNotice('初度登録年月は未来を選べません');
+          return false;
+        }
+        return true;
+      }catch(e){
+        if (typeof openNotice === 'function') openNotice('初度登録年月の確認でエラーが発生しました。再度お試しください。');
+        return false;
+      }
+    };
+  }
+
+  // 車台番号・ナンバーの最低限チェック＋整形
+  if (typeof window.validateVIN !== 'function') {
+    window.validateVIN = function(){
+      try{
+        const vin     = (document.getElementById('vin')?.value || '').trim();
+        const plateEl = document.getElementById('plate');
+        const plate   = plateEl?.value?.trim() || '';
+        if (vin.length < 8){
+          if (typeof openNotice === 'function') openNotice('車台番号を入力してください（例：ZVW50-1234567）');
+          return false;
+        }
+        const digits = plate.replace(/[^\d]/g,'').slice(-4);
+        if (digits.length < 4){
+          if (typeof openNotice === 'function') openNotice('ナンバー（数字4桁）を入力してください（例：12-34）');
+          return false;
+        }
+        if (plateEl){
+          plateEl.value = digits.slice(0,2) + '-' + digits.slice(2);
+        }
+        return true;
+      }catch(e){
+        if (typeof openNotice === 'function') openNotice('入力内容の確認でエラーが発生しました。再度お試しください。');
+        return false;
+      }
+    };
+  }
+})();
+</script>
+<!-- END: js-vehicle-handlers -->
+
 
 <!-- START: js-choice-toggles -->
 <script>
@@ -2802,5 +2868,25 @@
 })();
 </script>
 <!-- END: js-md-zip-helper -->
+
+<!-- START: js-large-label-override -->
+<script>
+  (function(){
+    // 文字拡大トグルのラベルを短縮版に統一（文字拡大／文字縮小）
+    window.applyLarge = function(on){
+      document.body.classList.toggle('large', !!on);
+      var l = document.getElementById('lblLarge');
+      if (l) l.textContent = on ? '文字縮小' : '文字拡大';
+    };
+    window.toggleLarge = function(){
+      applyLarge(!document.body.classList.contains('large'));
+    };
+    document.addEventListener('DOMContentLoaded', function(){
+      var l = document.getElementById('lblLarge');
+      if (l) l.textContent = document.body.classList.contains('large') ? '文字縮小' : '文字拡大';
+    });
+  })();
+</script>
+<!-- END: js-large-label-override -->
 
 </html>
