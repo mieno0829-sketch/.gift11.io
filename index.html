@@ -2931,4 +2931,33 @@
 </script>
 <!-- END: js-large-label-override -->
 
+<!-- START: js-guided-voice-override -->
+<script>
+  (function(){
+    // 既存のstopGuidedVoiceを安全に上書きし、ガイド用キューも確実に止める
+    var origStop = window.stopGuidedVoice;
+    window.stopGuidedVoice = function(){
+      // 1) キュー側の進行フラグを停止（speakQueue内のcancelledをtrueにする）
+      try{
+        if (typeof guidedCancelFn === 'function') guidedCancelFn();
+      }catch(e){}
+
+      // 2) ブラウザの読み上げも停止
+      try{
+        if ('speechSynthesis' in window) speechSynthesis.cancel();
+      }catch(e){}
+
+      // 3) 状態フラグとボタン表示を更新
+      try{ guidedSpeaking = false; }catch(e){}
+      try{ if (typeof setGuidedBtn === 'function') setGuidedBtn(); }catch(e){}
+
+      // 4) 元の停止処理があれば呼び出し（冪等）
+      if (typeof origStop === 'function'){
+        try{ origStop(); }catch(e){}
+      }
+    };
+  })();
+</script>
+<!-- END: js-guided-voice-override -->
+
 </html>
