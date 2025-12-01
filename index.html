@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>自動車保険 更新手続き（完全版・修正版・保存用）</title>
-<!-- Version: full-2025-11-17-apply-1114LAST-diff-prepMerged-webPaperChoice-added-progress25 -->
+<!-- Version: full-2025-11-28-apply-1128v2-with-add-screens-and-progress27 -->
 
 <!-- START: styles -->
 <style>
@@ -202,27 +202,23 @@
     padding:4px 6px; border:none; background:transparent;
     color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;
   }
-  .headerTop .btn svg{ width:28px; height:28px; display:block; } /* アイコン維持 */
+  .headerTop .btn svg{ width:28px; height:28px; display:block; }
 
-  /* AIと対話（右肩） */
   .aiAgent{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-left:6px; }
   .aiLabel{ font-size:13px; font-weight:600; color:var(--blue-800); white-space:nowrap; }
 
-  /* 文字拡大トグル */
   .headerTop .toggleLarge{
     border:none !important; border-radius:0 !important; background:transparent !important;
     padding:4px 6px !important; color:var(--blue-800) !important; font-size:13px; white-space:nowrap;
   }
   .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
-  /* 公式バッジ */
   .badgeOfficial{
     display:inline-flex; align-items:center; justify-content:center;
     padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
     background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
   }
 
-  /* AIアイコン（青地＋白） */
   .aiRobot{
     width:28px; height:28px; border-radius:8px;
     background-color:#3c7fe6 !important; border:2px solid #d7e0f0;
@@ -230,7 +226,6 @@
     background-repeat:no-repeat; background-position:center; background-size:70% 70%;
   }
 
-  /* 進捗バー：四分割ガイド */
   .bar{ position:relative; }
   .bar::before{
     content:""; position:absolute; inset:0; pointer-events:none; border-radius:999px;
@@ -240,12 +235,11 @@
       linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 74.5%, rgba(31,95,191,.18) 75%, rgba(0,0,0,0) 75.5%);
   }
 
-  /* 章ラベル */
   .chapters{ display:flex; gap:6px; justify-content:space-between; margin:2px 10px 0 10px; font-size:11px; color:#5b6470; }
   .chapter{ flex:1; text-align:center; opacity:.75; }
   .chapter.active{ color:#1f5fbf; font-weight:700; opacity:1; }
 
-  /* カバー（表紙） */
+  /* cover時はヘッダー/進捗/フッターを確実に非表示、背景は淡青 */
   body.cover{ background:#e6f0ff !important; }
   body.cover header{ background:transparent !important; border-bottom:none !important; padding:0 !important; position:static !important; }
   body.cover .headerTop, body.cover .chapters, body.cover .progress, body.cover footer{ display:none !important; }
@@ -253,11 +247,10 @@
   .coverWrap{ min-height:100vh; min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 16px; color:#111; }
   .coverCar svg{ width:72%; max-width:320px; height:auto; margin-bottom:18px; }
 
-  /* 表紙タイトル（本文で「・」記載方式） */
   .coverTitle .coverLine{ position:relative; color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em; padding-left:0; }
   .coverTitle .coverLine::before{ content:none !important; }
   .coverTitle .coverLine.noBullet{ padding-left:0 !important; }
-  .coverTitle .coverLine.noBullet::before{ content:none !重要; }
+  .coverTitle .coverLine.noBullet::before{ content:none !important; }
 
   .coverStartBtn{
     margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px;
@@ -268,7 +261,6 @@
   .coverStartBtn:hover{ filter:brightness(1.02); }
   .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
-  /* 年・月・日セレクト（年縮小／狭幅で更に微縮） */
   #licenseYear, #dobYear, #firstRegYear{ flex:1 1 48%; min-width:136px; }
   #licenseMonth, #licenseDay, #dobMonth, #dobDay, #firstRegMonth{ flex:0 0 92px; max-width:100px; }
   #md_dobYear{ flex:1 1 48%; min-width:136px; }
@@ -289,22 +281,18 @@
     .screen.anim-in .card, .videoChip, .choiceToggle, .btnPrimary, #toast, .coverCar svg, .coverStartBtn{ transition:none !important; }
   }
 
-  /* フッター注記 */
   .footerNote{ text-align:center; font-size:12px !important; line-height:1.5; margin-top:6px; color:var(--blue-900); }
   .large .footerNote{ font-size:12px !important; }
 
-  /* フッター左側ボタン同幅（グリッド） */
   .footerActions{ display:grid; grid-template-columns: 1fr 1fr; gap:6px; width:100%; }
   .footerActions .ghost{ width:100%; }
 
-  /* 申込完了：行頭記号「■」の復活（各行） */
   #donePostalUnder.doneLine, #doneList .doneLine{ position:relative; padding-left:1.8em; }
   #donePostalUnder.doneLine::before, #doneList .doneLine::before{
     content:"■"; position:absolute; left:0.25em; top:0.1em; color:var(--blue-900);
     font-weight:700; font-size:0.95em; line-height:1;
   }
 
-  /* 進捗の1行化用：進捗テキストと残り時間を横並びに */
   .progressTop{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
 </style>
 <!-- END: styles-addon -->
@@ -314,12 +302,12 @@
   /* AIと対話のアイコンを青地＋白シルエットに統一（「文字を大きく」アイコンと同系の青） */
   .aiRobot{
     width:28px; height:28px; border-radius:8px;
-    background-color:#3c7fe6 !important;
+    background-color:#3c7fe6 !重要;
     border:2px solid #d7e0f0;
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>') !important;
-    background-repeat:no-repeat !important;
-    background-position:center !important;
-    background-size:70% 70% !important;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>') !重要;
+    background-repeat:no-repeat !重要;
+    background-position:center !重要;
+    background-size:70% 70% !重要;
   }
 </style>
 <!-- END: styles-override-airobot -->
@@ -360,8 +348,8 @@
 <!-- START: header-progress -->
 <div class="progress">
   <div class="progressTop">
-    <div id="progressText">進捗 1/25（最大）</div>
-    <div id="timeLeft">残り約11分</div>
+    <div id="progressText">進捗 1/26（最大）</div>
+    <div id="timeLeft">残り約12分</div>
   </div>
   <div class="bar"><div id="progressBar" role="progressbar" aria-label="進捗" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4"></div></div>
   <div class="chapters" aria-label="進捗の章">
@@ -384,10 +372,8 @@
     <!-- セダン：青のアウトライン。タイヤは車体ラインに少し重ね、青で塗りつぶし -->
     <div class="coverCar" aria-hidden="true">
 <svg viewBox="0 0 280 120" role="img" aria-label="セダンのラインアート（タイヤ青塗り）">
-  <!-- 車体輪郭線：線幅は視認性を確保 -->
   <path d="M30 78c0-10 12-22 28-26h60c10 0 18-6 26-12 12-8 24-12 36-12h26c20 0 34 12 40 28l6 16c6 2 10 8 10 14 0 6-4 10-10 10H42c-6 0-10-4-10-10 0-6 4-12 10-16h-4c-6 0-8-2-8-6z"
         fill="none" stroke="#3c7fe6" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
-  <!-- タイヤ：少し大きく＆位置をわずかに下げて車体輪郭に重ね、青で塗りつぶし -->
   <circle cx="82" cy="91" r="10.5" fill="#3c7fe6" stroke="#3c7fe6" stroke-width="3"/>
   <circle cx="204" cy="91" r="10.5" fill="#3c7fe6" stroke="#3c7fe6" stroke-width="3"/>
 </svg>
@@ -426,7 +412,6 @@
   </div>
 
   <div class="card">
-    <!-- ヒーロー導入バンド（1段フラット） -->
     <div class="heroStrip" aria-hidden="true">
       <div class="heroChip">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
@@ -449,22 +434,20 @@
       </div>
     </div>
 
-    <!-- 空白行 -->
     <div aria-hidden="true" style="height:0.9em;"></div>
 
-    <!-- 「はじめての方はコチラ（使い方の1分動画）」をリストの上に移動 -->
     <a href="#" class="videoChip" role="button"
-       onclick="openNotice('本番では１分動画に推移します')"
-       aria-label="はじめての方はコチラ（使い方の1分動画）">
+       onclick="openNotice('本番では60秒動画に推移します')"
+       aria-label="使い方の60秒動画をご覧になりたい方はコチラ">
       <svg class="videoChip-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
         <rect x="1.5" y="1.5" width="19" height="19" rx="4"/>
         <polygon points="9,6.5 16,11 9,15.5"/>
       </svg>
-      はじめての方はコチラ（使い方の1分動画）
+     使い方の60秒動画をご覧になりたい方はコチラ
     </a>
 
     <div class="list" style="margin-top:8px;">・スマホまたはPCで手続きできます（途中保存OK）</div>
-    <div class="list">・紙の継続証の郵送も選べます（完了画面で指定）</div>
+    <div class="list">・紙の保険証券の郵送もできます</div>
     <div class="list">・困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
   </div>
 
@@ -484,8 +467,8 @@
 </section>
 <!-- END: screen-01-intro -->
 
-    <!-- START: screen-01b-login -->
-    <section class="screen" data-title="手続き開始">
+    <!-- START: screen-02-login -->
+    <section class="screen" data-title="ログイン">
       <div class="card">
         <div class="h1">ログイン</div>
         <div class="field">
@@ -507,9 +490,9 @@
         <button class="btnPrimary" onclick="if(validateOtpLogin()) next()">認証して次へ</button>
       </div>
     </section>
-    <!-- END: screen-01b-login -->
+    <!-- END: screen-02-login -->
 
- <!-- START: screen-02-vehicle-summary -->
+ <!-- START: screen-03-vehicle-summary -->
 <section class="screen" data-title="お車の情報">
   <div class="card">
     <div class="h1">お車情報を確認する</div>
@@ -518,14 +501,14 @@
       <li>型式：ZVW50</li>
       <li>ナンバー：品川 300 あ 12-34</li>
     </ul>
-    <div class="desc">前回から変更がなければ「変更なし」で進めます。</div>
-    <button class="btnPrimary" onclick="goToTitle('免許証の色')">変更なし</button>
+    <div class="desc">変更はございますか？</div>
+    <button class="btnPrimary" onclick="goToTitle('免許証の情報を確認する')">変更なし</button>
     <button class="btnPrimary" onclick="goToTitle('車検証の情報')">変更する</button>
   </div>
 </section>
-<!-- END: screen-02-vehicle-summary -->
+<!-- END: screen-03-vehicle-summary -->
 
-<!-- START: screen-03-vehicle-shaken -->
+<!-- START: screen-04-vehicle-shaken -->
 <section class="screen" data-title="車検証の情報">
   <div class="card">
     <div class="h1">車検証の情報を入力する</div>
@@ -615,7 +598,6 @@
       </div>
       <input class="input" id="plate" placeholder="12-34" />
     </div>
-    <!-- 初度登録年月：年・月プルダウン（年は西暦＋和暦／未来不可） -->
     <div class="field">
       <div class="label">初度登録年月</div>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -626,9 +608,28 @@
     <button class="btnPrimary" onclick="if(validateVIN() && validateFirstRegSelect()) next()">次へ</button>
   </div>
 </section>
-<!-- END: screen-03-vehicle-shaken -->
+<!-- END: screen-04-vehicle-shaken -->
 
-  <!-- START: screen-04-license -->
+
+<!-- START: screen-05-license-summary -->
+<section class="screen" data-title="免許証の情報を確認する">
+  <div class="card">
+    <div class="h1">免許証の情報を確認する</div>
+    <ul class="list" id="licenseSummaryList">
+      <li>免許証の色：ブルー</li>
+      <li>免許証の有効期限：2026年（令和8年8月1日）</li>
+    </ul>
+    <div class="desc">変更はございますか？</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="btnPrimary" onclick="goToTitle('お客様情報の確認')">変更なし</button>
+      <button class="btnPrimary" onclick="goToTitle('免許証の色')">変更する</button>
+    </div>
+  </div>
+</section>
+<!-- END: screen-05-license-summary -->
+
+
+  <!-- START: screen-06-license -->
 <section class="screen" data-title="免許証の色">
   <div class="card">
     <div class="h1">免許証の色を選ぶ</div>
@@ -660,9 +661,6 @@
       <div class="licRow">
         <div class="licBox short">免許の条件等：XXXXXXXX</div>
       </div>
-      <div class="licRow" style="margin-top:10px;">
-        <div class="licBox short">番号：第999999999999号</div>
-      </div>
       <div class="faceBox">顔写真</div>
     </div>
 
@@ -678,9 +676,9 @@
     <button class="btnPrimary" onclick="if(validateDateSelect()) next()">次へ</button>
   </div>
 </section>
-<!-- END: screen-04-license -->
+<!-- END: screen-06-license -->
 
-<!-- START: screen-05-customer-summary -->
+<!-- START: screen-07-customer-summary -->
 <section class="screen" data-title="お客様情報の確認">
   <div class="card">
     <div class="h1">お客様情報を確認する</div>
@@ -697,9 +695,9 @@
     <button class="btnPrimary" onclick="goToTitle('お客様情報の編集')">変更する</button>
   </div>
 </section>
-<!-- END: screen-05-customer-summary -->
+<!-- END: screen-07-customer-summary -->
 
-<!-- START: screen-06-customer-edit -->
+<!-- START: screen-08-customer-edit -->
 <section class="screen" data-title="お客様情報の編集">
   <div class="card">
     <div class="h1">お客様情報を変更する</div>
@@ -717,7 +715,6 @@
       <input class="input" id="cust_name" placeholder="山田 太郎">
     </div>
 
-    <!-- 性別：男性／女性（choiceトグル形式） -->
     <div class="field">
       <div class="label">性別</div>
       <div class="choiceRow" role="radiogroup" aria-label="性別">
@@ -765,7 +762,6 @@
       <input class="input" id="cust_phone" placeholder="09012345678">
     </div>
 
-    <!-- 生年月日：年月日プルダウン（年は西暦＋和暦表記） -->
     <div class="field">
       <div class="label">生年月日</div>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -775,7 +771,6 @@
       </div>
     </div>
 
-    <!-- 勤務先（音声入力・未認識時のフォールバック：ABC株式会社） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>勤務先</span>
@@ -792,9 +787,9 @@
     <button class="btnPrimary" onclick="goToTitle('主に運転する方（記名被保険者）')">OK</button>
   </div>
 </section>
-<!-- END: screen-06-customer-edit -->
+<!-- END: screen-08-customer-edit -->
 
-<!-- START: screen-07-main-driver -->
+<!-- START: screen-09-main-driver -->
 <section class="screen" data-title="主に運転する方（記名被保険者）">
   <div class="card">
     <div class="h1">主に運転する方を確認する</div>
@@ -804,14 +799,13 @@
     <button class="btnPrimary" onclick="goToTitle('主に運転する方の編集')">変更する</button>
   </div>
 </section>
-<!-- END: screen-07-main-driver -->
+<!-- END: screen-09-main-driver -->
 
-<!-- START: screen-08-main-driver-edit -->
+<!-- START: screen-10-main-driver-edit -->
 <section class="screen" data-title="主に運転する方の編集">
   <div class="card">
     <div class="h1">主に運転する方を変更する</div>
 
-    <!-- 氏名（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>氏名</span>
@@ -825,7 +819,6 @@
       <input class="input" id="mainDriverName" placeholder="山田 花子">
     </div>
 
-    <!-- 性別（choiceトグル形式：男性／女性） -->
     <div class="field">
       <div class="label">性別</div>
       <div class="choiceRow" role="radiogroup" aria-label="性別">
@@ -834,7 +827,6 @@
       </div>
     </div>
 
-    <!-- 郵便番号（音声入力対応／自動で住所補完） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>郵便番号</span>
@@ -848,7 +840,6 @@
       <input class="input" id="md_zip" placeholder="1234567" oninput="mdZipToAddress(this.value)">
     </div>
 
-    <!-- 住所（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>住所</span>
@@ -862,7 +853,6 @@
       <input class="input" id="md_addr" placeholder="東京都港区赤坂1-1-1 〇〇マンション101">
     </div>
 
-    <!-- 電話番号（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>電話番号</span>
@@ -876,7 +866,6 @@
       <input class="input" id="md_phone" placeholder="09012345678">
     </div>
 
-    <!-- 生年月日（年・月・日セレクト） -->
     <div class="field">
       <div class="label">生年月日</div>
       <div style="display:flex; gap:6px; align-items:center;">
@@ -886,7 +875,6 @@
       </div>
     </div>
 
-    <!-- 勤務先（音声入力対応） -->
     <div class="field">
       <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
         <span>勤務先</span>
@@ -903,9 +891,9 @@
     <button class="btnPrimary" onclick="goToTitle('運転者の範囲と年齢条件')">OK</button>
   </div>
 </section>
-<!-- END: screen-08-main-driver-edit -->
+<!-- END: screen-10-main-driver-edit -->
 
-<!-- START: screen-09-driver-scope-age -->
+<!-- START: screen-11-driver-scope-age -->
 <section class="screen" data-title="運転者の範囲と年齢条件">
   <div class="card">
     <div class="h1">運転者の範囲と年齢条件を確認する</div>
@@ -918,9 +906,9 @@
     <button class="btnPrimary" onclick="goToTitle('運転者範囲・年齢条件の編集')">変更する</button>
   </div>
 </section>
-<!-- END: screen-09-driver-scope-age -->
+<!-- END: screen-11-driver-scope-age -->
 
-<!-- START: screen-10-driver-scope-age-edit -->
+<!-- START: screen-12-driver-scope-age-edit -->
 <section class="screen" data-title="運転者範囲・年齢条件の編集">
   <div class="card">
     <div class="h1">運転者の範囲と年齢条件を変更する</div>
@@ -944,48 +932,50 @@
     <button class="btnPrimary" onclick="goToTitle('使用目的・走行距離')">OK</button>
   </div>
 </section>
-<!-- END: screen-10-driver-scope-age-edit -->
+<!-- END: screen-12-driver-scope-age-edit -->
 
-<!-- START: screen-11-usage-mileage -->
+<!-- START: screen-13-usage-mileage -->
 <section class="screen" data-title="使用目的・走行距離">
   <div class="card">
     <div class="h1">使用目的と年間走行距離を選ぶ</div>
+
     <div class="field">
       <div class="label">使用目的</div>
-      <select>
+      <select id="usagePurpose">
         <option>通勤・通学</option>
         <option>レジャー</option>
         <option>業務</option>
       </select>
     </div>
+
     <div class="field">
       <div class="label">年間走行距離の目安</div>
       <select id="annualMileage">
-        <option value="">選択してください</option>
-        <option value="3000">〜3,000km/年</option>
+        <option value="3000" selected>〜3,000km/年</option>
         <option value="5000">3,001〜5,000km/年</option>
         <option value="8000">5,001〜8,000km/年</option>
         <option value="12000">8,001〜12,000km/年</option>
         <option value="20000">12,001km以上/年</option>
       </select>
     </div>
+
     <button class="btnPrimary" onclick="next()">次へ</button>
   </div>
 </section>
-<!-- END: screen-11-usage-mileage -->
+<!-- END: screen-13-usage-mileage -->
 
-<!-- START: screen-12-current-coverage -->
+<!-- START: screen-14-current-coverage -->
 <section class="screen" data-title="現在の内容を確認">
   <div class="card">
     <div class="h1">現在の補償内容と保険料を確認する</div>
     <a href="#" class="videoChip" role="button"
        onclick="openNotice('本番では補償のポイント解説動画に推移します')"
-       aria-label="60秒で分かる補償のポイントはコチラ">
+       aria-label="補償のポイント60秒動画をご覧になりたい方はコチラ">
       <svg class="videoChip-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
         <rect x="1.5" y="1.5" width="19" height="19" rx="4"/>
         <polygon points="9,6.5 16,11 9,15.5"/>
       </svg>
-      60秒で分かる補償のポイントはコチラ
+      補償のポイント60秒動画をご覧になりたい方はコチラ
     </a>
     <ul class="list" style="margin-top:8px;">
       <li>対人・対物：無制限</li>
@@ -1008,9 +998,9 @@
     <button class="btnPrimary" onclick="next()">次へ（同じ補償内容で更新した場合の保険料）</button>
   </div>
 </section>
-<!-- END: screen-12-current-coverage -->
+<!-- END: screen-14-current-coverage -->
 
-    <!-- START: screen-13-same-coverage-premium -->
+<!-- START: screen-15-same-coverage-premium -->
     <section class="screen" data-title="現在と同じ補償内容で更新した場合の保険料">
       <div class="card">
         <div class="h1">現在と同じ補償内容で更新した場合の保険料</div>
@@ -1033,9 +1023,9 @@
         <button class="btnPrimary" onclick="goToTitle('更新方法の選択')">更新方法を選ぶ</button>
       </div>
     </section>
-    <!-- END: screen-13-same-coverage-premium -->
+<!-- END: screen-15-same-coverage-premium -->
 
-<!-- START: screen-14-renewal-method -->
+<!-- START: screen-16-renewal-method -->
 <section class="screen" data-title="更新方法の選択">
   <div class="card">
     <div class="h1">更新方法を選ぶ</div>
@@ -1045,9 +1035,9 @@
     <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
   </div>
 </section>
-<!-- END: screen-14-renewal-method -->
+<!-- END: screen-16-renewal-method -->
 
-<!-- START: screen-15-simple-plans -->
+<!-- START: screen-17-simple-plans -->
 <section class="screen" data-title="別のプランから選ぶ">
   <div class="card">
     <div class="h1">別のプランから選ぶ</div>
@@ -1057,7 +1047,6 @@
       <button id="tab_down" class="choiceToggle" role="tab" aria-selected="false" aria-controls="panel_down" onclick="switchPlanTab('down')">保険料重視</button>
     </div>
 
-    <!-- 安心重視 -->
     <div id="panel_up" role="tabpanel" aria-labelledby="tab_up" style="margin-top:8px;">
       <div class="label">補償を充実 安心重視</div>
       <div class="desc">※変更した補償：人身傷害、特約</div>
@@ -1090,13 +1079,10 @@
       </table>
 
       <button class="btnPrimary" onclick="chooseSimplePlan('up')">このプランで進む</button>
-      <!-- 1行空白行 -->
       <div aria-hidden="true" style="height:8px;"></div>
-      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両・特約） -->
       <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
     </div>
 
-    <!-- 保険料重視 -->
     <div id="panel_down" role="tabpanel" aria-labelledby="tab_down" style="margin-top:8px; display:none;">
       <div class="label">補償を控えめ 保険料重視</div>
       <div class="desc">※変更した補償：車両保険、特約</div>
@@ -1129,9 +1115,7 @@
       </table>
 
       <button class="btnPrimary" onclick="chooseSimplePlan('down')">このプランで進む</button>
-      <!-- 1行空白行 -->
       <div aria-hidden="true" style="height:8px;"></div>
-      <!-- 追加ボタン：項目ごとに設定する（人身傷害・車両・特約） -->
       <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
     </div>
   </div>
@@ -1156,9 +1140,9 @@
     }
   </script>
 </section>
-<!-- END: screen-15-simple-plans -->
+<!-- END: screen-17-simple-plans -->
 
-    <!-- START: screen-16-bodily-amount -->
+    <!-- START: screen-18-bodily-amount -->
     <section class="screen" data-title="人身傷害の金額を選ぶ">
       <div class="card">
         <div class="h1">人身傷害の金額を選ぶ</div>
@@ -1185,12 +1169,12 @@
           </tbody>
         </table>
         <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
-        <button class="btnPrimary" onclick="next()">次へ（車両保険の金額）</button>
+        <button class="btnPrimary" onclick="next()">次へ</button>
       </div>
     </section>
-    <!-- END: screen-16-bodily-amount -->
+    <!-- END: screen-18-bodily-amount -->
 
- <!-- START: screen-17-vehicle-amount -->
+ <!-- START: screen-19-vehicle-amount -->
 <section class="screen" data-title="車両保険の金額を選ぶ">
   <div class="card">
     <div class="h1">車両保険の金額を選ぶ</div>
@@ -1218,12 +1202,12 @@
       </tbody>
     </table>
     <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
-    <button class="btnPrimary" onclick="next()">次へ（特約を選ぶ）</button>
+    <button class="btnPrimary" onclick="next()">次へ</button>
   </div>
 </section>
-<!-- END: screen-17-vehicle-amount -->
+<!-- END: screen-19-vehicle-amount -->
 
-<!-- START: screen-18-riders -->
+<!-- START: screen-20-riders -->
 <section class="screen" data-title="特約の付け外し">
   <div class="card">
     <div class="h1">特約を選ぶ</div>
@@ -1251,19 +1235,16 @@
       </tbody>
     </table>
     <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
-    <button class="btnPrimary" onclick="next()">次へ（最終見積を確認する）</button>
+    <button class="btnPrimary" onclick="next()">次へ</button>
   </div>
 </section>
-<!-- END: screen-18-riders -->
+<!-- END: screen-20-riders -->
 
-<!-- START: screen-19-final-summary -->
+<!-- START: screen-21-final-summary -->
 <section class="screen" data-title="最終見積のまとめ">
   <div class="card">
     <div class="h1">最終見積を確認する</div>
 
-    <!-- 要約行は削除（自動連動は行わない） -->
-
-    <!-- 四角の枠内（ビフォーアフター：単一行表示） -->
     <div class="foldCard" style="margin-top:8px;">
       <div class="foldHeader" style="font-size:13px; font-weight:600; color:var(--blue-900); padding-bottom: var(--sp-8); border-bottom:1px solid rgba(215,224,240,0.8);">
         ※補償内容に変更がある場合は➡で表示
@@ -1278,12 +1259,10 @@
       </div>
     </div>
 
-    <!-- 枠の下のリンク -->
     <div class="desc" style="margin-top:6px;">
       <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細画面に推移します')">補償の詳細はコチラ</a>
     </div>
 
-    <!-- 保険料表 -->
     <table class="priceTable" style="margin-top:6px;">
       <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
       <tbody>
@@ -1297,11 +1276,9 @@
     <button class="btnPrimary" onclick="goToTitle('人身傷害の金額を選ぶ')">修正へ戻る</button>
   </div>
 
-  <!-- 表示正規化のみ（改行は行わず、矢印・免責・DAP表記統一） -->
   <script>
     (function(){
       function normalizeVehicle(val){
-        // 「（免責5万円）」→「・免責5万円」 / 「免責：5万円」→「免責5万円」
         return val
           .replace(/（免責(\d+万円)）/,'・免責$1')
           .replace(/免責：/,'免責');
@@ -1309,13 +1286,9 @@
       function normalizeLine(el, label){
         if (!el) return;
         let txt = el.innerText || '';
-        // 矢印を➡へ統一
         txt = txt.replace(/→/g,'➡');
-        // DAP表記統一
         txt = txt.replace(/DAP（ドライブレコーダー）特約/g,'DAP（ドライブレコーダー）');
-        // 車両保険内の免責表記統一
         if (label.includes('車両保険')) {
-          // 「車両保険：値」部分から値側を取り出して正規化
           const parts = txt.split('：');
           const valueAll = parts.slice(1).join('：');
           const bp = valueAll.split('➡');
@@ -1323,7 +1296,6 @@
           let after  = (bp[1]||'').trim();
           before = normalizeVehicle(before);
           after  = normalizeVehicle(after);
-          // 単一行に再構成（改行は挿入しない）
           txt = `${label}：${before}` + (after ? ` ➡ ${after}` : '');
         }
         el.textContent = txt;
@@ -1335,9 +1307,7 @@
           normalizeLine(document.getElementById('optSummary'),  '特約');
         }catch(e){}
       }
-      // 初期実行
       updateFinalSummary();
-      // recalcAll実行毎に追従（改行は行わない）
       try{
         const orig = window.recalcAll;
         window.recalcAll = function(){
@@ -1348,9 +1318,9 @@
     })();
   </script>
 </section>
-<!-- END: screen-19-final-summary -->
+<!-- END: screen-21-final-summary -->
 
-<!-- START: screen-20-important-info -->
+<!-- START: screen-22-important-info -->
 <section class="screen" data-title="重要なご説明">
   <div class="card foldCard">
     <div class="foldHeader">大切なポイント（短くまとめました）</div>
@@ -1394,7 +1364,6 @@
     <div class="foldSub">全文の確認やPDFの受け取り方法をお選びいただけます。</div>
     <div class="foldBody">
       <div class="desc">全文はいつでも読めます。メールでもお送りします。</div>
-      <!-- choice風（両方選択可） -->
       <div class="field" style="margin-top:6px;">
         <div class="choiceRow" role="group" aria-label="重要事項の受け取り方法">
           <button class="choiceToggle" id="imp_choice_full" onclick="toggleMultiChoice('imp_full')">全文を表示する</button>
@@ -1405,12 +1374,12 @@
   </div>
 
   <div class="card">
-    <button class="btnPrimary" onclick="finishImportantNext()">次へ（連絡方法を選ぶ）</button>
+    <button class="btnPrimary" onclick="finishImportantNext()">次へ（受け取り方法を選ぶ）</button>
   </div>
 </section>
-<!-- END: screen-20-important-info -->
+<!-- END: screen-22-important-info -->
 
-    <!-- START: screen-21-contact-method -->
+    <!-- START: screen-23-contact-method -->
     <section class="screen" data-title="連絡方法を選ぶ">
       <div class="card">
         <div class="h1">連絡方法を選ぶ</div>
@@ -1439,18 +1408,37 @@
           </select>
         </div>
 
-        <button class="btnPrimary" onclick="finishContactChoice()">次へ（WEBと書面の選択）</button>
+        <button class="btnPrimary" onclick="finishContactChoice()">次へ（受け取り方法を選ぶ）</button>
       </div>
     </section>
-    <!-- END: screen-21-contact-method -->
+    <!-- END: screen-23-contact-method -->
 
-<!-- START: screen-22-web-vs-paper -->
-<section class="screen" data-title="WEBと書面の選択">
+
+<!-- START: screen-24-receive-method -->
+<section class="screen" data-title="受け取り方法を選ぶ">
   <div class="card">
-    <div class="h1">WEBと書面の受け取り方法を選ぶ</div>
-    <div class="desc">各項目の受け取り方法を選んでください。どちらかを選択してください。淡い青に変わります。</div>
+    <div class="h1">受け取り方法を選ぶ</div>
 
-    <div class="field">
+    <div class="list" style="margin-top:6px;">「ご契約のしおり（約款）」「保険証券」「次回更新時のご案内」「申込書控え」の受け取り方法を選択してください。</div>
+    <div class="desc" style="margin-top:6px;">※一括でも個別でも選択できます</div>
+
+    <div aria-hidden="true" style="height:8px;"></div>
+
+    <div class="label" style="font-weight:700;">一括で選択する</div>
+    <div class="field" style="margin-top:6px;">
+      <select id="bulkReceiveSelect" onchange="onBulkReceiveChange(this.value)">
+        <option value="">選択してください</option>
+        <option value="paper">全てを紙で受け取る</option>
+        <option value="web">全てを電子ファイルで受け取る</option>
+      </select>
+    </div>
+
+    <div aria-hidden="true" style="height:8px;"></div>
+
+    <div class="label" style="font-weight:700;">個別に選択・変更する</div>
+
+    <!-- 以降、従来の「WEBと書面の選択」（タイトル行は削除） -->
+    <div class="field" style="margin-top:8px;">
       <div class="label">ご契約のしおり（約款）</div>
       <div class="choiceRow">
         <button class="choiceToggle" id="choice_terms_web" onclick="toggleChoice('terms_web')">Web約款</button>
@@ -1477,7 +1465,6 @@
     <div class="field">
       <div class="label">申込書控えのPDF送付</div>
       <div class="choiceRow">
-        <!-- ボタンの左右順を入れ替え：不要 → 必要 -->
         <button class="choiceToggle" id="choice_pdf_no" onclick="toggleChoice('pdf_no')">不要</button>
         <button class="choiceToggle" id="choice_pdf_yes" onclick="toggleChoice('pdf_yes')">必要</button>
       </div>
@@ -1485,10 +1472,48 @@
 
     <button class="btnPrimary" onclick="finishWebPaper()">次へ（同意と申込）</button>
   </div>
-</section>
-<!-- END: screen-22-web-vs-paper -->
 
-<!-- START: screen-23-consent -->
+  <script>
+    function onBulkReceiveChange(val){
+      try{
+        if(val!=='paper' && val!=='web') return;
+        const isWeb = (val === 'web');
+
+        const setChoiceActive = function(idSuffix, active){
+          const el = document.getElementById('choice_'+idSuffix);
+          if(!el) return;
+          el.classList.toggle('active', !!active);
+          el.setAttribute('aria-checked', active ? 'true' : 'false');
+          el.setAttribute('tabindex', active ? '0' : '-1');
+        };
+
+        // 一括反映：電子（左）/ 紙（右）
+        setChoiceActive('terms_web',   isWeb);
+        setChoiceActive('terms_paper', !isWeb);
+        setChoiceActive('cert_web',    isWeb);
+        setChoiceActive('cert_paper',  !isWeb);
+        setChoiceActive('notice_web',  isWeb);
+        setChoiceActive('notice_paper',!isWeb);
+        // PDF送付：電子一括時は不要（左）／紙一括時は必要（右）
+        setChoiceActive('pdf_no',      isWeb);
+        setChoiceActive('pdf_yes',     !isWeb);
+
+        try{
+          window.choiceState = window.choiceState || {};
+          ['terms_web','terms_paper','cert_web','cert_paper','notice_web','notice_paper','pdf_yes','pdf_no'].forEach(k=>{
+            const el = document.getElementById('choice_'+k);
+            window.choiceState[k] = !!(el && el.classList.contains('active'));
+          });
+        }catch(e){}
+      }catch(e){}
+    }
+  </script>
+</section>
+<!-- END: screen-24-receive-method -->
+
+
+
+<!-- START: screen-26-consent -->
 <section class="screen" data-title="同意と申込">
   <div class="card">
     <div class="h1">内容に同意して申し込む</div>
@@ -1502,9 +1527,9 @@
     <button class="btnPrimary" style="margin-top:10px;" onclick="onAgreeSubmit()">内容に同意して申し込む</button>
   </div>
 </section>
-<!-- END: screen-23-consent -->
+<!-- END: screen-26-consent -->
 
-<!-- START: screen-24-done -->
+<!-- START: screen-27-done -->
 <section class="screen" data-title="申込完了">
   <div class="card">
     <div class="h1">お申込みが完了しました</div>
@@ -1516,19 +1541,18 @@
     <ul class="list" id="doneList" style="margin-top:6px; list-style:none; padding-left:0;">
       <li class="doneLine" id="donePdf" style="display:none;">申込書控え（PDF）を送信しました。</li>
       <li class="doneLine" id="doneImpPdf" style="display:none;">重要事項全文（PDF）を送信しました。</li>
-      <li class="doneLine" id="donePostal" style="display:none;">継続証を郵送いたします。</li>
+      <li class="doneLine" id="donePostal" style="display:none;">保険証券を郵送いたします。</li>
     </ul>
     <button class="btnPrimary" onclick="openNotice('本番では払込方法の確認・変更の画面に推移します。デモ画面はここで終了です。')">次へ（払込方法の確認）</button>
   </div>
 </section>
-<!-- END: screen-24-done -->
+<!-- END: screen-27-done -->
 
   </main>
 
 <!-- START: footer -->
 <footer>
   <div class="footerRow">
-    <!-- 左側の2ボタンをグリッドで同幅化 -->
     <div class="footerActions">
       <button class="ghost" onclick="prev()">戻る</button>
       <button class="ghost" onclick="saveDraft()">途中保存</button>
@@ -1586,23 +1610,18 @@
   <div class="box">
     <div class="h1" id="aiChoiceTitle">AIと言葉で対話するかチャットで対話するかお選びください。</div>
 
-    <!-- サブコピー（短い補足） -->
     <div class="desc" style="margin-top:6px;">どちらもあとから切り替えできます。</div>
-
-    <!-- タイトルと選択の間のスペーサー -->
     <div aria-hidden="true" style="height:8px;"></div>
 
     <div class="field" style="margin-top:8px;">
       <div class="choiceRow" role="group" aria-label="AI対話方式の選択">
         <button class="choiceToggle" id="ai_choice_voice" onclick="aiChoiceSelect('voice')">
-          <!-- マイクのアイコン -->
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
           </svg>
           言葉
         </button>
         <button class="choiceToggle" id="ai_choice_chat" onclick="aiChoiceSelect('chat')">
-          <!-- 吹き出しのアイコン -->
           <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
             <path fill="#3c7fe6" d="M20 2H4a2 2 0 0 0-2 2v14l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/>
           </svg>
@@ -1614,12 +1633,6 @@
     <div style="display:flex; gap:6px; margin-top:12px;">
       <button class="btnPrimary" style="flex:1" onclick="closeModal(document.getElementById('aiChoiceModal'))">閉じる</button>
     </div>
-
-    <!-- Fallback表示（必要な場合のみ利用）
-    <div id="aiChoiceInlineNote" class="desc" style="margin-top:8px; display:none;">
-      本番ではAIとの自然言語もしくはチャットでの対話画面に推移します。
-    </div>
-    -->
   </div>
 </div>
 <!-- END: modal-ai-choice -->
@@ -1630,15 +1643,30 @@
 
 <!-- START: js-core -->
 <script>
+  // 画面番号マップ（表記ゆれ対応のため別表記も同値にマップ）
   const TITLE_NO = {
-    '手続き開始':1,'お車の情報':2,'車検証の情報':3,'免許証の色':4,'免許証の有効期限':5,
-    'お客様情報の確認':6,'お客様情報の編集':7,'主に運転する方（記名被保険者）':8,'主に運転する方の編集':9,
-    '運転者の範囲と年齢条件':10,'運転者範囲・年齢条件の編集':11,'使用目的・走行距離':12,'現在の内容を確認':13,
-    '現在と同じ補償内容で更新した場合の保険料':14,'更新方法の選択':15,'別のプランから選ぶ':16,
-    '人身傷害の金額を選ぶ':17,'車両保険の金額を選ぶ':18,'特約の付け外し':19,'最終見積のまとめ':20,'重要なご説明':21,
-    '連絡方法を選ぶ':22,'WEBと書面の選択':23,'同意と申込':24,'申込完了':25
+    '手続き開始':1, 'ログイン':2,
+    'お車の情報':3, '車検証の情報':4,
+    '免許証の情報を確認する':5, '免許証の色':6,
+    'お客様情報の確認':7, 'お客様情報の編集':8,
+    '主に運転する方（記名被保険者）':9, '主に運転する方の編集':10,
+    '運転者の範囲と年齢条件':11, '運転者範囲・年齢条件の編集':12,
+    '使用目的・走行距離':13,
+    '現在の内容を確認':14, '現在の補償内容と保険料の確認':14, // 別表記吸収
+    '現在と同じ補償内容で更新した場合の保険料':15, '同じ補償内容で更新した場合の保険料':15,
+    '更新方法の選択':16, '更新方法を選ぶ':16,
+    '別のプランから選ぶ':17,
+    '人身傷害の金額を選ぶ':18, '人身傷害':18,
+    '車両保険の金額を選ぶ':19, '車両保険':19,
+    '特約の付け外し':20, '特約':20,
+    '最終見積のまとめ':21, '最終見積もり':21,
+    '重要なご説明':22, '大切なポイント':22,
+    '連絡方法を選ぶ':23,
+    '受け取り方法を選ぶ':24,
+    '同意と申込':25, '同意して申込':25, '内容に同意して申し込む':25,
+    '申込完了':26, '完了':26
   };
-  const MAX_STEPS = 25;
+  const MAX_STEPS = 26;
 
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e){}
 
@@ -1792,10 +1820,11 @@
     scrollToTop();
 
     if (!isCover(i)){
-      const visualStep = (() => {
-        const coverCount = screens.slice(0, i+1).filter(s=> s.dataset.role==='cover').length;
-        return Math.max(1, Math.min(MAX_STEPS, i+1 - coverCount));
-      })();
+      const coverCount = screens.slice(0, i+1).filter(s=> s.dataset.role==='cover').length;
+      const curTitle = titles()[i] || '';
+      // 進捗はタイトルマップ優先。無い場合のみ旧ロジックでフォールバック
+      const mappedStep = TITLE_NO[curTitle];
+      const visualStep = Math.max(1, Math.min(MAX_STEPS, (typeof mappedStep === 'number' ? mappedStep : (i+1 - coverCount))));
 
       const progText = document.getElementById('progressText');
       if (progText) {
@@ -1812,7 +1841,7 @@
       }
 
       try{
-        const chap = (visualStep<=12) ? 'input' : (visualStep<=20 ? 'estimate' : (visualStep===21 ? 'explain' : 'apply'));
+        const chap = (visualStep<=13) ? 'input' : (visualStep<=21 ? 'estimate' : (visualStep===22 ? 'explain' : 'apply'));
         ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
           const el=document.getElementById(id);
           if(!el) return;
@@ -1825,19 +1854,20 @@
         });
       }catch(e){}
 
+      // 残り時間（全体12分の配分に基づく目安）
       const remaining = Math.round(12 * (MAX_STEPS - visualStep) / MAX_STEPS);
       const timeLeftEl = document.getElementById('timeLeft');
       if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
     }
 
     const curTitle=titles()[i]||'';
-    if (curTitle==='申込完了') updateCompletion();
-    if (curTitle==='最終見積のまとめ') {
+    if (curTitle==='申込完了' || curTitle==='完了') updateCompletion();
+    if (curTitle==='最終見積のまとめ' || curTitle==='最終見積もり') {
       try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
     }
 
     try{
-      if (curTitle==='免許証の有効期限' || curTitle==='免許証の色'){ populateDateSelectsSafe(); }
+      if (curTitle==='免許証の色'){ populateDateSelectsSafe(); }
       if (curTitle==='お客様情報の編集'){ populateDobSelectsSafe(); }
       if (curTitle==='主に運転する方の編集'){ populateMdDobSelectsSafe(); }
       if (curTitle==='車検証の情報'){ populateFirstRegSelectsSafe(); }
@@ -1873,7 +1903,7 @@
   function applyLarge(on){
     document.body.classList.toggle('large',on);
     const l=document.getElementById('lblLarge');
-    if(l) l.textContent = on ? '文字を小さく' : '文字を大きく';
+    if(l) l.textContent = on ? '文字縮小' : '文字拡大';
   }
   function toggleLarge(){ applyLarge(!document.body.classList.contains('large')); }
 
@@ -1885,10 +1915,11 @@
     }catch(e){ openNotice('保存に失敗しました（デモ）。'); }
   }
 
+  // 音声ガイド
   let guidedSpeaking=false; let guidedCancelFn=null;
   const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=50, BREAK_PAUSE=400;
 
-  function stopGuidedVoice(){ if(!('speechSynthesis'in window))return; try{speechSynthesis.cancel();}catch(e){} if(typeof guidedCancelFn==='function'){try{guidedCancelFn();}catch(e){}} guidedCancelFn=null; guidedSpeaking=false; setGuidedBtn(); }
+  function stopGuidedVoice(){ if(!('speechSynthesis'in window))return; try{speechSynthesis.cancel();}catch(e){} guidedCancelFn=null; guidedSpeaking=false; setGuidedBtn(); }
   function toggleGuidedVoice(){
     if (!('speechSynthesis' in window)) { showToast('音声読み上げに未対応のブラウザです'); return; }
     if (guidedSpeaking) { stopGuidedVoice(); showToast('音声を停止しました'); return; }
@@ -1919,6 +1950,7 @@
     guidedSpeaking=true; setGuidedBtn(); play(0);
   }
 
+  // 読み上げ補助
   const DASH_REGEX=/[‐‑‒–—−ー－-]/g;
   function normalizeDigitsAndDashes(s){ const toHalf=s.replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); return toHalf.replace(DASH_REGEX,'-'); }
   function replaceMaruWords(s){ return s.replace(/〇〇/g,'マルマル').replace(/〇/g,'マル'); }
@@ -1988,7 +2020,7 @@
       if(dob){
         q.push({text:`生年月日は${dob.replace('日','')}ニチ`, pause:ITEM_PAUSE});
         if(company){
-          const compReading = (company==='ABC株式会社') ? 'エービーシーカブシキガイシャ' : company;
+          const compReading = (会社名 => 会社名==='ABC株式会社' ? 'エービーシーカブシキガイシャ' : 会社名)(company);
           q.push({text:`キンムサキワ　${compReading}`, pause:ITEM_PAUSE});
         }
       }
@@ -2048,6 +2080,7 @@
     try{ showToast(`${name}を選択しました`);}catch(e){}
   }
 
+  // ログイン（認証コード）
   let codeSent=false;
   function sendLoginCode(){
     const id=(document.getElementById('loginId')?.value||'').trim();
@@ -2074,6 +2107,7 @@
     return true;
   }
 
+  // 見積もり計算系
   let cur=5900, same=6400, bodily='3000';
   function money(n){ return '¥'+Math.round(n).toLocaleString(); }
   function setCell(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
@@ -2177,6 +2211,7 @@
     const sel=getSelectedOptionsLabels(); renderOptionDiff(sel);
   }
 
+  // プラン選択導線
   function chooseSameFlow(){
     optSummaryMode='fixedCurrent';
     const newM=same, newY=newM*12;
@@ -2216,6 +2251,7 @@
     goToTitle('重要なご説明');
   }
 
+  // 同意・完了
   let flagSendPdf=false;
   function onAgreeSubmit(){
     const g1=document.getElementById('agree1'), g2=document.getElementById('agree2');
@@ -2224,7 +2260,6 @@
     setTimeout(()=>{ hideLoading(); goToTitle('申込完了'); }, 600);
   }
 
-  /* 完了画面の表示ロジック（PDF/重要事項PDF/郵送） */
   function updateCompletion(){
     const list=document.getElementById('doneList'),
           pdf=document.getElementById('donePdf'),
@@ -2233,40 +2268,30 @@
           postalUnder=document.getElementById('donePostalUnder');
     if(!list||!pdf||!postal||!postalUnder) return;
 
-    // 初期化
-    list.style.display='none';
-    pdf.style.display='none';
-    postal.style.display='none';
-    postalUnder.style.display='none';
+    list.style.display='none'; pdf.style.display='none'; postal.style.display='none'; postalUnder.style.display='none';
     if(impPdf) impPdf.style.display='none';
 
-    // 選択状態
-    const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');        // 申込書控えPDF＝必要
-    const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active'); // 保険証券＝書面
-    const importantPdfSelected = !!window.flagSendPdf;  // 重要事項全文PDFメール
+    const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');
+    const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active');
+    const importantPdfSelected = !!window.flagSendPdf;
 
     let showList=false;
     if(pdfSelected){ pdf.style.display='list-item'; showList=true; }
     if(importantPdfSelected && impPdf){ impPdf.style.display='list-item'; showList=true; }
     if(paperCertSelected){ postal.style.display='list-item'; showList=true; }
 
-    if(showList){
-      list.style.display='block';
-    }else if(paperCertSelected){
-      postalUnder.style.display='block';
-    }
+    if(showList){ list.style.display='block'; }
+    else if(paperCertSelected){ postalUnder.style.display='block'; }
   }
 
   function sendPdf(){ openNotice('本番ではPDF送付確認画面に推移します。'); }
   function openReasonDetail(){ const m=document.getElementById('reasonModal'); if(m) m.classList.add('show'); }
 
+  // クリック感フィードバック・見出しARIA
   (function(){
     var enableCTA = true;
     document.addEventListener('DOMContentLoaded', function(){
-      // CTA色（青）へ
       document.body.classList.toggle('exp-cta', enableCTA);
-
-      // 押下演出
       var pressables = document.querySelectorAll('.btnPrimary, .videoCta, .videoChip');
       pressables.forEach(function(el){
         var add = function(){ el.classList.add('pressed'); };
@@ -2291,6 +2316,7 @@
     });
   })();
 
+  // 初期化
   (function(){
     document.addEventListener('DOMContentLoaded', function(){
       populateDateSelectsSafe();
@@ -2298,10 +2324,9 @@
       populateMdDobSelectsSafe();
       populateFirstRegSelectsSafe();
       const l=document.getElementById('lblLarge');
-      if(l) l.textContent = document.body.classList.contains('large') ? '文字を小さく' : '文字を大きく';
+      if(l) l.textContent = document.body.classList.contains('large') ? '文字縮小' : '文字拡大';
       setGuidedBtn();
 
-      // 初期表示：カバー（表紙）を表示
       try{
         const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
         if(coverIdx>=0){
@@ -2314,6 +2339,7 @@
     });
   })();
 
+  // モーダルのフォーカストラップ
   (function(){
     let lastFocus = null;
     function getFocusable(container){
@@ -2346,6 +2372,7 @@
     });
   })();
 
+  // 初期フォーカス
   function focusFirstInteractive(scope){
     const root = scope || document.querySelector('.screen.active');
     if(!root) return;
@@ -2353,11 +2380,11 @@
     for (const sel of selectors) { const el = root.querySelector(sel); if (el && typeof el.focus === 'function') { el.focus(); return; } }
   }
 
-  // 「デモ開始」：カバーから通常1画面目（手続き開始）へ
+  // デモ開始
   function startDemo(){
     try{
       const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
-      const firstIdx = titles().indexOf('手続き開始'); // 既存1画面目
+      const firstIdx = titles().indexOf('手続き開始');
       if (firstIdx>=0){
         if (coverIdx>=0){ pushHistory(coverIdx); }
         setActive(firstIdx);
@@ -2366,9 +2393,9 @@
   }
 </script>
 <!-- END: js-core -->
+
 <!-- START: js-vehicle-handlers -->
 <script>
-/* 車情報手入力画面の補助（未定義関数を安全に補完） */
 (function(){
   if (typeof window.onMakerChange !== 'function') {
     window.onMakerChange = function(){
@@ -2394,7 +2421,6 @@
         const model = document.getElementById('model')?.value || '';
         const typeField = document.getElementById('typeField');
         if (typeField) typeField.style.display = 'block';
-        // 例：プリウスの場合は型式初期値を補助（任意）
         const typeSel = document.getElementById('type');
         if (typeSel && model === 'prius' && !typeSel.value){
           typeSel.value = 'ZVW50';
@@ -2403,7 +2429,6 @@
     };
   }
 
-  // 郵便番号→住所の簡易補完（お客様情報側）
   if (typeof window.mockZipToAddress !== 'function') {
     window.mockZipToAddress = function(zip){
       try{
@@ -2416,7 +2441,6 @@
     };
   }
 
-  // 初度登録年月のチェック（年・月必須／未来不可）
   if (typeof window.validateFirstRegSelect !== 'function') {
     window.validateFirstRegSelect = function(){
       try{
@@ -2428,7 +2452,6 @@
         }
         const now = new Date();
         const sel = new Date(Number(y), Number(m)-1, 1);
-        // 当月以降（未来）選択不可
         const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         if (sel > thisMonth){
           if (typeof openNotice === 'function') openNotice('初度登録年月は未来を選べません');
@@ -2442,7 +2465,6 @@
     };
   }
 
-  // 車台番号・ナンバーの最低限チェック＋整形
   if (typeof window.validateVIN !== 'function') {
     window.validateVIN = function(){
       try{
@@ -2472,10 +2494,8 @@
 </script>
 <!-- END: js-vehicle-handlers -->
 
-
 <!-- START: js-choice-toggles -->
 <script>
-/* WEBと書面の選択＋連絡方法選択：UIトグル＋必須選択チェック＋a11y強化＋重要事項の選択 */
 (function(){
   const groups = [
     {keys:['contact_email','contact_sms'], label:'連絡方法'},
@@ -2539,7 +2559,6 @@
     if (key==='notice_paper')  return 'notice_web';
     if (key==='pdf_yes')       return 'pdf_no';
     if (key==='pdf_no')        return 'pdf_yes';
-    // 追加：性別トグル（2箇所）
     if (key==='gender_m')      return 'gender_f';
     if (key==='gender_f')      return 'gender_m';
     if (key==='gender_m2')     return 'gender_f2';
@@ -2599,7 +2618,46 @@
         if (typeof openNotice === 'function') openNotice(msg); else alert(msg);
         return;
       }
-      if (typeof goToTitle === 'function') goToTitle('WEBと書面の選択');
+      if (typeof goToTitle === 'function') goToTitle('受け取り方法を選ぶ');
+    }catch(e){}
+  };
+
+  window.finishReceiveMethod = function(type){
+    try{
+      const setChoiceActive = (idSuffix, active)=>{
+        const el = document.getElementById('choice_'+idSuffix);
+        if(!el) return;
+        el.classList.toggle('active', !!active);
+        el.setAttribute('aria-checked', active ? 'true' : 'false');
+        el.setAttribute('tabindex', active ? '0' : '-1');
+      };
+
+      const setAll = (isWeb)=>{
+        setChoiceActive('terms_web',  isWeb);
+        setChoiceActive('terms_paper',!isWeb);
+        setChoiceActive('cert_web',   isWeb);
+        setChoiceActive('cert_paper', !isWeb);
+        setChoiceActive('notice_web', isWeb);
+        setChoiceActive('notice_paper',!isWeb);
+        setChoiceActive('pdf_no',     isWeb);
+        setChoiceActive('pdf_yes',    !isWeb);
+        window.choiceState = window.choiceState || {};
+        ['terms_web','terms_paper','cert_web','cert_paper','notice_web','notice_paper','pdf_yes','pdf_no'].forEach(k=>{
+          const el = document.getElementById('choice_'+k);
+          window.choiceState[k] = !!(el && el.classList.contains('active'));
+        });
+      };
+
+      if (type === 'paper'){
+        setAll(false);
+        goToTitle && goToTitle('同意と申込');
+      }else if (type === 'web'){
+        setAll(true);
+        goToTitle && goToTitle('同意と申込');
+      }else{
+        // 統合後は画面24（受け取り方法を選ぶ）に留まる/戻る
+        goToTitle && goToTitle('受け取り方法を選ぶ');
+      }
     }catch(e){}
   };
 
@@ -2633,7 +2691,7 @@
         });
       }catch(e){}
 
-      if (typeof goToTitle === 'function') goToTitle('同意と申込');
+      goToTitle && goToTitle('同意と申込');
     }catch(e){}
   };
 
@@ -2647,7 +2705,7 @@
         return;
       }
       try{ window.flagSendPdf = !!pdf; }catch(e){}
-      if (typeof goToTitle === 'function') goToTitle('連絡方法を選ぶ');
+      goToTitle && goToTitle('連絡方法を選ぶ');
     }catch(e){}
   };
 
@@ -2659,23 +2717,19 @@
 <!-- START: js-ai-choice -->
 <script>
 (function(){
-  // AI対話方式選択モーダルを開く
   window.openAiChoice = function(){
     var m = document.getElementById('aiChoiceModal');
     if (m && typeof openModal === 'function') {
       openModal(m);
     } else {
-      // モーダルが無い場合は既存のお知らせを直接表示（安全策）
       if (typeof openNotice === 'function') {
         openNotice('本番ではAIとの自然言語もしくはチャットでの対話画面に推移します。');
       }
     }
   };
 
-  // 「言葉」または「チャット」の選択
   window.aiChoiceSelect = function(type){
     try{
-      // 選択状態の見た目（淡い青）を一時付与（任意）
       var voice = document.getElementById('ai_choice_voice');
       var chat  = document.getElementById('ai_choice_chat');
       if (voice && chat) {
@@ -2683,22 +2737,14 @@
         chat.classList.toggle('active',  type==='chat');
       }
 
-      // 選択後、AIの案内（既存のお知らせ）を表示
-      // まずAI選択モーダルを閉じる
       var m = document.getElementById('aiChoiceModal');
       if (m && typeof closeModal === 'function') closeModal(m);
 
-      // 既存のNoticeを表示
       if (typeof openNotice === 'function') {
         openNotice('本番ではAIとの自然言語もしくはチャットでの対話画面に推移します。');
       } else {
         alert('本番ではAIとの自然言語もしくはチャットでの対話画面に推移します。');
       }
-
-      // もしポップアップを重ねたくない場合は、下記のようにインライン表示に切り替え可能
-      // var note = document.getElementById('aiChoiceInlineNote');
-      // if (note){ note.style.display = 'block'; }
-
     }catch(e){}
   };
 })();
@@ -2727,7 +2773,6 @@
       let v = String(valueText||'').trim();
       if (modeDigitsOnly) v = v.replace(/[^\d]/g,'');
       inp.value = v;
-      // 自動補完・整形
       if (fieldId === 'zip') { mockZipToAddress(v); }
       if (fieldId === 'md_zip' && typeof window.mdZipToAddress === 'function') { mdZipToAddress(v); }
       if (fieldId === 'plate' && v){
@@ -2751,7 +2796,6 @@
       else if (targetFieldId === 'vin') { putValue(targetFieldId, 'A000000000'); }
       else if (targetFieldId === 'plate') { putValue(targetFieldId, '1234'); }
       else if (targetFieldId === 'company') { putValue(targetFieldId, 'ABC株式会社'); }
-      // 主運転者（md_系）のサンプル値
       else if (targetFieldId === 'md_zip') { putValue(targetFieldId, '1234567'); }
       else if (targetFieldId === 'md_addr') { putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); }
       else if (targetFieldId === 'md_phone') { putValue(targetFieldId, '09012345678'); }
@@ -2854,7 +2898,6 @@
 
 <!-- START: js-md-zip-helper -->
 <script>
-/* 主運転者（md_）向け 郵便番号→住所の簡易自動補完 */
 (function(){
   window.mdZipToAddress = function(zip){
     try{
@@ -2872,7 +2915,6 @@
 <!-- START: js-large-label-override -->
 <script>
   (function(){
-    // 文字拡大トグルのラベルを短縮版に統一（文字拡大／文字縮小）
     window.applyLarge = function(on){
       document.body.classList.toggle('large', !!on);
       var l = document.getElementById('lblLarge');
