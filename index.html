@@ -365,7 +365,6 @@
     <!-- 予備（将来拡張） -->
     <!-- END: header-bottom -->
 
-
 <!-- START: screen-00-cover -->
 <section class="screen active" data-title="表紙" data-role="cover" aria-label="プロトタイプの表紙（セダン・ラインアート／タイヤ重ね＋青塗り）">
   <div class="coverWrap">
@@ -610,7 +609,6 @@
 </section>
 <!-- END: screen-04-vehicle-shaken -->
 
-
 <!-- START: screen-05-license-summary -->
 <section class="screen" data-title="免許証の情報を確認する">
   <div class="card">
@@ -627,7 +625,6 @@
   </div>
 </section>
 <!-- END: screen-05-license-summary -->
-
 
   <!-- START: screen-06-license -->
 <section class="screen" data-title="免許証の色">
@@ -1413,7 +1410,6 @@
     </section>
     <!-- END: screen-23-contact-method -->
 
-
 <!-- START: screen-24-receive-method -->
 <section class="screen" data-title="受け取り方法を選ぶ">
   <div class="card">
@@ -1510,8 +1506,6 @@
   </script>
 </section>
 <!-- END: screen-24-receive-method -->
-
-
 
 <!-- START: screen-26-consent -->
 <section class="screen" data-title="同意と申込">
@@ -1641,9 +1635,1091 @@
 <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <!-- END: toast -->
 
+<!-- START: js-core-bootstrap -->
+<script>
+  (function(){
+    if (!window.App){
+      window.App = { version: 'core-split-2025-12-01', modules: {}, bus: {}, flags:{} };
+      const listeners = {};
+      App.bus.on = function(evt, fn){ (listeners[evt] ||= []).push(fn); };
+      App.bus.emit = function(evt, payload){ (listeners[evt] || []).forEach(fn => { try{ fn(payload); }catch(e){} }); };
+    }
+  })();
+</script>
+<!-- END: js-core-bootstrap -->
+
+<!-- START: js-core-utils -->
+<script>
+  (function(App){
+    if (App.modules && App.modules.utils) return;
+    const safeTimers = new Set();
+    const utils = {
+      setSafeTimeout(fn, ms){
+        const id = setTimeout(()=>{ safeTimers.delete(id); try{ fn(); }catch(e){}; }, ms);
+        safeTimers.add(id); return id;
+      },
+      clearAllSafeTimeouts(){ safeTimers.forEach(id=> clearTimeout(id)); safeTimers.clear(); },
+      clamp(n,min,max){ return Math.max(min, Math.min(max, n)); },
+      isIOS(){ return /iPad|iPhone|iPod/.test(navigator.userAgent); }
+    };
+    App.modules = App.modules || {};
+    App.modules.utils = utils;
+  })(window.App || (window.App={modules:{},bus:{on(){},emit(){}}}));
+</script>
+<!-- END: js-core-utils -->
+
+<!-- START: js-core-guided-voice -->
+<script>
+  (function(App){
+    if (App.modules && App.modules.guidedVoice) return;
+    const U = (App.modules && App.modules.utils) || {};
+
+    let guidedSpeaking = false;
+    let cancelFlag = false;
+    let guidedCancelFn = function(){ cancelFlag = true; App.bus && App.bus.emit && App.bus.emit('voice:cancel'); };
+
+    const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=50, BREAK_PAUSE=400;
+
+    function setGuidedBtn(){
+      const lbl=document.getElementById('lblSpeak');
+      if(lbl) lbl.textContent = guidedSpeaking ? '音声を停止' : '音声で解説';
+    }
+
+    function speakQueue(queue,{rate=1.0,volume=1.0}={}){
+      cancelFlag=false;
+      const play=(idx)=>{
+        if(cancelFlag) return;
+        if(idx>=queue.length){ guidedSpeaking=false; setGuidedBtn(); App.bus && App.bus.emit && App.bus.emit('voice:end'); return; }
+        const seg=queue[idx];
+        const u=new SpeechSynthesisUtterance(seg.text);
+        u.lang='ja-JP'; u.rate=rate; u.volume=volume;
+        u.onstart=()=>{ guidedSpeaking=true; setGuidedBtn(); App.bus && App.bus.emit && App.bus.emit('voice:start'); };
+        u.onend=()=>{ if(!cancelFlag) setTimeout(()=>play(idx+1), typeof seg.pause==='number'? seg.pause: ITEM_PAUSE); };
+        u.onerror=()=>{ if(!cancelFlag) setTimeout(()=>play(idx+1), 300); };
+        try{ speechSynthesis.speak(u);}catch(e){ setTimeout(()=>play(idx+1), 300); }
+      };
+      try{ speechSynthesis.cancel(); }catch(e){}
+      guidedSpeaking=true; setGuidedBtn(); play(0);
+    }
+
+    function stopGuidedVoice(){
+      try{ if (typeof guidedCancelFn === 'function') guidedCancelFn(); }catch(e){}
+      try{ if ('speechSynthesis' in window) speechSynthesis.cancel(); }catch(e){}
+      guidedSpeaking=false; setGuidedBtn(); App.bus && App.bus.emit && App.bus.emit('voice:stop');
+    }
+
+    // 読み上げ補助
+    const DASH_REGEX=/[‐‑‒–—−ー－-]/g;
+    function normalizeDigitsAndDashes(s){ const toHalf=s.replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); return toHalf.replace(DASH_REGEX,'-'); }
+    function replaceMaruWords(s){ return s.replace(/〇〇/g,'マルマル').replace(/〇/g,'マル'); }
+    function readBlockNumberForSpeech(bn){
+      const map={'0':'ゼロ','1':'イチ','2':'ニ','3':'サン','4':'ヨン','5':'ゴ','6':'ロク','7':'ナナ','8':'ハチ','9':'キュウ'};
+      const normalized=normalizeDigitsAndDashes(bn);
+      const parts=normalized.split('-').filter(Boolean).map(token=> token.split('').map(d=> map[d]||d).join(''));
+      return parts.join('の');
+    }
+    function buildAddressSegments(addr){
+      const segs=[]; let rest=addr;
+      if(rest.includes('東京都')){ segs.push('東京都'); rest=rest.replace('東京都',''); }
+      if(rest.includes('港区'))  { segs.push('港区');   rest=rest.replace('港区',''); }
+      if(rest.includes('赤坂')){ segs.push('アカサカ'); rest=rest.replace('赤坂',''); }
+      rest = replaceMaruWords(rest);
+      const normalized=normalizeDigitsAndDashes(rest);
+      const blockMatch=normalized.match(/(\d+(?:-\d+)+|\d+)/);
+      if(blockMatch){
+        segs.push(readBlockNumberForSpeech(blockMatch[1]));
+        rest=rest.replace(/[０-９0-9][０-９0-9\- ‑‒–—−ー－]*/, '').trim();
+      }
+      if(rest) segs.push(rest.replace(/\s+/g,''));
+      return segs.filter(Boolean);
+    }
+    function kanaDigits(s){ const map={'0':'ゼロ','1':'イチ','2':'ニ','3':'サン','4':'ヨン','5':'ゴ','6':'ロク','7':'ナナ','8':'ハチ','9':'キュウ'}; return s.split('').map(d=> map[d]||d).join(''); }
+    function formatPhoneNo(phoneRaw){
+      const p=phoneRaw.replace(/[^\d]/g,'');
+      if(p.length===11) return `${kanaDigits(p.slice(0,3))}の${kanaDigits(p.slice(3,7))}の${kanaDigits(p.slice(7))}`;
+      if(p.length===10) return `${kanaDigits(p.slice(0,3))}の${kanaDigits(p.slice(3,7))}の${kanaDigits(p.slice(7))}`;
+      return kanaDigits(p);
+    }
+
+    function buildGuidedQueue(){
+      const screens=[...document.querySelectorAll('.screen')];
+      const step = screens.findIndex(s=> s.classList.contains('active'));
+      const titles = ()=> screens.map(s=> s.dataset.title);
+      const title = titles()[step];
+      if(title==='お客様情報の確認'){
+        const list=document.getElementById('custList');
+        const lines=(list?.innerText||'').split('\n').map(s=>s.trim()).filter(Boolean);
+        const name=(lines.find(v=>v.startsWith('氏名：'))||'').replace('氏名：','').trim();
+        const gender=(lines.find(v=>v.startsWith('性別：'))||'').replace('性別：','').trim();
+        const addr=(lines.find(v=>v.startsWith('住所：'))||'').replace('住所：','').trim();
+        const phone=(lines.find(v=>v.startsWith('電話番号：'))||'').replace('電話番号：','').trim();
+        const dob=(lines.find(v=>v.startsWith('生年月日：'))||'').replace('生年月日：','').trim();
+        const company=(lines.find(v=>v.startsWith('勤務先：'))||'').replace('勤務先：','').trim();
+        const q=[];
+        q.push({text:'変更はございますか？ご登録内容を読み上げます。', pause:ITEM_PAUSE});
+        if(name){ q.push({text:`氏名は、${name}`, pause:NAME_BRIEF_PAUSE}); q.push({text:'サマ。', pause:ITEM_PAUSE}); const g = gender.includes('女性') ? 'ジョセイ' : 'ダンセイ'; q.push({text:`セイベツワ　${g}`, pause:ITEM_PAUSE}); }
+        if(addr){
+          const addrSegs=buildAddressSegments(addr);
+          if(addrSegs.length){
+            q.push({text:'住所は、', pause:SUB_PAUSE});
+            addrSegs.forEach((s,i)=> q.push({text:s+(i===addrSegs.length-1?'':'、'), pause:SUB_PAUSE}));
+            q.push({text:'。', pause:ITEM_PAUSE});
+          }else{ q.push({text:`住所は、${addr}。`, pause:ITEM_PAUSE}); }
+        }
+        if(phone){ q.push({text:`電話番号は、${formatPhoneNo(phone)}。`, pause:ITEM_PAUSE}); }
+        if(dob){
+          q.push({text:`生年月日は${dob.replace('日','')}ニチ`, pause:ITEM_PAUSE});
+          if(company){
+            const compReading = (会社名 => 会社名==='ABC株式会社' ? 'エービーシーカブシキガイシャ' : 会社名)(company);
+            q.push({text:`キンムサキワ　${compReading}`, pause:ITEM_PAUSE});
+          }
+        }
+        q.push({text:'内容に変更はございますか。変更がある場合は、変更するボタンを押してください。', pause:0});
+        return q;
+      }
+      const raw = (screens[step]?.innerText || '');
+      const lines = raw.split('\n').map(s=> s.trim()).filter(Boolean);
+      const queue = [];
+      lines.forEach((line, idx)=>{ queue.push({ text: line, pause: (idx === lines.length-1 ? SUB_PAUSE : BREAK_PAUSE) }); });
+      return queue.length ? queue : [{text: raw.replace(/\s+/g,' '), pause:0}];
+    }
+
+    function toggleGuidedVoice(){
+      if (!('speechSynthesis' in window)) { try{ showToast('音声読み上げに未対応のブラウザです'); }catch(e){} return; }
+      if (guidedSpeaking) { stopGuidedVoice(); try{ showToast('音声を停止しました'); }catch(e){} return; }
+      const queue=buildGuidedQueue();
+      const screens=[...document.querySelectorAll('.screen')];
+      const step = screens.findIndex(s=> s.classList.contains('active'));
+      const title = screens[step]?.dataset?.title || '';
+      const isIOS = U && U.isIOS && U.isIOS();
+      const opts={ rate:1.0, volume:1.0 };
+      const merged = isIOS && (title !== 'お客様情報の確認')
+        ? [{text:queue.map(q=>q.text).join('。'), pause:0}] : queue;
+      speakQueue(merged, opts);
+      try{ showToast('音声で解説を開始しました（再タップで停止）'); }catch(e){}
+    }
+
+    App.modules = App.modules || {};
+    App.modules.guidedVoice = {
+      speakQueue, stop: stopGuidedVoice, toggle: toggleGuidedVoice,
+      buildGuidedQueue, get speaking(){ return guidedSpeaking; },
+      get cancel(){ return guidedCancelFn; }, cancelQueue(){ guidedCancelFn(); }
+    };
+
+    // 互換API
+    window.stopGuidedVoice = stopGuidedVoice;
+    window.toggleGuidedVoice = toggleGuidedVoice;
+    window.setGuidedBtn = setGuidedBtn;
+    window.guidedCancelFn = guidedCancelFn;
+    window.guidedSpeaking = guidedSpeaking;
+  })(window.App || (window.App={modules:{},bus:{on(){},emit(){}}}));
+</script>
+<!-- END: js-core-guided-voice -->
+
+<!-- START: js-core-progress -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.progress) return;
+
+    // 内部関数：可視ステップの計算（TITLE_NO優先、無い場合はindexベース）
+    function computeVisualStep(i, screens, TITLE_NO, MAX_STEPS){
+      try{
+        const titles = screens.map(s => s.dataset.title || '');
+        const t = titles[i] || '';
+        const m = (TITLE_NO && typeof TITLE_NO[t] === 'number') ? TITLE_NO[t] : null;
+        if (typeof m === 'number') return Math.max(1, Math.min(MAX_STEPS, m));
+        // マップが無ければ cover を除いて単純カウント
+        const coverCount = screens.slice(0, i+1).filter(s => s.dataset.role === 'cover').length;
+        return Math.max(1, Math.min(MAX_STEPS, (i + 1 - coverCount)));
+      }catch(e){
+        return Math.max(1, Math.min(MAX_STEPS, i+1));
+      }
+    }
+
+    // 内部関数：章ハイライトの更新
+    function updateChapters(visualStep){
+      try{
+        const chap = (visualStep<=13) ? 'input' : (visualStep<=21 ? 'estimate' : (visualStep===22 ? 'explain' : 'apply'));
+        ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
+          const el=document.getElementById(id);
+          if(!el) return;
+          el.classList.toggle('active',
+            (chap==='input'   && id==='chapInput') ||
+            (chap==='estimate'&& id==='chapEstimate') ||
+            (chap==='explain' && id==='chapExplain') ||
+            (chap==='apply'   && id==='chapApply')
+          );
+        });
+      }catch(e){}
+    }
+
+    // 内部関数：進捗の可視更新
+    function updateProgressUI(visualStep, MAX_STEPS){
+      try{
+        const progText = document.getElementById('progressText');
+        if (progText) {
+          progText.textContent = visualStep===1 ? `進捗 ${visualStep}/${MAX_STEPS}（最大）` : `進捗 ${visualStep}/${MAX_STEPS}`;
+        }
+        const pct = (visualStep / MAX_STEPS) * 100;
+        const bar = document.getElementById('progressBar');
+        if (bar){
+          bar.style.width = `${pct}%`;
+          bar.setAttribute('aria-valuemin','0');
+          bar.setAttribute('aria-valuemax', String(MAX_STEPS));
+          bar.setAttribute('aria-valuenow', String(visualStep));
+          bar.setAttribute('aria-valuetext', `全${MAX_STEPS}ステップ中の${visualStep}ステップ目`);
+        }
+      }catch(e){}
+    }
+
+    // 内部関数：残り時間の目安更新
+    function updateTimeLeft(visualStep, MAX_STEPS){
+      try{
+        const remaining = Math.round(12 * (MAX_STEPS - visualStep) / MAX_STEPS);
+        const timeLeftEl = document.getElementById('timeLeft');
+        if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
+      }catch(e){}
+    }
+
+    // 画面アクティブ変更時に呼び出すエントリポイント
+    function onActive(index, screens, MAX_STEPS, TITLE_NO){
+      try{
+        const visualStep = computeVisualStep(index, screens, TITLE_NO, MAX_STEPS);
+        updateProgressUI(visualStep, MAX_STEPS);
+        updateChapters(visualStep);
+        updateTimeLeft(visualStep, MAX_STEPS);
+      }catch(e){}
+    }
+
+    App.modules.progress = { onActive, computeVisualStep };
+  })(window.App);
+</script>
+<!-- END: js-core-progress -->
+
+<!-- START: js-core-storage -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.storage) return;
+
+    var KEY = 'auto_ins_update_draft';
+
+    function safeOpenNotice(msg){
+      try{
+        if (typeof window.openNotice === 'function') { openNotice(msg); }
+        else { alert(msg); }
+      }catch(e){}
+    }
+
+    function save(){
+      try{
+        // グローバル（js-core）から最小限の状態を取得
+        var curStep = (typeof window.step === 'number') ? window.step : 0;
+        var getTitles = (typeof window.titles === 'function') ? window.titles : function(){ return Array.from(document.querySelectorAll('.screen')).map(function(s){ return s.dataset.title || ''; }); };
+        var titleArr = getTitles();
+        var title = titleArr[curStep] || '';
+        var hist = Array.isArray(window.historyStack) ? window.historyStack.slice() : [];
+        var data = { step: curStep, title: title, hist: hist, timestamp: new Date().toISOString() };
+        localStorage.setItem(KEY, JSON.stringify(data));
+        safeOpenNotice('途中保存しました。次回は前回の続きから再開できます（デモ）。');
+      }catch(e){
+        safeOpenNotice('保存に失敗しました（デモ）。');
+      }
+    }
+
+    function load(){
+      try{
+        var raw = localStorage.getItem(KEY);
+        if (!raw) return null;
+        var data = JSON.parse(raw);
+        if (!data || typeof data.step !== 'number') return null;
+        return data;
+      }catch(e){
+        return null;
+      }
+    }
+
+    function clear(){
+      try{ localStorage.removeItem(KEY); }catch(e){}
+    }
+
+    // 初回読み込み時に下書きがあれば復元の提案（軽量なconfirmで実装）
+    function offerResume(){
+      try{
+        var data = load();
+        if (!data) return;
+
+        // すでに表紙でない or すでにナビゲーション開始済みなら提案しない
+        var screens = Array.from(document.querySelectorAll('.screen'));
+        var activeIdx = screens.findIndex(function(s){ return s.classList.contains('active'); });
+        var isCover = function(i){ return !!(screens[i] && screens[i].dataset.role === 'cover'); };
+        var onCover = isCover(activeIdx);
+
+        if (!onCover) return;
+
+        var ok = window.confirm('前回の続き（「' + (data.title || '前回の画面') + '」）から再開しますか？');
+        if (!ok) return;
+
+        // ヒストリーも復元（可能な範囲）
+        try{
+          if (Array.isArray(data.hist)) {
+            window.historyStack = data.hist.slice(); // 破壊的代入
+          }
+        }catch(e){}
+
+        // 該当タイトルへ移動（なければ step index でフォールバック）
+        var titlesFn = (typeof window.titles === 'function') ? window.titles : function(){ return screens.map(function(s){ return s.dataset.title || ''; }); };
+        var list = titlesFn();
+        var tIdx = list.indexOf(data.title);
+        if (tIdx >= 0 && typeof window.goToTitle === 'function') {
+          window.goToTitle(data.title);
+        } else if (typeof window.setActive === 'function') {
+          window.setActive(Math.max(0, Math.min(screens.length - 1, data.step)));
+        } else if (typeof window.goToTitle === 'function') {
+          // 最後の手段
+          window.goToTitle('手続き開始');
+        }
+      }catch(e){}
+    }
+
+    App.modules.storage = { save, load, clear, offerResume };
+
+    // 既存onclick互換（js-core短縮後もここに委譲）
+    if (typeof window.saveDraft !== 'function'){
+      window.saveDraft = function(){ try{ App.modules.storage.save(); }catch(e){} };
+    }
+  })(window.App);
+</script>
+<!-- END: js-core-storage -->
+
+<!-- START: js-core-network -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.network) return;
+
+    // 設定（将来の本番API切替を見据えた簡易設定）
+    var cfg = {
+      baseUrl: '',          // 本番でAPIベースURLを入れる
+      timeoutMs: 10000,     // ネットワークタイムアウト
+      mock: true            // デモ中はモック
+    };
+
+    function safeOpenNotice(msg){
+      try{ (typeof window.openNotice === 'function') ? openNotice(msg) : alert(msg); }catch(e){}
+    }
+    function safeToast(msg){
+      try{ (typeof window.showToast === 'function') ? showToast(msg) : console.log('[toast]', msg); }catch(e){}
+    }
+    function focusOtp(){
+      try{ document.getElementById('otp1')?.focus(); }catch(e){}
+    }
+
+    // 汎用リクエスト（今後の拡張用）
+    async function request(path, opts){
+      if (cfg.mock){
+        // デモでは疑似遅延のみ
+        await new Promise(r => setTimeout(r, 450));
+        return { ok:true, status:200, json: async()=>({ ok:true }) };
+      }
+      const ctrl = new AbortController();
+      const id = setTimeout(()=> ctrl.abort(), cfg.timeoutMs);
+      try{
+        const res = await fetch((cfg.baseUrl || '') + path, { ...opts, signal: ctrl.signal });
+        clearTimeout(id);
+        return res;
+      }catch(e){
+        clearTimeout(id);
+        throw e;
+      }
+    }
+
+    // 認証コード送信（デモ実装：入力チェック + 成功トースト + フォーカス移動）
+    async function sendLoginCode(){
+      try{
+        const id = (document.getElementById('loginId')?.value || '').trim();
+        if (!id){
+          safeOpenNotice('電話番号またはメールアドレスを入力してください');
+          return;
+        }
+        // 通信中の見た目（任意）
+        try{ if (typeof window.showLoading === 'function') showLoading(); }catch(_){}
+
+        // デモはmock成功
+        await request('/auth/send-code', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ loginId:id }) });
+
+        try{ if (typeof window.hideLoading === 'function') hideLoading(); }catch(_){}
+        safeToast('認証コードを送信しました（デモ）。届いた４桁の認証コードを入力してください');
+        focusOtp();
+      }catch(e){
+        try{ if (typeof window.hideLoading === 'function') hideLoading(); }catch(_){}
+        safeOpenNotice('認証コードの送信に失敗しました。しばらくしてから再度お試しください。');
+      }
+    }
+
+    App.modules.network = { sendLoginCode, request, config: cfg };
+
+    // 既存のonclick互換（js-core短縮後はここに委譲）
+    if (typeof window.sendLoginCode !== 'function'){
+      window.sendLoginCode = function(){ try{ App.modules.network.sendLoginCode(); }catch(e){} };
+    }
+  })(window.App);
+</script>
+<!-- END: js-core-network -->
+
+<!-- START: js-core-estimate -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.estimate) return;
+
+    // 内部状態（従来どおり）
+    let cur=5900, same=6400, bodily='3000';
+
+    // ユーティリティ
+    function money(n){ return '¥'+Math.round(n).toLocaleString(); }
+    function setCell(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
+    function setDelta(id,v){
+      const el=document.getElementById(id); if(!el) return;
+      const sign=v>=0?'+':'-'; const abs=Math.abs(v);
+      el.textContent=`${sign}¥${Math.round(abs).toLocaleString()}`;
+      el.classList.toggle('dpos',v>=0); el.classList.toggle('dneg',v<0);
+    }
+    function normalizeVehicleText(amount, deduct){
+      const dMText = (deduct === 0) ? '0万円' : (deduct === 100000 ? '10万円' : '5万円');
+      if (amount === 0) return 'なし';
+      return `${amount}万円・免責${dMText}`;
+    }
+
+    function recalcSamePage(){
+      const sameM=same, sameY=same*12, curM=cur, curY=cur*12;
+      setCell('curMonthly12', money(curM)); setCell('curYearly12', money(curY));
+      setCell('sameMonthly', money(sameM)); setCell('sameYearly', money(sameY));
+      setCell('deltaMonthlyBox',(sameM-curM>=0?'+':'-')+'¥'+Math.abs(sameM-curM).toLocaleString());
+      setCell('deltaYearlyBox',(sameY-curY>=0?'+':'-')+'¥'+Math.abs(sameY-curY).toLocaleString());
+      setCell('planUpCurM', money(curM)); setCell('planUpCurY', money(curY));
+      setCell('planUpNewM', money(6900)); setCell('planUpNewY', money(6900*12));
+      setDelta('planUpDeltaM', 6900-curM); setDelta('planUpDeltaY', 6900*12-curY);
+      setCell('planDownCurM', money(curM)); setCell('planDownCurY', money(curY));
+      setCell('planDownNewM', money(4800)); setCell('planDownNewY', money(4800*12));
+      setDelta('planDownDeltaM', 4800-curM); setDelta('planDownDeltaY', 4800*12-curY);
+    }
+
+    function updateDiffLinesDynamic(){
+      const bEl = document.getElementById('diffBodily');
+      if (bEl){
+        const curB = '3,000万円';
+        let newB = '3,000万円';
+        if (bodily === '5000') newB = '5,000万円';
+        else if (bodily === '8000') newB = '8,000万円';
+        else if (bodily === '10000') newB = '1億円';
+        else if (bodily === 'unlimited') newB = '無制限';
+        bEl.textContent = (newB === curB)
+          ? `人身傷害：${curB}`
+          : `人身傷害：${curB} ➡ ${newB}`;
+      }
+      const vEl = document.getElementById('diffVehicle');
+      if (vEl){
+        const vehA = Number(document.getElementById('vehicleAmount')?.value || 200);
+        const deduct = Number(document.getElementById('deduct')?.value || 50000);
+        const curV = `200万円・免責5万円`;
+        const newV = normalizeVehicleText(vehA, deduct);
+        vEl.textContent = (newV === curV)
+          ? `車両保険：${curV}`
+          : `車両保険：${curV} ➡ ${newV}`;
+      }
+    }
+
+    function getSelectedOptionsLabels(){
+      const s=[];
+      if(document.getElementById('opt_law')?.checked)    s.push('弁護士費用');
+      if(document.getElementById('opt_rental')?.checked) s.push('代車費用');
+      if(document.getElementById('opt_dap')?.checked)    s.push('DAP（ドライブレコーダー）');
+      return s;
+    }
+    const currentOptionBaseline=['弁護士費用','代車費用'];
+    function arrayEqualIgnoreOrder(a,b){ if(a.length!==b.length) return false; const aa=[...a].sort(), bb=[...b].sort(); return aa.every((v,i)=> v===bb[i]); }
+    function normalizeOptionLabel(lbl){
+      return String(lbl || '')
+        .replace(/特約/g, '')
+        .replace(/DAP（ドライブレコーダー）特約/g, 'DAP（ドライブレコーダー）');
+    }
+    function renderOptionDiff(newList){
+      const curStr='弁護士費用／代車費用';
+      const newStr = newList.length ? newList.map(normalizeOptionLabel).join('／') : 'なし';
+      const el=document.getElementById('optSummary'); if(!el) return;
+      if(arrayEqualIgnoreOrder(newList, currentOptionBaseline)){
+        el.textContent = `特約：${curStr}`;
+      }else{
+        el.textContent = `特約：${curStr} ➡ ${newStr}`;
+      }
+    }
+
+    let optSummaryMode='dynamic';
+    function updateOptionSummary(){
+      if(optSummaryMode==='fixedCurrent'){ renderOptionDiff([...currentOptionBaseline]); return; }
+      if(optSummaryMode==='fixedNone'){ renderOptionDiff([]); return; }
+      const sel=getSelectedOptionsLabels(); renderOptionDiff(sel);
+    }
+
+    function recalcAll(){
+      recalcSamePage();
+      let bodilyAdj=0;
+      if(bodily==='5000') bodilyAdj=400; else if(bodily==='8000') bodilyAdj=700; else if(bodily==='10000') bodilyAdj=900; else if(bodily==='unlimited') bodilyAdj=1200;
+      const vehA=Number(document.getElementById('vehicleAmount')?.value||200);
+      const deduct=Number(document.getElementById('deduct')?.value||50000);
+      const optLaw=document.getElementById('opt_law')?.checked?200:0;
+      const optRent=document.getElementById('opt_rental')?.checked?180:0;
+      const optDap=document.getElementById('opt_dap')?.checked?200:0;
+      const vehAdj=vehA===0?-1200:(vehA===150?300:(vehA===200?600:900));
+      let deductAdj=0; if(deduct===0) deductAdj=400; else if(deduct===100000) deductAdj=-400;
+      const optAdj=optLaw+optRent+(isNaN(optDap)?0:optDap);
+      const newMonthly=Math.max(1500, same + bodilyAdj + vehAdj + deductAdj + optAdj);
+      const newYearly=newMonthly*12;
+      setCell('curMonthly', money(cur)); setCell('curYearly', money(cur*12));
+      setCell('kpiCur1', money(cur)); setCell('kpiCur1Y', money(cur*12));
+      setCell('kpiNew1', money(newMonthly)); setCell('kpiNew1Y', money(newYearly)); setDelta('kpiDelta1', newMonthly-cur); setDelta('kpiDelta1Y', newYearly - cur*12);
+      setCell('kpiCur2', money(cur)); setCell('kpiCur2Y', money(cur*12));
+      setCell('kpiNew2', money(newMonthly)); setCell('kpiNew2Y', money(newYearly)); setDelta('kpiDelta2', newMonthly-cur); setDelta('kpiDelta2Y', newYearly - cur*12);
+      setCell('kpiCur3', money(cur)); setCell('kpiCur3Y', money(cur*12));
+      setCell('kpiNew3', money(newMonthly)); setCell('kpiNew3Y', money(newYearly)); setDelta('kpiDelta3', newMonthly-cur); setDelta('kpiDelta3Y', newYearly - cur*12);
+      setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
+      setCell('sumNewMonthly', money(newMonthly)); setCell('sumNewYearly', money(newYearly));
+      setDelta('sumDeltaMonthly', newMonthly-cur); setDelta('sumDeltaYearly', newYearly - cur*12);
+      updateOptionSummary();
+      try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
+    }
+
+    function onBodilyChange(val){ bodily=val||'3000'; recalcAll(); }
+
+    function chooseSameFlow(){
+      optSummaryMode='fixedCurrent';
+      const newM=same, newY=newM*12;
+      setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
+      setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
+      setDelta('sumDeltaMonthly', newM-cur); setDelta('sumDeltaYearly', newY - cur*12);
+      const b=document.getElementById('diffBodily'), v=document.getElementById('diffVehicle');
+      if(b) b.textContent='人身傷害：3,000万円';
+      if(v) v.textContent='車両保険：200万円・免責5万円';
+      updateOptionSummary();
+      try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
+      if (typeof window.goToTitle === 'function') window.goToTitle('重要なご説明');
+    }
+    function openSimplePlans(){ if (typeof window.goToTitle === 'function') window.goToTitle('別のプランから選ぶ'); }
+    function goStepByStep(){ optSummaryMode='dynamic'; if (typeof window.goToTitle === 'function') window.goToTitle('人身傷害の金額を選ぶ'); }
+    function chooseSimplePlan(type){
+      let newM=same;
+      const b=document.getElementById('diffBodily');
+      const v=document.getElementById('diffVehicle');
+      if(type==='up'){
+        newM=6900;
+        if(b) b.textContent='人身傷害：3,000万円 ➡ 5,000万円';
+        if(v) v.textContent='車両保険：200万円・免責5万円 ➡ 250万円・免責5万円';
+        optSummaryMode='fixedCurrent';
+      }else{
+        newM=4800;
+        if(b) b.textContent='人身傷害：3,000万円';
+        if(v) v.textContent='車両保険：あり ➡ なし';
+        optSummaryMode='fixedNone';
+      }
+      const newY=newM*12;
+      setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
+      setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
+      setDelta('sumDeltaMonthly', newM - cur); setDelta('sumDeltaYearly', newY - cur*12);
+      updateOptionSummary();
+      try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
+      if (typeof window.goToTitle === 'function') window.goToTitle('重要なご説明');
+    }
+
+    // 公開API
+    App.modules.estimate = {
+      recalcAll, onBodilyChange, chooseSameFlow, openSimplePlans, goStepByStep, chooseSimplePlan
+    };
+
+    // 互換API（HTMLのonclick互換維持）
+    window.recalcAll = recalcAll;
+    window.onBodilyChange = onBodilyChange;
+    window.chooseSameFlow = chooseSameFlow;
+    window.openSimplePlans = openSimplePlans;
+    window.goStepByStep = goStepByStep;
+    window.chooseSimplePlan = chooseSimplePlan;
+  })(window.App);
+</script>
+<!-- END: js-core-estimate -->
+
+<!-- START: js-estimate-final-bridge -->
+<script>
+  (function(){
+    // recalcAll の呼び出しで最終見積の表記整形も確実に呼ぶ統合ラッパ
+    try{
+      var mod = (window.App && App.modules && App.modules.estimate) ? App.modules.estimate : null;
+      if (mod && typeof mod.recalcAll === 'function'){
+        var originalRecalc = mod.recalcAll;
+        var unified = function(){
+          try{ originalRecalc(); }catch(e){}
+          try{ if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); }catch(e){}
+        };
+        // モジュール内とwindow双方に統一版を適用
+        App.modules.estimate.recalcAll = unified;
+        window.recalcAll = unified;
+      }
+    }catch(e){}
+
+    // 人身傷害・車両/免責の変更時は即時に再計算＋最終整形
+    function bindLiveRecalc(){
+      try{
+        var bodilySel = document.getElementById('bodilyAmount');
+        var vehSel    = document.getElementById('vehicleAmount');
+        var dedSel    = document.getElementById('deduct');
+        var handler = function(){
+          try{ App.modules && App.modules.estimate && App.modules.estimate.recalcAll(); }catch(e){}
+        };
+        if (bodilySel) bodilySel.addEventListener('change', handler);
+        if (vehSel)    vehSel.addEventListener('change', handler);
+        if (dedSel)    dedSel.addEventListener('change', handler);
+      }catch(e){}
+    }
+    document.addEventListener('DOMContentLoaded', bindLiveRecalc);
+  })();
+</script>
+<!-- END: js-estimate-final-bridge -->
+
+<!-- START: js-core-modal -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.modal) return;
+
+    let lastFocus = null;
+
+    function getFocusable(container){
+      try{
+        return Array.from(container.querySelectorAll(
+          'a[href], area[href], input:not([disabled]), select:not([disabled]), ' +
+          'textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(el => el.offsetParent !== null);
+      }catch(e){ return []; }
+    }
+
+    function trapFocus(modal){
+      function onKeyDown(e){
+        if (e.key === 'Escape') { e.preventDefault(); closeModal(modal); return; }
+        if (e.key !== 'Tab') return;
+        const f = getFocusable(modal); if (f.length === 0) return;
+        const first = f[0], last = f[f.length-1];
+        if (e.shiftKey){
+          if (document.activeElement === first || !modal.contains(document.activeElement)) { e.preventDefault(); last.focus(); }
+        }else{
+          if (document.activeElement === last || !modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+        }
+      }
+      modal.__trapHandler = onKeyDown;
+      document.addEventListener('keydown', onKeyDown);
+    }
+
+    function untrapFocus(modal){
+      if (modal.__trapHandler){
+        document.removeEventListener('keydown', modal.__trapHandler);
+        modal.__trapHandler = null;
+      }
+    }
+
+    function openModal(modal){
+      try{
+        lastFocus = document.activeElement;
+        modal.classList.add('show');
+        const f = getFocusable(modal);
+        (f.find(el=>el.id && /CloseBtn$/i.test(el.id)) || f[0] || modal).focus();
+        trapFocus(modal);
+      }catch(e){}
+    }
+
+    function closeModal(modal){
+      try{
+        untrapFocus(modal);
+        modal.classList.remove('show');
+        if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+        lastFocus = null;
+      }catch(e){}
+    }
+
+    // 外側タップで閉じる（既存モーダルに適用）
+    function bindBackdropClose(id){
+      try{
+        const m = document.getElementById(id);
+        if(!m) return;
+        m.addEventListener('mousedown', function(e){ if(e.target === m) closeModal(m); });
+      }catch(e){}
+    }
+
+    // 公開API
+    App.modules.modal = { openModal, closeModal };
+
+    // 互換: windowへ公開（既存コードが参照）
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+
+    // 既存モーダルへ適用
+    document.addEventListener('DOMContentLoaded', function(){
+      ['noticeModal','reasonModal','aiChoiceModal'].forEach(bindBackdropClose);
+    });
+  })(window.App);
+</script>
+<!-- END: js-core-modal -->
+
+<!-- START: js-core-accessibility -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.accessibility) return;
+
+    // 初期フォーカス（画面内の最初のインタラクティブ要素へ）
+    function focusFirstInteractive(scope){
+      try{
+        const root = scope || document.querySelector('.screen.active');
+        if(!root) return;
+        const selectors = [ 'button.btnPrimary', 'input, select, textarea, button, a[href]', '.coverStartBtn' ];
+        for (const sel of selectors){
+          const el = root.querySelector(sel);
+          if (el && typeof el.focus === 'function'){ el.focus(); return; }
+        }
+      }catch(e){}
+    }
+
+    // 見出しARIA付与（.card .h1 に role/aria-levelを付与）
+    function initHeadingAria(){
+      try{
+        document.querySelectorAll('.card .h1').forEach(function(h){
+          if(!h.getAttribute('role')) h.setAttribute('role','heading');
+          if(!h.getAttribute('aria-level')) h.setAttribute('aria-level','1');
+        });
+      }catch(e){}
+    }
+
+    // 押下フィードバック（btnPrimary / videoCta / videoChip に pressed クラス）
+    function initPressedFeedback(){
+      try{
+        const pressables = document.querySelectorAll('.btnPrimary, .videoCta, .videoChip');
+        pressables.forEach(function(el){
+          const add = function(){ el.classList.add('pressed'); };
+          const remove = function(){ el.classList.remove('pressed'); };
+          el.addEventListener('pointerdown', add);
+          el.addEventListener('pointerup', remove);
+          el.addEventListener('pointerleave', remove);
+          el.addEventListener('mousedown', add);
+          el.addEventListener('mouseup', remove);
+          el.addEventListener('mouseleave', remove);
+          el.addEventListener('touchstart', add, {passive:true});
+          el.addEventListener('touchend', remove);
+          el.addEventListener('touchcancel', remove);
+        });
+      }catch(e){}
+    }
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', function(){
+      initHeadingAria();
+      initPressedFeedback();
+    });
+
+    // 公開API
+    App.modules.accessibility = { focusFirstInteractive, initHeadingAria };
+    // 互換: windowへも露出（既存コード参照用）
+    window.focusFirstInteractive = focusFirstInteractive;
+  })(window.App);
+</script>
+<!-- END: js-core-accessibility -->
+
+<!-- START: js-cta-theme -->
+<script>
+  (function(){
+    // ボタン配色を「青テーマ」にする（.exp-cta スタイルを有効化）
+    document.addEventListener('DOMContentLoaded', function(){
+      document.body.classList.add('exp-cta');
+    });
+  })();
+</script>
+<!-- END: js-cta-theme -->
+
+<!-- START: js-core-navigation -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.navigation) return;
+
+    // 内部状態
+    let _TITLE_NO = {};
+    let _MAX_STEPS = 26;
+    let _step = 0;
+    let _historyStack = [];
+
+    // 依存を安全に呼ぶヘルパ
+    function safe(fn){ try{ return fn && fn(); }catch(e){} }
+    function screens(){ return Array.from(document.querySelectorAll('.screen')); }
+    function titles(){ return screens().map(s=> s.dataset.title || ''); }
+    function isCover(i){ const ss = screens(); return !!(ss[i] && ss[i].dataset.role === 'cover'); }
+    function curTitle(i){ const t = titles(); return t[i] || ''; }
+
+    // 外部フック
+    let afterActivateHook = null;
+
+    function configure(cfg){
+      _TITLE_NO = cfg && cfg.TITLE_NO ? cfg.TITLE_NO : _TITLE_NO;
+      _MAX_STEPS = typeof cfg?.MAX_STEPS === 'number' ? cfg.MAX_STEPS : _MAX_STEPS;
+    }
+    function setAfterActivate(fn){ afterActivateHook = fn; }
+
+    // 進捗更新
+    function updateProgress(i){
+      if (isCover(i)) return;
+      if (App.modules && App.modules.progress && typeof App.modules.progress.onActive === 'function'){
+        App.modules.progress.onActive(i, screens(), _MAX_STEPS, _TITLE_NO);
+      }
+    }
+
+    // 画面切り替え本体
+    function setActive(i){
+      // 音声ガイド停止
+      safe(()=> window.stopGuidedVoice && window.stopGuidedVoice());
+
+      const ss = screens();
+      ss.forEach((s, idx)=>{
+        const isActive = idx === i;
+        s.classList.toggle('active', isActive);
+        s.classList.toggle('anim-in', isActive);
+      });
+
+      document.body.classList.toggle('cover', isCover(i));
+
+      // スクロール
+      safe(()=> window.scrollToTop && window.scrollToTop());
+
+      // 進捗
+      updateProgress(i);
+
+      // 最終見積の整形（必要時）
+      const title = curTitle(i);
+      if (title === '最終見積のまとめ' || title === '最終見積もり'){
+        safe(()=> window.updateFinalSummary && window.updateFinalSummary());
+      }
+
+      // 画面ごとの初期化フック（js-core側で設定）
+      if (typeof afterActivateHook === 'function'){
+        try{ afterActivateHook(title); }catch(e){}
+      }
+
+      // 初期フォーカス
+      safe(()=> App.modules && App.modules.accessibility && App.modules.accessibility.focusFirstInteractive());
+
+      _step = i;
+    }
+
+    function pushHistory(idx){
+      if (typeof idx!=='number') return;
+      if (_historyStack.length && _historyStack[_historyStack.length-1]===idx) return;
+      _historyStack.push(idx);
+    }
+
+    function next(){
+      pushHistory(_step);
+      const idx = Math.min(_step + 1, screens().length - 1);
+      setActive(idx);
+      // 見積り再計算
+      safe(()=> App.modules && App.modules.estimate && App.modules.estimate.recalcAll());
+    }
+
+    function prev(){
+      if (!_historyStack.length) return;
+      const backIdx = _historyStack.pop();
+      if (typeof backIdx === 'number'){
+        setActive(backIdx);
+        safe(()=> App.modules && App.modules.estimate && App.modules.estimate.recalcAll());
+      }
+    }
+
+    function goToTitle(title){
+      const idx = titles().indexOf(title);
+      if (idx >= 0){
+        pushHistory(_step);
+        setActive(idx);
+        safe(()=> App.modules && App.modules.estimate && App.modules.estimate.recalcAll());
+      }
+    }
+
+    // 公開API
+    App.modules.navigation = {
+      configure, setAfterActivate, setActive, next, prev, goToTitle,
+      titles,
+      get step(){ return _step; },
+      get historyStack(){ return _historyStack; }
+    };
+
+    // 互換API（window に露出）
+    window.setActive = setActive;
+    window.next = next;
+    window.prev = prev;
+    window.goToTitle = goToTitle;
+  })(window.App);
+</script>
+<!-- END: js-core-navigation -->
+
+<!-- START: js-core-dates -->
+<script>
+  (function(App){
+    if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.dates) return;
+
+    // 和暦併記
+    function formatYearWithEra(y){
+      const year = Number(y);
+      if (isNaN(year)) return `${y}年`;
+      let era = '';
+      if (year >= 2019) era = `令和${year - 2018}年`;
+      else if (year >= 1989) era = `平成${year - 1988}年`;
+      else if (year >= 1926) era = `昭和${year - 1925}年`;
+      else era = '';
+      return era ? `${year}年（${era}）` : `${year}年`;
+    }
+
+    function fillYearOptions(sel, startY, endY){
+      if (!sel || sel.options.length > 1) return;
+      for(let y=startY; y<=endY; y++){
+        const o=document.createElement('option'); o.value=String(y); o.textContent=formatYearWithEra(y); sel.appendChild(o);
+      }
+    }
+    function fillMonthOptions(sel, max=12){
+      if (!sel) return;
+      // 一旦初期化し直す（最大月の制限に対応）
+      sel.innerHTML = '<option value="">月</option>';
+      for(let m=1; m<=max; m++){
+        const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; sel.appendChild(o);
+      }
+    }
+    function fillDayOptions(sel){
+      if (!sel || sel.options.length > 1) return;
+      for(let d=1; d<=31; d++){
+        const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; sel.appendChild(o);
+      }
+    }
+
+    // 免許証の有効期限
+    function populateLicenseDateSelects(){
+      try{
+        const ySel = document.getElementById('licenseYear');
+        const mSel = document.getElementById('licenseMonth');
+        const dSel = document.getElementById('licenseDay');
+        if (!ySel || !mSel || !dSel) return;
+        const now=new Date(), startY=now.getFullYear(), endY=startY+12;
+        fillYearOptions(ySel, startY, endY);
+        if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
+        fillDayOptions(dSel);
+      }catch(e){}
+    }
+    function validateLicenseDate(){
+      try{
+        const y=document.getElementById('licenseYear')?.value || '';
+        const m=document.getElementById('licenseMonth')?.value || '';
+        const d=document.getElementById('licenseDay')?.value || '';
+        if(!y||!m||!d){
+          if (typeof openNotice === 'function') openNotice('有効期限を「年・月・日」の3つから選んでください');
+          return false;
+        }
+        return true;
+      }catch(e){
+        if (typeof openNotice === 'function') openNotice('有効期限の選択でエラーが発生しました。再度お試しください。');
+        return false;
+      }
+    }
+
+    // 生年月日（お客様）
+    function populateDobSelects(){
+      try{
+        const ySel = document.getElementById('dobYear');
+        const mSel = document.getElementById('dobMonth');
+        const dSel = document.getElementById('dobDay');
+        if (!ySel || !mSel || !dSel) return;
+        const now=new Date(), endY=now.getFullYear(), startY=endY-100;
+        fillYearOptions(ySel, startY, endY);
+        if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
+        fillDayOptions(dSel);
+      }catch(e){}
+    }
+    function validateDobSelect(){
+      try{
+        const y=document.getElementById('dobYear')?.value || '';
+        const m=document.getElementById('dobMonth')?.value || '';
+        const d=document.getElementById('dobDay')?.value || '';
+        if(!y||!m||!d){
+          if (typeof openNotice === 'function') openNotice('生年月日を「年・月・日」の3つから選んでください');
+          return false;
+        }
+        return true;
+      }catch(e){
+        if (typeof openNotice === 'function') openNotice('生年月日の選択でエラーが発生しました。再度お試しください。');
+        return false;
+      }
+    }
+
+    // 生年月日（主に運転する方）
+    function populateMdDobSelects(){
+      try{
+        const ySel = document.getElementById('md_dobYear');
+        const mSel = document.getElementById('md_dobMonth');
+        const dSel = document.getElementById('md_dobDay');
+        if (!ySel || !mSel || !dSel) return;
+        const now=new Date(), endY=now.getFullYear(), startY=endY-100;
+        fillYearOptions(ySel, startY, endY);
+        if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
+        fillDayOptions(dSel);
+      }catch(e){}
+    }
+
+    // 初度登録年月（未来月は不可／当年は当月まで）
+    function populateFirstRegSelects(){
+      try{
+        const ySel = document.getElementById('firstRegYear');
+        const mSel = document.getElementById('firstRegMonth');
+        if (!ySel || !mSel) return;
+        const now=new Date(), endY=now.getFullYear(), startY=endY-50;
+        fillYearOptions(ySel, startY, endY);
+        const selectedY = Number(ySel.value || endY);
+        const maxMonth  = (selectedY === now.getFullYear()) ? (now.getMonth()+1) : 12;
+        fillMonthOptions(mSel, maxMonth);
+        // 年変更で再計算（onceだと2回目以降が機能しないので都度バインドに変更）
+        ySel.addEventListener('change', function(){
+          try{
+            const sy = Number(ySel.value || endY);
+            const mm = (sy === now.getFullYear()) ? (now.getMonth()+1) : 12;
+            fillMonthOptions(mSel, mm);
+          }catch(e){}
+        });
+      }catch(e){}
+    }
+
+    // 公開API
+    App.modules.dates = {
+      formatYearWithEra,
+      populateLicenseDateSelects, validateLicenseDate,
+      populateDobSelects,         validateDobSelect,
+      populateMdDobSelects,
+      populateFirstRegSelects
+    };
+
+    // 互換（window.* を従来名で露出）
+    window.formatYearWithEra = formatYearWithEra;
+    window.populateDateSelectsSafe     = populateLicenseDateSelects;
+    window.validateDateSelect          = validateLicenseDate;
+    window.populateDobSelectsSafe      = populateDobSelects;
+    window.populateMdDobSelectsSafe    = populateMdDobSelects;
+    window.populateFirstRegSelectsSafe = populateFirstRegSelects;
+  })(window.App);
+</script>
+<!-- END: js-core-dates -->
+
 <!-- START: js-core -->
 <script>
-  // 画面番号マップ（表記ゆれ対応のため別表記も同値にマップ）
+  // 画面番号マップ（分割後もここで維持）
   const TITLE_NO = {
     '手続き開始':1, 'ログイン':2,
     'お車の情報':3, '車検証の情報':4,
@@ -1652,7 +2728,7 @@
     '主に運転する方（記名被保険者）':9, '主に運転する方の編集':10,
     '運転者の範囲と年齢条件':11, '運転者範囲・年齢条件の編集':12,
     '使用目的・走行距離':13,
-    '現在の内容を確認':14, '現在の補償内容と保険料の確認':14, // 別表記吸収
+    '現在の内容を確認':14, '現在の補償内容と保険料の確認':14,
     '現在と同じ補償内容で更新した場合の保険料':15, '同じ補償内容で更新した場合の保険料':15,
     '更新方法の選択':16, '更新方法を選ぶ':16,
     '別のプランから選ぶ':17,
@@ -1670,729 +2746,481 @@
 
   try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch(e){}
 
-  const screens=[...document.querySelectorAll('.screen')];
-  let step=0;
-  const titles=()=>screens.map(s=>s.dataset.title);
-  const isCover=(i)=> !!(screens[i] && screens[i].dataset.role==='cover');
-
-  const historyStack = [];
-  function pushHistory(idx){
-    if (typeof idx!=='number') return;
-    if (historyStack.length && historyStack[historyStack.length-1]===idx) return;
-    historyStack.push(idx);
-  }
-
-  function ensureLoading(){
-    let o=document.getElementById('loadingOverlay');
-    if(!o){
-      o=document.createElement('div'); o.id='loadingOverlay'; o.className='loadingOverlay'; o.style.display='none';
-      const sp=document.createElement('div'); sp.className='loadingSpinner'; o.appendChild(sp);
-      document.body.appendChild(o);
-    }
-    return o;
-  }
-  function showLoading(){ const o=ensureLoading(); o.style.display='flex'; }
-  function hideLoading(){ const o=document.getElementById('loadingOverlay'); if(o) o.style.display='none'; }
-
+  // スクロール補助
   function scrollToTop(){
     const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     try { window.scrollTo({ top: 0, left: 0, behavior: prefersReduced ? 'auto' : 'smooth' }); }
     catch(e){ window.scrollTo(0, 0); }
   }
 
-  function formatYearWithEra(y){
-    const year = Number(y);
-    if (isNaN(year)) return `${y}年`;
-    let era = '';
-    if (year >= 2019) era = `令和${year - 2018}年`;
-    else if (year >= 1989) era = `平成${year - 1988}年`;
-    else if (year >= 1926) era = `昭和${year - 1925}年`;
-    else era = '';
-    return era ? `${year}年（${era}）` : `${year}年`;
-  }
-
-  function populateDateSelectsSafe(){ try{
-      const ySel = document.getElementById('licenseYear');
-      const mSel = document.getElementById('licenseMonth');
-      const dSel = document.getElementById('licenseDay');
-      if (!ySel || !mSel || !dSel) return;
-      if (ySel.options.length <= 1){
-        const now=new Date(), startY=now.getFullYear(), endY=startY+12;
-        for(let y=startY;y<=endY;y++){
-          const o=document.createElement('option'); o.value=String(y); o.textContent=formatYearWithEra(y); ySel.appendChild(o);
-        }
-      }
-      if (mSel.options.length <= 1){
-        for(let m=1;m<=12;m++){ const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; mSel.appendChild(o); }
-      }
-      if (dSel.options.length <= 1){
-        for(let d=1;d<=31;d++){ const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; dSel.appendChild(o); }
-      }
-    }catch(e){ console.error('populateDateSelectsSafe error:', e); } }
-  function validateDateSelect(){ try{
-      const y=document.getElementById('licenseYear')?.value || '';
-      const m=document.getElementById('licenseMonth')?.value || '';
-      const d=document.getElementById('licenseDay')?.value || '';
-      if(!y||!m||!d){ openNotice('有効期限を「年・月・日」の3つから選んでください'); return false; }
-      return true;
-    }catch(e){ openNotice('有効期限の選択でエラーが発生しました。再度お試しください。'); return false; } }
-
-  function populateDobSelectsSafe(){ try{
-      const ySel = document.getElementById('dobYear');
-      const mSel = document.getElementById('dobMonth');
-      const dSel = document.getElementById('dobDay');
-      if (!ySel || !mSel || !dSel) return;
-      if (ySel.options.length <= 1){
-        const now=new Date(), endY=now.getFullYear(), startY=endY-100;
-        for(let y=startY;y<=endY;y++){
-          const o=document.createElement('option'); o.value=String(y);
-          o.textContent=formatYearWithEra(y);
-          ySel.appendChild(o);
-        }
-      }
-      if (mSel.options.length <= 1){
-        for(let m=1;m<=12;m++){ const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; mSel.appendChild(o); }
-      }
-      if (dSel.options.length <= 1){
-        for(let d=1;d<=31;d++){ const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; dSel.appendChild(o); }
-      }
-    }catch(e){ console.error('populateDobSelectsSafe error:', e); } }
-  function validateDobSelect(){ try{
-      const y=document.getElementById('dobYear')?.value || '';
-      const m=document.getElementById('dobMonth')?.value || '';
-      const d=document.getElementById('dobDay')?.value || '';
-      if(!y||!m||!d){ openNotice('生年月日を「年・月・日」の3つから選んでください'); return false; }
-      return true;
-    }catch(e){ openNotice('生年月日の選択でエラーが発生しました。再度お試しください。'); return false; } }
-
-  function populateMdDobSelectsSafe(){ try{
-      const ySel = document.getElementById('md_dobYear');
-      const mSel = document.getElementById('md_dobMonth');
-      const dSel = document.getElementById('md_dobDay');
-      if (!ySel || !mSel || !dSel) return;
-      if (ySel.options.length <= 1){
-        const now=new Date(), endY=now.getFullYear(), startY=endY-100;
-        for(let y=startY;y<=endY;y++){
-          const o=document.createElement('option'); o.value=String(y);
-          o.textContent=formatYearWithEra(y);
-          ySel.appendChild(o);
-        }
-      }
-      if (mSel.options.length <= 1){
-        for(let m=1;m<=12;m++){ const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; mSel.appendChild(o); }
-      }
-      if (dSel.options.length <= 1){
-        for(let d=1;d<=31;d++){ const o=document.createElement('option'); o.value=String(d).padStart(2,'0'); o.textContent=`${d}日`; dSel.appendChild(o); }
-      }
-    }catch(e){ console.error('populateMdDobSelectsSafe error:', e); } }
-
-  function populateFirstRegSelectsSafe(){ try{
-      const ySel = document.getElementById('firstRegYear');
-      const mSel = document.getElementById('firstRegMonth');
-      if (!ySel || !mSel) return;
-      if (ySel.options.length <= 1){
-        const now=new Date(), endY=now.getFullYear(), startY=endY-50;
-        for(let y=startY;y<=endY;y++){
-          const o=document.createElement('option'); o.value=String(y);
-          o.textContent=formatYearWithEra(y);
-          ySel.appendChild(o);
-        }
-      }
-      const selectedY = Number(ySel.value || new Date().getFullYear());
-      const now = new Date();
-      const maxMonth = (selectedY === now.getFullYear()) ? (now.getMonth()+1) : 12;
-      mSel.innerHTML = '<option value="">月</option>';
-      for(let m=1;m<=maxMonth;m++){
-        const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; mSel.appendChild(o);
-      }
-      ySel.addEventListener('change', populateFirstRegSelectsSafe, { once:true });
-    }catch(e){ console.error('populateFirstRegSelectsSafe error:', e); } }
-
-  function setActive(i){
-    stopGuidedVoice();
-    screens.forEach((s,idx)=>{
-      const isActive = idx===i;
-      s.classList.toggle('active', isActive);
-      s.classList.toggle('anim-in', isActive);
-    });
-
-    document.body.classList.toggle('cover', isCover(i));
-    scrollToTop();
-
-    if (!isCover(i)){
-      const coverCount = screens.slice(0, i+1).filter(s=> s.dataset.role==='cover').length;
-      const curTitle = titles()[i] || '';
-      // 進捗はタイトルマップ優先。無い場合のみ旧ロジックでフォールバック
-      const mappedStep = TITLE_NO[curTitle];
-      const visualStep = Math.max(1, Math.min(MAX_STEPS, (typeof mappedStep === 'number' ? mappedStep : (i+1 - coverCount))));
-
-      const progText = document.getElementById('progressText');
-      if (progText) {
-        progText.textContent = visualStep===1 ? `進捗 ${visualStep}/${MAX_STEPS}（最大）` : `進捗 ${visualStep}/${MAX_STEPS}`;
-      }
-      const pct=(visualStep/MAX_STEPS)*100;
-      const bar=document.getElementById('progressBar');
-      if(bar){
-        bar.style.width=`${pct}%`;
-        bar.setAttribute('aria-valuemin','0');
-        bar.setAttribute('aria-valuemax', String(MAX_STEPS));
-        bar.setAttribute('aria-valuenow', String(visualStep));
-        bar.setAttribute('aria-valuetext', `全${MAX_STEPS}ステップ中の${visualStep}ステップ目`);
-      }
-
-      try{
-        const chap = (visualStep<=13) ? 'input' : (visualStep<=21 ? 'estimate' : (visualStep===22 ? 'explain' : 'apply'));
-        ['chapInput','chapEstimate','chapExplain','chapApply'].forEach(id=>{
-          const el=document.getElementById(id);
-          if(!el) return;
-          el.classList.toggle('active',
-            (chap==='input'   && id==='chapInput') ||
-            (chap==='estimate'&& id==='chapEstimate') ||
-            (chap==='explain' && id==='chapExplain') ||
-            (chap==='apply'   && id==='chapApply')
-          );
-        });
-      }catch(e){}
-
-      // 残り時間（全体12分の配分に基づく目安）
-      const remaining = Math.round(12 * (MAX_STEPS - visualStep) / MAX_STEPS);
-      const timeLeftEl = document.getElementById('timeLeft');
-      if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
-    }
-
-    const curTitle=titles()[i]||'';
-    if (curTitle==='申込完了' || curTitle==='完了') updateCompletion();
-    if (curTitle==='最終見積のまとめ' || curTitle==='最終見積もり') {
-      try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
-    }
-
+  // 申込完了画面の表示同期（選択内容に応じて完了行を表示）
+  function updateDoneScreen(){
     try{
-      if (curTitle==='免許証の色'){ populateDateSelectsSafe(); }
-      if (curTitle==='お客様情報の編集'){ populateDobSelectsSafe(); }
-      if (curTitle==='主に運転する方の編集'){ populateMdDobSelectsSafe(); }
-      if (curTitle==='車検証の情報'){ populateFirstRegSelectsSafe(); }
-    }catch(e){}
+      const st = (window.choiceState || {});
+      const sendImpPdf = !!window.flagSendPdf;
+      const elPdf       = document.getElementById('donePdf');
+      const elImpPdf    = document.getElementById('doneImpPdf');
+      const elPostal    = document.getElementById('donePostal');
 
-    setTimeout(()=>{ focusFirstInteractive(); },0);
-    step=i;
-  }
+      if (elPdf)    elPdf.style.display    = st['pdf_yes']     ? '' : 'none';
+      if (elImpPdf) elImpPdf.style.display = sendImpPdf        ? '' : 'none';
+      if (elPostal) elPostal.style.display = st['cert_paper']  ? '' : 'none';
 
-  function next(){
-    pushHistory(step);
-    const nextIdx = Math.min(step+1, screens.length-1);
-    setActive(nextIdx);
-    recalcAll();
-  }
-  function prev(){
-    if (!historyStack.length) return;
-    const backIdx = historyStack.pop();
-    if (typeof backIdx==='number') {
-      setActive(backIdx);
-      recalcAll();
-    }
-  }
-  function goToTitle(title){
-    const idx=titles().indexOf(title);
-    if(idx>=0){
-      pushHistory(step);
-      setActive(idx);
-      recalcAll();
-    }
-  }
-
-  function applyLarge(on){
-    document.body.classList.toggle('large',on);
-    const l=document.getElementById('lblLarge');
-    if(l) l.textContent = on ? '文字縮小' : '文字拡大';
-  }
-  function toggleLarge(){ applyLarge(!document.body.classList.contains('large')); }
-
-  function saveDraft(){
-    try{
-      const data={ step, title: titles()[step], timestamp:new Date().toISOString(), hist:[...historyStack] };
-      localStorage.setItem('auto_ins_update_draft', JSON.stringify(data));
-      openNotice('途中保存しました。次回は前回の続きから再開できます（デモ）。');
-    }catch(e){ openNotice('保存に失敗しました（デモ）。'); }
-  }
-
-  // 音声ガイド
-  let guidedSpeaking=false; let guidedCancelFn=null;
-  const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=50, BREAK_PAUSE=400;
-
-  function stopGuidedVoice(){ if(!('speechSynthesis'in window))return; try{speechSynthesis.cancel();}catch(e){} guidedCancelFn=null; guidedSpeaking=false; setGuidedBtn(); }
-  function toggleGuidedVoice(){
-    if (!('speechSynthesis' in window)) { showToast('音声読み上げに未対応のブラウザです'); return; }
-    if (guidedSpeaking) { stopGuidedVoice(); showToast('音声を停止しました'); return; }
-    const queue=buildGuidedQueue();
-    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-    const opts={ rate:1.0, volume:1.0 };
-    const merged=isIOS && (titles()[step] !== 'お客様情報の確認')
-      ? [{text:queue.map(q=>q.text).join('。'), pause:0}] : queue;
-    speakQueue(merged, opts); showToast('音声で解説を開始しました（再タップで停止）');
-  }
-  function setGuidedBtn(){
-    const lbl=document.getElementById('lblSpeak');
-    if(lbl) lbl.textContent = guidedSpeaking ? '音声を停止' : '音声で解説';
-  }
-  function speakQueue(queue,{rate=1.0,volume=1.0}={}){
-    let cancelled=false; guidedCancelFn=()=>{cancelled=true;};
-    const play=(idx)=>{
-      if(cancelled) return;
-      if(idx>=queue.length){ guidedSpeaking=false; setGuidedBtn(); return; }
-      const seg=queue[idx]; const u=new SpeechSynthesisUtterance(seg.text);
-      u.lang='ja-JP'; u.rate=rate; u.volume=volume;
-      u.onstart=()=>{ guidedSpeaking=true; setGuidedBtn(); };
-      u.onend=()=>{ if(!cancelled) setTimeout(()=>play(idx+1), typeof seg.pause==='number'? seg.pause: ITEM_PAUSE); };
-      u.onerror=()=>{ if(!cancelled) setTimeout(()=>play(idx+1), 300); };
-      try{ speechSynthesis.speak(u);}catch(e){ setTimeout(()=>play(idx+1), 300); }
-    };
-    try{ speechSynthesis.cancel(); }catch(e){}
-    guidedSpeaking=true; setGuidedBtn(); play(0);
-  }
-
-  // 読み上げ補助
-  const DASH_REGEX=/[‐‑‒–—−ー－-]/g;
-  function normalizeDigitsAndDashes(s){ const toHalf=s.replace(/[０-９]/g,d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0)); return toHalf.replace(DASH_REGEX,'-'); }
-  function replaceMaruWords(s){ return s.replace(/〇〇/g,'マルマル').replace(/〇/g,'マル'); }
-  function readBlockNumberForSpeech(bn){
-    const map={'0':'ゼロ','1':'イチ','2':'ニ','3':'サン','4':'ヨン','5':'ゴ','6':'ロク','7':'ナナ','8':'ハチ','9':'キュウ'};
-    const normalized=normalizeDigitsAndDashes(bn);
-    const parts=normalized.split('-').filter(Boolean).map(token=> token.split('').map(d=> map[d]||d).join(''));
-    return parts.join('の');
-  }
-  function buildAddressSegments(addr){
-    const segs=[]; let rest=addr;
-    if(rest.includes('東京都')){ segs.push('東京都'); rest=rest.replace('東京都',''); }
-    if(rest.includes('港区'))  { segs.push('港区');   rest=rest.replace('港区',''); }
-    if(rest.includes('赤坂')){ segs.push('アカサカ'); rest=rest.replace('赤坂',''); }
-    rest = replaceMaruWords(rest);
-    const normalized=normalizeDigitsAndDashes(rest);
-    const blockMatch=normalized.match(/(\d+(?:-\d+)+|\d+)/);
-    if(blockMatch){
-      segs.push(readBlockNumberForSpeech(blockMatch[1]));
-      rest=rest.replace(/[０-９0-9][０-９0-9\- ‑‒–—−ー－]*/, '').trim();
-    }
-    if(rest) segs.push(rest.replace(/\s+/g,''));
-    return segs.filter(Boolean);
-  }
-  function kanaDigits(s){ const map={'0':'ゼロ','1':'イチ','2':'ニ','3':'サン','4':'ヨン','5':'ゴ','6':'ロク','7':'ナナ','8':'ハチ','9':'キュウ'}; return s.split('').map(d=> map[d]||d).join(''); }
-  function formatPhoneNo(phoneRaw){
-    const p=phoneRaw.replace(/[^\d]/g,'');
-    if(p.length===11) return `${kanaDigits(p.slice(0,3))}の${kanaDigits(p.slice(3,7))}の${kanaDigits(p.slice(7))}`;
-    if(p.length===10) return `${kanaDigits(p.slice(0,3))}の${kanaDigits(p.slice(3,7))}の${kanaDigits(p.slice(7))}`;
-    return kanaDigits(p);
-  }
-
-  function buildGuidedQueue(){
-    const title=titles()[step];
-    if(title==='お客様情報の確認'){
-      const list=document.getElementById('custList');
-      const lines=(list?.innerText||'').split('\n').map(s=>s.trim()).filter(Boolean);
-      const name=(lines.find(v=>v.startsWith('氏名：'))||'').replace('氏名：','').trim();
-      const gender=(lines.find(v=>v.startsWith('性別：'))||'').replace('性別：','').trim();
-      const addr=(lines.find(v=>v.startsWith('住所：'))||'').replace('住所：','').trim();
-      const phone=(lines.find(v=>v.startsWith('電話番号：'))||'').replace('電話番号：','').trim();
-      const dob=(lines.find(v=>v.startsWith('生年月日：'))||'').replace('生年月日：','').trim();
-      const company=(lines.find(v=>v.startsWith('勤務先：'))||'').replace('勤務先：','').trim();
-      const q=[];
-      q.push({text:'変更はございますか？ご登録内容を読み上げます。', pause:ITEM_PAUSE});
-
-      if(name){
-        q.push({text:`氏名は、${name}`, pause:NAME_BRIEF_PAUSE});
-        q.push({text:'サマ。', pause:ITEM_PAUSE});
-        const g = gender.includes('女性') ? 'ジョセイ' : 'ダンセイ';
-        q.push({text:`セイベツワ　${g}`, pause:ITEM_PAUSE});
-      }
-
-      if(addr){
-        const addrSegs=buildAddressSegments(addr);
-        if(addrSegs.length){
-          q.push({text:'住所は、', pause:SUB_PAUSE});
-          addrSegs.forEach((s,i)=> q.push({text:s+(i===addrSegs.length-1?'':'、'), pause:SUB_PAUSE}));
-          q.push({text:'。', pause:ITEM_PAUSE});
-        }else{
-          q.push({text:`住所は、${addr}。`, pause:ITEM_PAUSE});
-        }
-      }
-
-      if(phone){ q.push({text:`電話番号は、${formatPhoneNo(phone)}。`, pause:ITEM_PAUSE}); }
-
-      if(dob){
-        q.push({text:`生年月日は${dob.replace('日','')}ニチ`, pause:ITEM_PAUSE});
-        if(company){
-          const compReading = (会社名 => 会社名==='ABC株式会社' ? 'エービーシーカブシキガイシャ' : 会社名)(company);
-          q.push({text:`キンムサキワ　${compReading}`, pause:ITEM_PAUSE});
-        }
-      }
-
-      q.push({text:'内容に変更はございますか。変更がある場合は、変更するボタンを押してください。', pause:0});
-      return q;
-    }
-    const raw = (screens[step]?.innerText || '');
-    const lines = raw.split('\n').map(s=> s.trim()).filter(Boolean);
-    const queue = [];
-    lines.forEach((line, idx)=>{
-      queue.push({ text: line, pause: (idx === lines.length-1 ? SUB_PAUSE : BREAK_PAUSE) });
-    });
-    return queue.length ? queue : [{text: raw.replace(/\s+/g,' '), pause:0}];
-  }
-
-  function showManual(){ ['ocrShoot','ocrGuide','ocrResult'].forEach(id=>{const el=document.getElementById(id); if(el) el.style.display='none';}); const m=document.getElementById('manualForm'); if(m) m.style.display='block'; }
-  function showOCRGuide(){
-    const s=document.getElementById('ocrShoot'),
-          g=document.getElementById('ocrGuide'),
-          r=document.getElementById('ocrResult'),
-          m=document.getElementById('manualForm');
-    if(s) s.style.display='block';
-    if(g) g.style.display='block';
-    if(r) r.style.display='none';
-    if(m) m.style.display='none';
-  }
-  function startShooting(){
-    showLoading();
-    openNotice('本番ではカメラ撮影に遷移します（デモは結果へ）');
-    setTimeout(()=>{ hideLoading(); showOCRResult(); },800);
-  }
-  function showOCRResult(){
-    const s=document.getElementById('ocrShoot'),
-          g=document.getElementById('ocrGuide'),
-          r=document.getElementById('ocrResult'),
-          m=document.getElementById('manualForm');
-    if(s) s.style.display='none';
-    if(g) g.style.display='none';
-    if(r) r.style.display='block';
-    if(m) m.style.display='none';
-  }
-
-  function openNotice(msg){ const b=document.getElementById('noticeBody'); if(b) b.textContent=msg; const modal=document.getElementById('noticeModal'); if(modal) openModal(modal); }
-  function closeNotice(){ const modal=document.getElementById('noticeModal'); if(modal) closeModal(modal); }
-  function showToast(message){
-    try{
-      const t=document.getElementById('toast'); if(!t) return;
-      t.textContent=''; void t.offsetHeight; t.textContent=String(message||'');
-      t.style.display='block'; clearTimeout(showToast._tid);
-      showToast._tid=setTimeout(()=>{ t.style.display='none'; },2250);
+      // 既定では利用しない補助行（必要時のみ活用）
+      // const elPostalUnder = document.getElementById('donePostalUnder');
+      // if (elPostalUnder) elPostalUnder.style.display = st['cert_paper'] ? '' : 'none';
     }catch(e){}
   }
 
-  function selectColor(name, el){
-    try{ document.querySelectorAll('.colorBtn').forEach(b=> b.classList.remove('active')); if(el) el.classList.add('active'); }catch(e){}
-    try{ showToast(`${name}を選択しました`);}catch(e){}
-  }
-
-  // ログイン（認証コード）
-  let codeSent=false;
-  function sendLoginCode(){
-    const id=(document.getElementById('loginId')?.value||'').trim();
-    if(!id){ openNotice('電話番号またはメールアドレスを入力してください'); return; }
-    codeSent=true;
-    showToast('認証コードを送信しました（デモ）。届いた４桁の認証コードを入力してください');
-    document.getElementById('otp1')?.focus();
-  }
-  function otpAutoNext(idx){
-    const cur=document.getElementById('otp'+idx);
-    if(!cur) return;
-    cur.value=cur.value.replace(/[^0-9０-９]/g,'').slice(-1).replace(/[０-９]/g, d=>String.fromCharCode(d.charCodeAt(0)-0xFEE0));
-    if(cur.value && idx<4){ document.getElementById('otp'+(idx+1))?.focus(); }
-    if(idx===4){
-      const filled=['otp1','otp2','otp3','otp4'].every(id=> (document.getElementById(id)?.value||'').length===1);
-      if(filled) cur.blur();
-    }
-  }
-  function validateOtpLogin(){
-    const id=(document.getElementById('loginId')?.value||'').trim();
-    if(!id){ openNotice('電話番号またはメールアドレスを入力してください'); return false; }
-    const filled=['otp1','otp2','otp3','otp4'].every(id=> (document.getElementById(id)?.value||'').length===1);
-    if(!filled){ openNotice('認証コード4桁を入力してください'); return false; }
-    return true;
-  }
-
-  // 見積もり計算系
-  let cur=5900, same=6400, bodily='3000';
-  function money(n){ return '¥'+Math.round(n).toLocaleString(); }
-  function setCell(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
-  function setDelta(id,v){ const el=document.getElementById(id); if(!el) return; const sign=v>=0?'+':'-'; const abs=Math.abs(v); el.textContent=`${sign}¥${Math.round(abs).toLocaleString()}`; el.classList.toggle('dpos',v>=0); el.classList.toggle('dneg',v<0); }
-  function onBodilyChange(val){ bodily=val||'3000'; recalcAll(); }
-
-  function normalizeVehicleText(amount, deduct){
-    const dMText = (deduct === 0) ? '0万円' : (deduct === 100000 ? '10万円' : '5万円');
-    if (amount === 0) return 'なし';
-    return `${amount}万円・免責${dMText}`;
-  }
-
-  function recalcSamePage(){
-    const sameM=same, sameY=same*12, curM=cur, curY=cur*12;
-    setCell('curMonthly12', money(curM)); setCell('curYearly12', money(curY));
-    setCell('sameMonthly', money(sameM)); setCell('sameYearly', money(sameY));
-    setCell('deltaMonthlyBox',(sameM-curM>=0?'+':'-')+'¥'+Math.abs(sameM-curM).toLocaleString());
-    setCell('deltaYearlyBox',(sameY-curY>=0?'+':'-')+'¥'+Math.abs(sameY-curY).toLocaleString());
-    setCell('planUpCurM', money(curM)); setCell('planUpCurY', money(curY));
-    setCell('planUpNewM', money(6900)); setCell('planUpNewY', money(6900*12)); setDelta('planUpDeltaM', 6900-curM); setDelta('planUpDeltaY', 6900*12-curY);
-    setCell('planDownCurM', money(curM)); setCell('planDownCurY', money(curY));
-    setCell('planDownNewM', money(4800)); setCell('planDownNewY', money(4800*12)); setDelta('planDownDeltaM', 4800-curM); setDelta('planDownDeltaY', 4800*12-curY);
-  }
-
-  function updateDiffLinesDynamic(){
-    const bEl = document.getElementById('diffBodily');
-    if (bEl){
-      const curB = '3,000万円';
-      let newB = '3,000万円';
-      if (bodily === '5000') newB = '5,000万円';
-      else if (bodily === '8000') newB = '8,000万円';
-      else if (bodily === '10000') newB = '1億円';
-      else if (bodily === 'unlimited') newB = '無制限';
-      bEl.textContent = (newB === curB)
-        ? `人身傷害：${curB}`
-        : `人身傷害：${curB} ➡ ${newB}`;
-    }
-    const vEl = document.getElementById('diffVehicle');
-    if (vEl){
-      const vehA = Number(document.getElementById('vehicleAmount')?.value || 200);
-      const deduct = Number(document.getElementById('deduct')?.value || 50000);
-      const curV = `200万円・免責5万円`;
-      const newV = normalizeVehicleText(vehA, deduct);
-      vEl.textContent = (newV === curV)
-        ? `車両保険：${curV}`
-        : `車両保険：${curV} ➡ ${newV}`;
-    }
-  }
-
-  function recalcAll(){
-    recalcSamePage();
-    let bodilyAdj=0;
-    if(bodily==='5000') bodilyAdj=400; else if(bodily==='8000') bodilyAdj=700; else if(bodily==='10000') bodilyAdj=900; else if(bodily==='unlimited') bodilyAdj=1200;
-    const vehA=Number(document.getElementById('vehicleAmount')?.value||200);
-    const deduct=Number(document.getElementById('deduct')?.value||50000);
-    const optLaw=document.getElementById('opt_law')?.checked?200:0;
-    const optRent=document.getElementById('opt_rental')?.checked?180:0;
-    const optDap=document.getElementById('opt_dap')?.checked?200:0;
-    const vehAdj=vehA===0?-1200:(vehA===150?300:(vehA===200?600:900));
-    let deductAdj=0; if(deduct===0) deductAdj=400; else if(deduct===100000) deductAdj=-400;
-    const optAdj=optLaw+optRent+(isNaN(optDap)?0:optDap);
-    const newMonthly=Math.max(1500, same + bodilyAdj + vehAdj + deductAdj + optAdj);
-    const newYearly=newMonthly*12;
-    setCell('curMonthly', money(cur)); setCell('curYearly', money(cur*12));
-    setCell('kpiCur1', money(cur)); setCell('kpiCur1Y', money(cur*12)); setCell('kpiNew1', money(newMonthly)); setCell('kpiNew1Y', money(newYearly)); setDelta('kpiDelta1', newMonthly-cur); setDelta('kpiDelta1Y', newYearly - cur*12);
-    setCell('kpiCur2', money(cur)); setCell('kpiCur2Y', money(cur*12)); setCell('kpiNew2', money(newMonthly)); setCell('kpiNew2Y', money(newYearly)); setDelta('kpiDelta2', newMonthly-cur); setDelta('kpiDelta2Y', newYearly - cur*12);
-    setCell('kpiCur3', money(cur)); setCell('kpiCur3Y', money(cur*12)); setCell('kpiNew3', money(newMonthly)); setCell('kpiNew3Y', money(newYearly)); setDelta('kpiDelta3', newMonthly-cur); setDelta('kpiDelta3Y', newYearly - cur*12);
-    setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12)); setCell('sumNewMonthly', money(newMonthly)); setCell('sumNewYearly', money(newYearly)); setDelta('sumDeltaMonthly', newMonthly-cur); setDelta('sumDeltaYearly', newYearly - cur*12);
-    updateOptionSummary(); updateDiffLinesDynamic();
-    try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
-  }
-
-  const currentOptionBaseline=['弁護士費用','代車費用'];
-  let optSummaryMode='dynamic';
-  function normalizeOptionLabel(lbl){
-    return String(lbl || '')
-      .replace(/特約/g, '')
-      .replace(/DAP（ドライブレコーダー）特約/g, 'DAP（ドライブレコーダー）');
-  }
-  function getSelectedOptionsLabels(){
-    const s=[];
-    if(document.getElementById('opt_law')?.checked)    s.push('弁護士費用');
-    if(document.getElementById('opt_rental')?.checked) s.push('代車費用');
-    if(document.getElementById('opt_dap')?.checked)    s.push('DAP（ドライブレコーダー）');
-    return s;
-  }
-  function arrayEqualIgnoreOrder(a,b){ if(a.length!==b.length) return false; const aa=[...a].sort(), bb=[...b].sort(); return aa.every((v,i)=> v===bb[i]); }
-  function renderOptionDiff(newList){
-    const curStr='弁護士費用／代車費用';
-    const newStr = newList.length ? newList.map(normalizeOptionLabel).join('／') : 'なし';
-    const el=document.getElementById('optSummary'); if(!el) return;
-    if(arrayEqualIgnoreOrder(newList, currentOptionBaseline)){
-      el.textContent = `特約：${curStr}`;
-    }else{
-      el.textContent = `特約：${curStr} ➡ ${newStr}`;
-    }
-  }
-  function updateOptionSummary(){
-    if(optSummaryMode==='fixedCurrent'){ renderOptionDiff([...currentOptionBaseline]); return; }
-    if(optSummaryMode==='fixedNone'){ renderOptionDiff([]); return; }
-    const sel=getSelectedOptionsLabels(); renderOptionDiff(sel);
-  }
-
-  // プラン選択導線
-  function chooseSameFlow(){
-    optSummaryMode='fixedCurrent';
-    const newM=same, newY=newM*12;
-    setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
-    setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
-    setDelta('sumDeltaMonthly', newM-cur); setDelta('sumDeltaYearly', newY - cur*12);
-    const b=document.getElementById('diffBodily'), v=document.getElementById('diffVehicle');
-    if(b) b.textContent='人身傷害：3,000万円';
-    if(v) v.textContent='車両保険：200万円・免責5万円';
-    updateOptionSummary();
-    try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
-    goToTitle('重要なご説明');
-  }
-  function openSimplePlans(){ goToTitle('別のプランから選ぶ'); }
-  function goStepByStep(){ optSummaryMode='dynamic'; goToTitle('人身傷害の金額を選ぶ'); }
-  function chooseSimplePlan(type){
-    let newM=same;
-    const b=document.getElementById('diffBodily');
-    const v=document.getElementById('diffVehicle');
-    if(type==='up'){
-      newM=6900;
-      if(b) b.textContent='人身傷害：3,000万円 ➡ 5,000万円';
-      if(v) v.textContent='車両保険：200万円・免責5万円 ➡ 250万円・免責5万円';
-      optSummaryMode='fixedCurrent';
-    }else{
-      newM=4800;
-      if(b) b.textContent='人身傷害：3,000万円';
-      if(v) v.textContent='車両保険：あり ➡ なし';
-      optSummaryMode='fixedNone';
-    }
-    const newY=newM*12;
-    setCell('sumCurMonthly', money(cur)); setCell('sumCurYearly', money(cur*12));
-    setCell('sumNewMonthly', money(newM)); setCell('sumNewYearly', money(newY));
-    setDelta('sumDeltaMonthly', newM - cur); setDelta('sumDeltaYearly', newY - cur*12);
-    updateOptionSummary();
-    try { if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary(); } catch(e){}
-    goToTitle('重要なご説明');
-  }
-
-  // 同意・完了
-  let flagSendPdf=false;
-  function onAgreeSubmit(){
-    const g1=document.getElementById('agree1'), g2=document.getElementById('agree2');
-    if(!g1.checked||!g2.checked){ openNotice('同意のチェックを入れてください。'); return; }
-    showLoading();
-    setTimeout(()=>{ hideLoading(); goToTitle('申込完了'); }, 600);
-  }
-
-  function updateCompletion(){
-    const list=document.getElementById('doneList'),
-          pdf=document.getElementById('donePdf'),
-          impPdf=document.getElementById('doneImpPdf'),
-          postal=document.getElementById('donePostal'),
-          postalUnder=document.getElementById('donePostalUnder');
-    if(!list||!pdf||!postal||!postalUnder) return;
-
-    list.style.display='none'; pdf.style.display='none'; postal.style.display='none'; postalUnder.style.display='none';
-    if(impPdf) impPdf.style.display='none';
-
-    const pdfSelected = !!document.getElementById('choice_pdf_yes')?.classList.contains('active');
-    const paperCertSelected = !!document.getElementById('choice_cert_paper')?.classList.contains('active');
-    const importantPdfSelected = !!window.flagSendPdf;
-
-    let showList=false;
-    if(pdfSelected){ pdf.style.display='list-item'; showList=true; }
-    if(importantPdfSelected && impPdf){ impPdf.style.display='list-item'; showList=true; }
-    if(paperCertSelected){ postal.style.display='list-item'; showList=true; }
-
-    if(showList){ list.style.display='block'; }
-    else if(paperCertSelected){ postalUnder.style.display='block'; }
-  }
-
-  function sendPdf(){ openNotice('本番ではPDF送付確認画面に推移します。'); }
-  function openReasonDetail(){ const m=document.getElementById('reasonModal'); if(m) m.classList.add('show'); }
-
-  // クリック感フィードバック・見出しARIA
+  // ナビゲーション（モジュール）への委譲設定
   (function(){
-    var enableCTA = true;
-    document.addEventListener('DOMContentLoaded', function(){
-      document.body.classList.toggle('exp-cta', enableCTA);
-      var pressables = document.querySelectorAll('.btnPrimary, .videoCta, .videoChip');
-      pressables.forEach(function(el){
-        var add = function(){ el.classList.add('pressed'); };
-        var remove = function(){ el.classList.remove('pressed'); };
-        el.addEventListener('pointerdown', add);
-        el.addEventListener('pointerup', remove);
-        el.addEventListener('pointerleave', remove);
-        el.addEventListener('mousedown', add);
-        el.addEventListener('mouseup', remove);
-        el.addEventListener('mouseleave', remove);
-        el.addEventListener('touchstart', add, {passive:true});
-        el.addEventListener('touchend', remove);
-        el.addEventListener('touchcancel', remove);
-      });
-
+    // タイトルごとの追加初期化（従来の setActive 内にあった日付系呼び出しは dates モジュールに委譲）
+    function afterActivate(title){
       try{
-        document.querySelectorAll('.card .h1').forEach(function(h){
-          if(!h.getAttribute('role')) h.setAttribute('role','heading');
-          if(!h.getAttribute('aria-level')) h.setAttribute('aria-level','1');
-        });
+        if (title==='免許証の色')                         App.modules?.dates?.populateLicenseDateSelects();
+        if (title==='お客様情報の編集')                   App.modules?.dates?.populateDobSelects();
+        if (title==='主に運転する方の編集')               App.modules?.dates?.populateMdDobSelects();
+        if (title==='車検証の情報')                       App.modules?.dates?.populateFirstRegSelects();
+
+        // 申込完了画面に遷移したら、選択内容にもとづき完了メッセージを連動表示
+        if (title==='申込完了' || title==='完了'){
+          updateDoneScreen();
+        }
       }catch(e){}
-    });
+    }
+    try{
+      App.modules?.navigation?.configure({ TITLE_NO, MAX_STEPS });
+      App.modules?.navigation?.setAfterActivate(afterActivate);
+    }catch(e){}
   })();
 
   // 初期化
   (function(){
     document.addEventListener('DOMContentLoaded', function(){
-      populateDateSelectsSafe();
-      populateDobSelectsSafe();
-      populateMdDobSelectsSafe();
-      populateFirstRegSelectsSafe();
+      // 初回の各セレクト準備（dates モジュールに委譲）
+      try{
+        App.modules?.dates?.populateLicenseDateSelects();
+        App.modules?.dates?.populateDobSelects();
+        App.modules?.dates?.populateMdDobSelects();
+        App.modules?.dates?.populateFirstRegSelects();
+      }catch(e){}
+
+      // ラベル
       const l=document.getElementById('lblLarge');
       if(l) l.textContent = document.body.classList.contains('large') ? '文字縮小' : '文字拡大';
-      setGuidedBtn();
+      try{ if (typeof setGuidedBtn === 'function') setGuidedBtn(); }catch(e){}
 
+      // カバーへ
       try{
-        const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
+        const ss = Array.from(document.querySelectorAll('.screen'));
+        const coverIdx = ss.findIndex(s=> s.dataset.role==='cover');
         if(coverIdx>=0){
-          setActive(coverIdx);
+          App.modules?.navigation?.setActive(coverIdx);
           setTimeout(()=>{ const btn=document.querySelector('.coverStartBtn'); if(btn) btn.focus(); },0);
         }else{
-          setActive(0);
+          App.modules?.navigation?.setActive(0);
         }
-      }catch(e){ setActive(0); }
+      }catch(e){ App.modules?.navigation?.setActive(0); }
+
+      // 途中保存の再開提案（表紙でのみ）
+      try{
+        App.modules?.storage?.offerResume && App.modules.storage.offerResume();
+      }catch(e){}
     });
   })();
 
-  // モーダルのフォーカストラップ
-  (function(){
-    let lastFocus = null;
-    function getFocusable(container){
-      return Array.from(container.querySelectorAll('a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])')).filter(el => el.offsetParent !== null);
-    }
-    function trapFocus(modal){
-      function onKeyDown(e){
-        if (e.key === 'Escape') { e.preventDefault(); closeModal(modal); return; }
-        if (e.key !== 'Tab') return;
-        const f = getFocusable(modal); if (f.length === 0) return;
-        const first = f[0], last = f[f.length-1];
-        if (e.shiftKey){ if (document.activeElement === first || !modal.contains(document.activeElement)) { e.preventDefault(); last.focus(); } }
-        else { if (document.activeElement === last || !modal.contains(document.activeElement)) { e.preventDefault(); first.focus(); } }
-      }
-      modal.__trapHandler = onKeyDown; document.addEventListener('keydown', onKeyDown);
-    }
-    function untrapFocus(modal){ if (modal.__trapHandler){ document.removeEventListener('keydown', modal.__trapHandler); modal.__trapHandler = null; } }
-    window.openModal = function(modal){
-      lastFocus = document.activeElement; modal.classList.add('show');
-      const f = getFocusable(modal); (f.find(el=>el.id && /CloseBtn$/i.test(el.id)) || f[0] || modal).focus(); trapFocus(modal);
-    };
-    window.closeModal = function(modal){
-      untrapFocus(modal); modal.classList.remove('show');
-      if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
-      lastFocus = null;
-    };
-    ['noticeModal','reasonModal'].forEach(id=>{
-      const m=document.getElementById(id); if(!m) return;
-      m.addEventListener('mousedown', (e)=>{ if(e.target===m) closeModal(m); });
-    });
-  })();
-
-  // 初期フォーカス
-  function focusFirstInteractive(scope){
-    const root = scope || document.querySelector('.screen.active');
-    if(!root) return;
-    const selectors = [ 'button.btnPrimary', 'input, select, textarea, button, a[href]', '.coverStartBtn' ];
-    for (const sel of selectors) { const el = root.querySelector(sel); if (el && typeof el.focus === 'function') { el.focus(); return; } }
-  }
-
-  // デモ開始
+  // デモ開始（互換）
   function startDemo(){
     try{
-      const coverIdx = screens.findIndex(s=> s.dataset.role==='cover');
-      const firstIdx = titles().indexOf('手続き開始');
+      const ss = Array.from(document.querySelectorAll('.screen'));
+      const coverIdx = ss.findIndex(s=> s.dataset.role==='cover');
+      const t = ss.map(s=> s.dataset.title || '');
+      const firstIdx = t.indexOf('手続き開始');
       if (firstIdx>=0){
-        if (coverIdx>=0){ pushHistory(coverIdx); }
-        setActive(firstIdx);
+        if (coverIdx>=0){ App.modules?.navigation?.goToTitle && (window.historyStack = App.modules.navigation.historyStack, window.historyStack.push(coverIdx)); }
+        App.modules?.navigation?.setActive(firstIdx);
       }
-    }catch(e){ setActive(0); }
+    }catch(e){ App.modules?.navigation?.setActive(0); }
   }
+  window.startDemo = startDemo;
+
+  // storage等から参照されるユーティリティを露出（互換）
+  window.titles = function(){ try{ return App.modules?.navigation?.titles() || []; }catch(e){ return []; } };
+  Object.defineProperty(window, 'step', { get(){ try{ return App.modules?.navigation?.step || 0; }catch(e){ return 0; } } });
+  window.historyStack = (function(){ try{ return App.modules?.navigation?.historyStack || []; }catch(e){ return []; } })();
 </script>
 <!-- END: js-core -->
+
+<!-- START: js-final-summary-sync -->
+<script>
+  (function(){
+    // ラベル生成
+    function mapBodilyLabel(val){
+      if (val === 'unlimited') return '無制限';
+      if (val === '10000')     return '1億円';
+      if (val === '8000')      return '8,000万円';
+      if (val === '5000')      return '5,000万円';
+      if (val === '3000')      return '3,000万円';
+      return '';
+    }
+    function normalizeVehicleText(amount, deduct){
+      var dMText = (deduct === 0) ? '0万円' : (deduct === 100000 ? '10万円' : '5万円');
+      if (amount === 0) return 'なし';
+      return String(amount) + '万円・免責' + dMText;
+    }
+
+    // diff行へ現在選択を確実に反映（recalcAllと整形も含める統一タスク）
+    function syncFinalSummaryAll(){
+      try{
+        // まず再計算（js-core-estimate）
+        if (window.App && App.modules && App.modules.estimate && typeof App.modules.estimate.recalcAll === 'function'){
+          App.modules.estimate.recalcAll();
+        }
+      }catch(e){}
+
+      try{
+        // 直接 diff 行を上書き（防御的）
+        var bEl = document.getElementById('diffBodily');
+        var vEl = document.getElementById('diffVehicle');
+        if (bEl){
+          var curB = '3,000万円';
+          var bodilySel = document.getElementById('bodilyAmount');
+          var newB = (bodilySel ? mapBodilyLabel(bodilySel.value || '') : '');
+          bEl.textContent = (newB && newB !== curB)
+            ? ('人身傷害：' + curB + ' ➡ ' + newB)
+            : ('人身傷害：' + curB);
+        }
+        if (vEl){
+          var vehSel = document.getElementById('vehicleAmount');
+          var dedSel = document.getElementById('deduct');
+          var curV = '200万円・免責5万円';
+          var newV = (vehSel && dedSel) ? normalizeVehicleText(Number(vehSel.value || 200), Number(dedSel.value || 50000)) : '';
+          vEl.textContent = (newV && newV !== curV)
+            ? ('車両保険：' + curV + ' ➡ ' + newV)
+            : ('車両保険：' + curV);
+        }
+      }catch(e){}
+
+      try{
+        // 表記整形（「➡」「免責」表記など）
+        if (typeof window.updateFinalSummary === 'function') window.updateFinalSummary();
+      }catch(e){}
+    }
+
+    // 最終見積アクティブ判定
+    function isFinalSummaryActive(){
+      try{
+        var ss = document.querySelectorAll('.screen');
+        for (var i=0; i<ss.length; i++){
+          if (ss[i].classList.contains('active')){
+            var t = ss[i].dataset ? (ss[i].dataset.title || '') : '';
+            return (t === '最終見積のまとめ' || t === '最終見積もり');
+          }
+        }
+      }catch(e){}
+      return false;
+    }
+
+    // 1) ナビゲーションの afterActivate フックで「最終見積」直後に同期し、かつ「申込完了」でも完了表示を同期
+    (function installAfterActivateHook(){
+      try{
+        if (window.App && App.modules && App.modules.navigation && typeof App.modules.navigation.setAfterActivate === 'function'){
+          var prevHook = null;
+          App.modules.navigation.setAfterActivate(function(title){
+            // 既存フックがあれば実行
+            try{ typeof prevHook === 'function' && prevHook(title); }catch(e){}
+            // 最終見積の同期
+            if (title === '最終見積のまとめ' || title === '最終見積もり'){
+              setTimeout(syncFinalSummaryAll, 0);
+            }
+            // 申込完了の完了表示同期
+            if (title === '申込完了' || title === '完了'){
+              try{ if (typeof window.updateDoneScreen === 'function') window.updateDoneScreen(); }catch(e){}
+            }
+          });
+        }
+      }catch(e){}
+    })();
+
+    // 2) 最終見積画面にいる間は、「人身傷害」「車両保険/免責」変更時に即時同期
+    function bindLiveSync(){
+      try{
+        var bodilySel = document.getElementById('bodilyAmount');
+        var vehSel    = document.getElementById('vehicleAmount');
+        var dedSel    = document.getElementById('deduct');
+        var handler = function(){
+          if (!isFinalSummaryActive()) return;
+          syncFinalSummaryAll();
+        };
+        if (bodilySel) bodilySel.addEventListener('change', handler);
+        if (vehSel)    vehSel.addEventListener('change', handler);
+        if (dedSel)    dedSel.addEventListener('change', handler);
+      }catch(e){}
+    }
+    document.addEventListener('DOMContentLoaded', bindLiveSync);
+
+    // 3) 万一、最終見積画面に直接到達した場合（戻る等）にも初回同期を担保
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){ if (isFinalSummaryActive()) syncFinalSummaryAll(); }, 0);
+    });
+  })();
+</script>
+<!-- END: js-final-summary-sync -->
+
+<!-- START: js-actions-helper -->
+<script>
+  (function(){
+    // 「金額が変わる主な理由」モーダル
+    if (typeof window.openReasonDetail !== 'function'){
+      window.openReasonDetail = function(){
+        try{
+          var m = document.getElementById('reasonModal');
+          if (m && typeof openModal === 'function') openModal(m);
+          else if (m) m.classList.add('show');
+        }catch(e){}
+      };
+    }
+
+    // 同意して申込 → 完了へ（デモ動線）
+    if (typeof window.onAgreeSubmit !== 'function'){
+      window.onAgreeSubmit = function(){
+        try{
+          var g1=document.getElementById('agree1'), g2=document.getElementById('agree2');
+          if(!g1 || !g2 || !g1.checked || !g2.checked){
+            if (typeof openNotice === 'function') openNotice('同意のチェックを入れてください。');
+            return;
+          }
+          try{ if (typeof showLoading === 'function') showLoading(); }catch(e){}
+          setTimeout(function(){
+            try{ if (typeof hideLoading === 'function') hideLoading(); }catch(e){}
+            try{ if (typeof goToTitle === 'function') goToTitle('申込完了'); }catch(e){}
+          }, 600);
+        }catch(e){}
+      };
+    }
+
+    // PDF送付（デモ）
+    if (typeof window.sendPdf !== 'function'){
+      window.sendPdf = function(){
+        try{ if (typeof openNotice === 'function') openNotice('本番ではPDF送付確認画面に推移します。'); }catch(e){}
+      };
+    }
+  })();
+</script>
+<!-- END: js-actions-helper -->
+
+<!-- START: js-core-input-assist -->
+<script>
+  (function(App){
+    // 二重定義防止
+    App = App || (window.App={ modules:{}, bus:{ on(){}, emit(){} }});
+    if (App.modules && App.modules.inputAssist) return;
+
+    // 内部状態
+    var otpIds = ['otp1', 'otp2', 'otp3', 'otp4'];
+
+    // 数字1桁に正規化（全角→半角）
+    function normalizeOneDigit(v){
+      if (!v) return '';
+      var s = String(v).replace(/[^0-9０-９]/g,'').slice(-1);
+      return s.replace(/[０-９]/g, function(d){ return String.fromCharCode(d.charCodeAt(0) - 0xFEE0); });
+    }
+
+    // 次のOTPへ自動フォーカス
+    function otpAutoNext(idx){
+      try{
+        var id = 'otp' + idx;
+        var cur = document.getElementById(id);
+        if (!cur) return;
+        cur.value = normalizeOneDigit(cur.value);
+
+        // 入力済なら次へ
+        if (cur.value && idx < 4){
+          var next = document.getElementById('otp' + (idx + 1));
+          if (next && typeof next.focus === 'function') next.focus();
+        }
+
+        // 4桁揃ったらフォーカスを外す
+        if (idx === 4){
+          var filled = otpIds.every(function(i){ var el = document.getElementById(i); return el && el.value && el.value.length === 1; });
+          if (filled && typeof cur.blur === 'function') cur.blur();
+        }
+      }catch(e){}
+    }
+
+    // ログインID存在チェックとOTP4桁チェック
+    function validateOtpLogin(){
+      try{
+        var idEl = document.getElementById('loginId');
+        var id = (idEl && idEl.value || '').trim();
+        if(!id){
+          if (typeof openNotice === 'function') openNotice('電話番号またはメールアドレスを入力してください');
+          return false;
+        }
+        var filled = otpIds.every(function(i){ var el = document.getElementById(i); return el && (el.value || '').length === 1; });
+        if(!filled){
+          if (typeof openNotice === 'function') openNotice('認証コード4桁を入力してください');
+          return false;
+        }
+        return true;
+      }catch(e){
+        if (typeof openNotice === 'function') openNotice('認証の確認でエラーが発生しました。再度お試しください。');
+        return false;
+      }
+    }
+
+    // 使い勝手向上（Enterキー送信、初期バインド）
+    function bindOtpUX(){
+      try{
+        // 1) 入力イベントで常に1桁に正規化（既存HTMLのoninputと併用でもOK）
+        otpIds.forEach(function(i, idx){
+          var el = document.getElementById(i);
+          if (!el) return;
+          el.addEventListener('input', function(){ otpAutoNext(idx+1); });
+          el.setAttribute('inputmode', 'numeric');
+          el.setAttribute('aria-label', '認証コード ' + (idx+1) + '桁目');
+        });
+
+        // 2) 最後の桁でEnter押下時に送信ボタンをクリック
+        var last = document.getElementById('otp4');
+        if (last){
+          last.addEventListener('keydown', function(e){
+            if (e.key === 'Enter'){
+              e.preventDefault();
+              // 画面内の「認証して次へ」ボタンを探してクリック
+              var btns = Array.from(document.querySelectorAll('button.btnPrimary'));
+              var submit = btns.find(function(b){ return /認証して次へ/.test((b.textContent || '').trim()); });
+              if (submit) submit.click();
+            }
+          });
+        }
+      }catch(e){}
+    }
+
+    // DOM準備時にUXバインド
+    document.addEventListener('DOMContentLoaded', bindOtpUX);
+
+    // モジュール公開 + 互換グローバル
+    App.modules.inputAssist = { otpAutoNext, validateOtpLogin };
+    window.otpAutoNext = otpAutoNext;
+    window.validateOtpLogin = validateOtpLogin;
+
+  })(window.App);
+</script>
+<!-- END: js-core-input-assist -->
+
+<!-- START: js-core-ui-helpers -->
+<script>
+  (function(){
+    // Notice（お知らせモーダル）
+    if (typeof window.openNotice !== 'function'){
+      window.openNotice = function(msg){
+        try{
+          var b = document.getElementById('noticeBody');
+          if (b) b.textContent = String(msg || 'お知らせ');
+          var m = document.getElementById('noticeModal');
+          if (m && typeof openModal === 'function') {
+            openModal(m);
+          } else if (m) {
+            m.classList.add('show');
+            // フォーカス配慮がない環境でも最低限表示
+          } else {
+            alert(msg || 'お知らせ');
+          }
+        }catch(e){
+          try{ alert(msg || 'お知らせ'); }catch(_){}
+        }
+      };
+    }
+    if (typeof window.closeNotice !== 'function'){
+      window.closeNotice = function(){
+        try{
+          var m = document.getElementById('noticeModal');
+          if (m && typeof closeModal === 'function') closeModal(m);
+          else if (m) m.classList.remove('show');
+        }catch(e){}
+      };
+    }
+
+    // Toast（簡易通知）
+    if (typeof window.showToast !== 'function'){
+      window.showToast = function(message){
+        try{
+          var t = document.getElementById('toast');
+          if (!t) { alert(message || ''); return; }
+          t.textContent = '';
+          void t.offsetHeight; // 連続表示のためリフロー
+          t.textContent = String(message || '');
+          t.style.display = 'block';
+          clearTimeout(showToast._tid);
+          showToast._tid = setTimeout(function(){ t.style.display = 'none'; }, 2250);
+        }catch(e){
+          try{ alert(message || ''); }catch(_){}
+        }
+      };
+    }
+
+    // 車検証入力画面の表示切替（OCR/手入力）
+    function safeDisplay(id, show){
+      var el = document.getElementById(id);
+      if (el) el.style.display = show ? 'block' : 'none';
+    }
+    if (typeof window.showManual !== 'function'){
+      window.showManual = function(){
+        safeDisplay('ocrShoot', false);
+        safeDisplay('ocrGuide', false);
+        safeDisplay('ocrResult', false);
+        safeDisplay('manualForm', true);
+      };
+    }
+    if (typeof window.showOCRGuide !== 'function'){
+      window.showOCRGuide = function(){
+        safeDisplay('ocrShoot', true);
+        safeDisplay('ocrGuide', true);
+        safeDisplay('ocrResult', false);
+        safeDisplay('manualForm', false);
+      };
+    }
+    if (typeof window.startShooting !== 'function'){
+      window.startShooting = function(){
+        try{ if (typeof showLoading === 'function') showLoading(); }catch(e){}
+        try{ if (typeof openNotice === 'function') openNotice('本番ではカメラ撮影に遷移します（デモは結果へ）'); }catch(e){}
+        setTimeout(function(){
+          try{ if (typeof hideLoading === 'function') hideLoading(); }catch(e){}
+          try{ if (typeof showOCRResult === 'function') showOCRResult(); }catch(e){}
+        }, 800);
+      };
+    }
+    if (typeof window.showOCRResult !== 'function'){
+      window.showOCRResult = function(){
+        safeDisplay('ocrShoot', false);
+        safeDisplay('ocrGuide', false);
+        safeDisplay('ocrResult', true);
+        safeDisplay('manualForm', false);
+      };
+    }
+  })();
+</script>
+<!-- END: js-core-ui-helpers -->
+
+<!-- START: js-license-color-helper -->
+<script>
+  (function(){
+    if (typeof window.selectColor !== 'function'){
+      window.selectColor = function(name, el){
+        // ボタンのactive切り替え
+        try{
+          document.querySelectorAll('.colorBtn').forEach(function(b){ b.classList.remove('active'); });
+          if (el && el.classList) el.classList.add('active');
+        }catch(e){}
+
+        // 可能ならトースト通知（未定義時は無視）
+        try{ if (typeof showToast === 'function') showToast(name + 'を選択しました'); }catch(e){}
+      };
+    }
+  })();
+</script>
+<!-- END: js-license-color-helper -->
 
 <!-- START: js-vehicle-handlers -->
 <script>
