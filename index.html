@@ -1259,37 +1259,36 @@
 </section>
 <!-- END: screen-17-simple-plans -->
 
-    <!-- START: screen-18-bodily-amount -->
-    <section class="screen" data-title="人身傷害の金額を選ぶ">
-      <div class="card">
-        <div class="h1">人身傷害の金額を選ぶ</div>
-        <ul class="list">
-          <li>現在：3,000万円</li>
-        </ul>
-        <div class="field">
-          <div class="label">人身傷害（選択してください）</div>
-          <select id="bodilyAmount" onchange="onBodilyChange(this.value)">
-            <option value="">選択してください</option>
-            <option value="unlimited">無制限</option>
-            <option value="10000">1億円</option>
-            <option value="8000">8,000万円</option>
-            <option value="5000">5,000万円</option>
-            <option value="3000">3,000万円</option>
-          </select>
-        </div>
-        <table class="priceTable">
-          <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
-          <tbody>
-            <tr class="rowCurrent"><td class="rowLabel">現在</td><td id="kpiCur1">¥5,900</td><td id="kpiCur1Y">¥70,800</td></tr>
-            <tr class="rowNew"><td class="rowLabel">更新後</td><td id="kpiNew1">¥6,800</td><td id="kpiNew1Y">¥81,600</td></tr>
-            <tr class="rowDelta"><td class="rowLabel">差額</td><td id="kpiDelta1">+¥900</td><td id="kpiDelta1Y">+¥10,800</td></tr>
-          </tbody>
-        </table>
-        <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
-        <button class="btnPrimary" onclick="next()">次へ</button>
-      </div>
-    </section>
-    <!-- END: screen-18-bodily-amount -->
+<!-- START: screen-18-bodily-amount -->
+<section class="screen" data-title="人身傷害の金額を選ぶ">
+  <div class="card">
+    <div class="h1">人身傷害の金額を選ぶ</div>
+    <ul class="list">
+      <li>現在：3,000万円</li>
+    </ul>
+    <div class="field">
+      <div class="label">人身傷害（選択してください）</div>
+      <select id="bodilyAmount" onchange="onBodilyChange(this.value)">
+        <option value="unlimited">無制限</option>
+        <option value="10000">1億円</option>
+        <option value="8000">8,000万円</option>
+        <option value="5000">5,000万円</option>
+        <option value="3000" selected>3,000万円</option>
+      </select>
+    </div>
+    <table class="priceTable">
+      <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
+      <tbody>
+        <tr class="rowCurrent"><td class="rowLabel">現在</td><td id="kpiCur1">¥5,900</td><td id="kpiCur1Y">¥70,800</td></tr>
+        <tr class="rowNew"><td class="rowLabel">更新後</td><td id="kpiNew1">¥6,800</td><td id="kpiNew1Y">¥81,600</td></tr>
+        <tr class="rowDelta"><td class="rowLabel">差額</td><td id="kpiDelta1">+¥900</td><td id="kpiDelta1Y">+¥10,800</td></tr>
+      </tbody>
+    </table>
+    <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
+    <button class="btnPrimary" onclick="next()">次へ</button>
+  </div>
+</section>
+<!-- END: screen-18-bodily-amount -->
 
  <!-- START: screen-19-vehicle-amount -->
 <section class="screen" data-title="車両保険の金額を選ぶ">
@@ -2948,7 +2947,7 @@
       if (sub) sub.textContent = '「日」を選んでください。選択後に元の画面へ戻ります。';
     }
 
-    // 選択後にチェック表示 → 1秒後に自動遷移
+    // 選択後にチェック表示 → 0.5秒後に自動遷移
     function selectMonth(m, btn){
       const cfg = groups[group];
       if (!cfg) return;
@@ -2968,11 +2967,11 @@
       const disp = getEl(cfg.monthBtn);
       if (disp) disp.textContent = m + '月';
 
-      // 初度登録は月のみ → 1秒後に閉じる、他は日へ
+      // 初度登録は月のみ → 0.5秒後に閉じる、他は日へ
       if (group === 'firstReg'){
-        setTimeout(closePicker, 1000);
+        setTimeout(closePicker, 500);
       }else{
-        setTimeout(renderDayGrid, 1000);
+        setTimeout(renderDayGrid, 500);
       }
     }
 
@@ -2995,8 +2994,8 @@
       const disp = getEl(cfg.dayBtn);
       if (disp) disp.textContent = d + '日';
 
-      // 1秒後に閉じて元画面へ
-      setTimeout(closePicker, 1000);
+      // 0.5秒後に閉じて元画面へ
+      setTimeout(closePicker, 500);
     }
 
     // 公開関数（各対象）
