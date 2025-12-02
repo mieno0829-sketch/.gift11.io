@@ -312,6 +312,105 @@
 </style>
 <!-- END: styles-override-airobot -->
 
+<!-- START: styles-official-inline-contrast -->
+<style>
+  /* 提案B：背景なしテキストを維持しつつ、ダーク/ライト両対応の視認性を確保 */
+  .officialInline { padding:12px 12px 0 12px; }
+  .officialInline-row { display:flex; align-items:flex-start; gap:10px; }
+  .officialInline-bullet { width:18px; height:18px; flex:0 0 18px; }
+  .officialInline-text { font-size:13px; line-height:1.6; color: #0f3d7a; letter-spacing:.01em; }
+  .officialInline-text strong { font-weight:800; }
+
+  /* 等幅チップ（ドメイン/メールの誤読防止） */
+  .inlineChip{
+    display:inline-flex; align-items:center; justify-content:center;
+    margin:0 4px; padding:3px 8px;
+    border:1px solid #2b6fd6; border-radius:999px;
+    background:#fff; color:#2b6fd6; font-size:12px; font-weight:700; line-height:1;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+    white-space:nowrap;
+  }
+
+  /* リンクは常時下線＋ハイコントラスト色 */
+  .officialInline .officialLink{
+    color:#1f5fbf; text-decoration:underline; font-weight:700;
+  }
+  .officialInline .officialLink:active{ opacity:.9; }
+
+  /* フォーカス可視性（キーボード操作にも配慮） */
+  .officialInline .officialLink:focus-visible,
+  .officialInline .inlineChip:focus-visible{
+    outline:3px solid #3c7fe6; outline-offset:2px; border-radius:6px;
+  }
+
+  /* ダークモードでは文字色・リンク色を明示指定し、コントラストを確保（>=4.5:1） */
+  @media (prefers-color-scheme: dark){
+    .officialInline-text{ color:#ededed; }
+    .officialInline .officialLink{ color:#66B2FF; }
+    .inlineChip{
+      background:transparent; border-color:#66B2FF; color:#66B2FF;
+    }
+    /* 警告アイコンも暗所で沈まないように少し明るめに */
+    .officialInline-bullet polygon{ fill:#ffd54f; stroke:#e6c54b; }
+    .officialInline-bullet text{ fill:#3b2f00; }
+  }
+
+  /* 狭幅端末での折返し最適化 */
+  @media (max-width:360px){
+    .officialInline-text{ font-size:12.5px; }
+  }
+</style>
+<!-- END: styles-official-inline-contrast -->
+
+<!-- START: styles-monthday-picker -->
+<style>
+  /* 月・日ピッカー（四角ボタン／ライト・ダーク対応） */
+  .mdPickerHeader{ font-size:16px; font-weight:700; color:var(--blue-900); margin-top:0; }
+  .mdPickerSub{ font-size:12px; color:var(--sub); margin-top:4px; }
+  .mdGrid{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; margin-top:10px; }
+  .mdCell{
+    position:relative;
+    display:inline-flex; align-items:center; justify-content:center;
+    min-height:42px; padding:10px; border:1px solid var(--border); border-radius:10px;
+    background:#fff; color:#1a1a1a; font-size:15px; font-weight:700; cursor:pointer;
+  }
+  .mdCell:hover, .mdCell:focus-visible{ outline:3px solid #3c7fe6; outline-offset:2px; }
+  .mdCell.selected{ background:#eef4ff; border-color:#aecdff; color:#0f3d7a; }
+  .mdCell.selected::after{
+    content:"✓"; position:absolute; right:10px; top:6px; font-size:14px; font-weight:800; color:#2b6fd6;
+  }
+  .mdCell.disabled{ opacity:.45; cursor:not-allowed; background:#f6f8fc; }
+
+  .mdActions{ display:flex; gap:6px; margin-top:12px; justify-content:center; } /* センタリング */
+
+  .mdClose{ display:inline-block; padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; color:#0f3d7a; font-size:13px; cursor:pointer; }
+  .mdClose:active{ opacity:.9; }
+
+  @media (prefers-color-scheme: dark){
+    .mdCell{ background:#1e1e1e; color:#fafafa; border-color:#2c2c2c; }
+    .mdCell.disabled{ background:#222; border-color:#2c2c2c; color:#bbb; }
+    .mdCell.selected{ background:#16365f; border-color:#3c7fe6; color:#fff; }
+    .mdCell.selected::after{ color:#66B2FF; }
+    .mdClose{ background:#1e1e1e; color:#fafafa; border-color:#2c2c2c; }
+  }
+
+  /* 非表示select（値保持用） */
+  .visHiddenSelect{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
+  /* 表示用のダミー入力風ボタン（幅を短縮） */
+  .mdDisplayBtn{
+    flex:0 0 70px; max-width:72px;
+    display:flex; align-items:center; justify-content:center;
+    padding:8px; border:1px solid var(--border); border-radius:10px; background:#fff;
+    font-size:15px; color:#1a1a1a; cursor:pointer;
+  }
+  .mdDisplayBtn:focus-visible{ outline:3px solid #3c7fe6; outline-offset:2px; }
+  @media (prefers-color-scheme:dark){
+    .mdDisplayBtn{ background:#1e1e1e; color:#fafafa; border-color:#2c2c2c; }
+  }
+</style>
+<!-- END: styles-monthday-picker -->
+
 </head>
 <body>
 <div class="wrap">
@@ -381,7 +480,7 @@
     <div class="coverTitle">
       <div class="coverLine">プロトタイプ</div>
       <div aria-hidden="true" style="height:1.75em;"></div>
-      <div class="coverLine noBullet">狙い：以下のイメージ共有</div>
+      <div class="coverLine noBullet">狙い：イメージ共有</div>
       <div class="coverLine">・スマらく改修</div>
       <div class="coverLine">・e-Auto更新</div>
     </div>
@@ -404,8 +503,15 @@
         <text x="12" y="16" text-anchor="middle" font-size="12" fill="#3b2f00" font-weight="700">!</text>
       </svg>
       <span class="officialInline-text">
-        このページは公式サイト（example.co.jp）です。送信元メールは「@example.co.jp」から届きます。
-        <a href="#" onclick="openNotice('偽サイトの見分け方：送信元ドメイン、リンク先URL、個人情報の要求有無（変更ではなく新規の要求の有無）を確認してください。')">注意点はコチラ</a>
+        <strong>公式サイト</strong>
+        <span class="inlineChip" aria-label="公式ドメイン">example.co.jp</span><br>
+        送信元メールは
+        <span class="inlineChip" aria-label="送信元メールドメイン">@example.co.jp</span>
+        から届きます。
+        <a href="#" class="officialLink"
+           onclick="openNotice('偽サイトの見分け方：送信元ドメイン、リンク先URL、個人情報の要求有無（変更ではなく新規の要求の有無）を確認してください。')">
+          偽サイトの見分け方はコチラ
+        </a>
       </span>
     </div>
   </div>
@@ -599,9 +705,11 @@
     </div>
     <div class="field">
       <div class="label">初度登録年月</div>
-      <div style="display:flex; gap:6px; align-items:center;">
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
         <select id="firstRegYear"><option value="">年</option></select>
-        <select id="firstRegMonth"><option value="">月</option></select>
+
+        <button type="button" id="firstRegMonthDisplay" class="mdDisplayBtn" onclick="openMonthPickerForFirstReg()" aria-label="月を選ぶ">月</button>
+        <select id="firstRegMonth" class="visHiddenSelect" aria-hidden="true"><option value="">月</option></select>
       </div>
     </div>
     <button class="btnPrimary" onclick="if(validateVIN() && validateFirstRegSelect()) next()">次へ</button>
@@ -626,7 +734,7 @@
 </section>
 <!-- END: screen-05-license-summary -->
 
-  <!-- START: screen-06-license -->
+<!-- START: screen-06-license -->
 <section class="screen" data-title="免許証の色">
   <div class="card">
     <div class="h1">免許証の色を選ぶ</div>
@@ -664,10 +772,14 @@
     <div class="desc" style="margin-top:8px;">年・月・日をそれぞれお選びください。</div>
     <div class="field">
       <div class="label">有効期限</div>
-      <div style="display:flex; gap:6px; align-items:center;">
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
         <select id="licenseYear"><option value="">年</option></select>
-        <select id="licenseMonth"><option value="">月</option></select>
-        <select id="licenseDay"><option value="">日</option></select>
+
+        <button type="button" id="licenseMonthDisplay" class="mdDisplayBtn" onclick="openMonthDayPickerForLicense('month')" aria-label="月を選ぶ">月</button>
+        <select id="licenseMonth" class="visHiddenSelect" aria-hidden="true"><option value="">月</option></select>
+
+        <button type="button" id="licenseDayDisplay" class="mdDisplayBtn" onclick="openMonthDayPickerForLicense('day')" aria-label="日を選ぶ">日</button>
+        <select id="licenseDay" class="visHiddenSelect" aria-hidden="true"><option value="">日</option></select>
       </div>
     </div>
     <button class="btnPrimary" onclick="if(validateDateSelect()) next()">次へ</button>
@@ -761,10 +873,14 @@
 
     <div class="field">
       <div class="label">生年月日</div>
-      <div style="display:flex; gap:6px; align-items:center;">
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
         <select id="dobYear"><option value="">年</option></select>
-        <select id="dobMonth"><option value="">月</option></select>
-        <select id="dobDay"><option value="">日</option></select>
+
+        <button type="button" id="dobMonthDisplay" class="mdDisplayBtn" onclick="openMonthDayPickerForDob('month')" aria-label="月を選ぶ">月</button>
+        <select id="dobMonth" class="visHiddenSelect" aria-hidden="true"><option value="">月</option></select>
+
+        <button type="button" id="dobDayDisplay" class="mdDisplayBtn" onclick="openMonthDayPickerForDob('day')" aria-label="日を選ぶ">日</button>
+        <select id="dobDay" class="visHiddenSelect" aria-hidden="true"><option value="">日</option></select>
       </div>
     </div>
 
@@ -865,10 +981,14 @@
 
     <div class="field">
       <div class="label">生年月日</div>
-      <div style="display:flex; gap:6px; align-items:center;">
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
         <select id="md_dobYear"><option value="">年</option></select>
-        <select id="md_dobMonth"><option value="">月</option></select>
-        <select id="md_dobDay"><option value="">日</option></select>
+
+        <button type="button" id="md_dobMonthDisplay" class="mdDisplayBtn" onclick="openMonthDayPickerForMdDob('month')" aria-label="月を選ぶ">月</button>
+        <select id="md_dobMonth" class="visHiddenSelect" aria-hidden="true"><option value="">月</option></select>
+
+        <button type="button" id="md_dobDayDisplay" class="mdDisplayBtn" onclick="openMonthDayPickerForMdDob('day')" aria-label="日を選ぶ">日</button>
+        <select id="md_dobDay" class="visHiddenSelect" aria-hidden="true"><option value="">日</option></select>
       </div>
     </div>
 
@@ -1531,11 +1651,11 @@
     <div class="desc">お申込みありがとうございました。</div>
 
     <div class="item" id="receiptNo">受付番号：ABC12345</div>
-    <div class="item doneLine" id="donePostalUnder" style="display:none; margin-top:6px;">継続証を郵送いたします。</div>
     <ul class="list" id="doneList" style="margin-top:6px; list-style:none; padding-left:0;">
+      <li class="doneLine" id="doneTermsPostal" style="display:none;">ご契約のしおり（約款）を郵送いたします。</li>
+      <li class="doneLine" id="donePostal" style="display:none;">保険証券を郵送いたします。</li>
       <li class="doneLine" id="donePdf" style="display:none;">申込書控え（PDF）を送信しました。</li>
       <li class="doneLine" id="doneImpPdf" style="display:none;">重要事項全文（PDF）を送信しました。</li>
-      <li class="doneLine" id="donePostal" style="display:none;">保険証券を郵送いたします。</li>
     </ul>
     <button class="btnPrimary" onclick="openNotice('本番では払込方法の確認・変更の画面に推移します。デモ画面はここで終了です。')">次へ（払込方法の確認）</button>
   </div>
@@ -1630,6 +1750,19 @@
   </div>
 </div>
 <!-- END: modal-ai-choice -->
+
+<!-- START: modal-monthday-picker -->
+<div class="modal" id="monthDayPickerModal" role="dialog" aria-modal="true" aria-labelledby="mdPickerTitle" tabindex="-1">
+  <div class="box">
+    <div class="h1 mdPickerHeader" id="mdPickerTitle">有効期限の月・日を選ぶ</div>
+    <div class="mdPickerSub" id="mdPickerSub">まず「月」を選んでください。選択後に「日」へ切り替わります。</div>
+    <div id="mdPickerGrid" class="mdGrid" role="grid" aria-label="月・日選択グリッド"></div>
+    <div class="mdActions">
+      <button class="mdClose" onclick="closeModal(document.getElementById('monthDayPickerModal'))" aria-label="閉じる">×閉じる</button>
+    </div>
+  </div>
+</div>
+<!-- END: modal-monthday-picker -->
 
 <!-- START: toast -->
 <div id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -1873,12 +2006,20 @@
       }catch(e){}
     }
 
-    // 内部関数：残り時間の目安更新
+    // 内部関数：残り時間の目安更新（<1分は「残り約1分未満」で表示）
     function updateTimeLeft(visualStep, MAX_STEPS){
       try{
-        const remaining = Math.round(12 * (MAX_STEPS - visualStep) / MAX_STEPS);
+        const remainingRaw = 12 * (MAX_STEPS - visualStep) / MAX_STEPS;
+        const remainingRounded = Math.round(remainingRaw);
         const timeLeftEl = document.getElementById('timeLeft');
-        if (timeLeftEl) timeLeftEl.textContent = `残り約${remaining}分`;
+        if (!timeLeftEl) return;
+
+        // 最終ステップは0分表示で問題ないためそのまま
+        if (visualStep < MAX_STEPS && remainingRounded === 0 && remainingRaw > 0){
+          timeLeftEl.textContent = '残り約1分未満';
+        }else{
+          timeLeftEl.textContent = `残り約${remainingRounded}分`;
+        }
       }catch(e){}
     }
 
@@ -2717,6 +2858,196 @@
 </script>
 <!-- END: js-core-dates -->
 
+<!-- START: js-monthday-picker -->
+<script>
+  (function(App){
+    App = App || (window.App={ modules:{}, bus:{ on(){}, emit(){} }});
+
+    // 現在の対象グループとフェーズ
+    let phase = 'month'; // 'month' -> 'day'
+    let group = 'license'; // 'license' | 'dob' | 'md_dob' | 'firstReg'
+    let lastSelectedMonth = null;
+
+    const groups = {
+      license: { yearId:'licenseYear', monthId:'licenseMonth', dayId:'licenseDay', monthBtn:'licenseMonthDisplay', dayBtn:'licenseDayDisplay' },
+      dob:     { yearId:'dobYear',     monthId:'dobMonth',     dayId:'dobDay',     monthBtn:'dobMonthDisplay',     dayBtn:'dobDayDisplay' },
+      md_dob:  { yearId:'md_dobYear',  monthId:'md_dobMonth',  dayId:'md_dobDay',  monthBtn:'md_dobMonthDisplay',  dayBtn:'md_dobDayDisplay' },
+      firstReg:{ yearId:'firstRegYear',monthId:'firstRegMonth',                     monthBtn:'firstRegMonthDisplay' }
+    };
+
+    function getEl(id){ return document.getElementById(id); }
+    function openPicker(){
+      const m = getEl('monthDayPickerModal');
+      if (!m){ alert('ピッカーのモーダルが見つかりません'); return; }
+      if (typeof openModal === 'function') openModal(m); else m.classList.add('show');
+      renderMonthGrid();
+      const sub = getEl('mdPickerSub');
+      if (sub) sub.textContent = (group === 'firstReg')
+        ? '「月」を選んでください。選択後に元の画面へ戻ります。'
+        : 'まず「月」を選んでください。選択後に「日」へ切り替わります。';
+    }
+    function closePicker(){
+      const m = getEl('monthDayPickerModal');
+      if (!m) return;
+      if (typeof closeModal === 'function') closeModal(m); else m.classList.remove('show');
+      phase = 'month'; group = 'license'; lastSelectedMonth = null;
+    }
+
+    function daysInMonth(year, month){
+      const y = Number(year||0), m = Number(month||0);
+      if (!y || !m) return 31;
+      return new Date(y, m, 0).getDate();
+    }
+
+    function renderMonthGrid(){
+      phase = 'month';
+      const cfg = groups[group];
+      const grid = getEl('mdPickerGrid'); if (!grid || !cfg) return;
+      grid.innerHTML = '';
+      const months = Array.from({length:12}, (_,i)=> i+1);
+      months.forEach((mm)=>{
+        const btn = document.createElement('button');
+        const curVal = String(getEl(cfg.monthId)?.value||'');
+        btn.className = 'mdCell' + (curVal === String(mm).padStart(2,'0') ? ' selected':'');
+        btn.type='button';
+        btn.setAttribute('role','gridcell');
+        btn.setAttribute('aria-selected', btn.classList.contains('selected') ? 'true' : 'false');
+        btn.textContent = mm + '月';
+        btn.addEventListener('click', function(){
+          selectMonth(mm, btn);
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderDayGrid(){
+      phase = 'day';
+      const cfg = groups[group];
+      const grid = getEl('mdPickerGrid'); if (!grid || !cfg) return;
+      grid.innerHTML = '';
+      const yVal = getEl(cfg.yearId)?.value || '';
+      const mVal = lastSelectedMonth || getEl(cfg.monthId)?.value || '';
+      const maxDay = daysInMonth(yVal, mVal);
+
+      const makeCell = function(d){
+        const btn = document.createElement('button');
+        const curVal = String(getEl(cfg.dayId)?.value||'');
+        btn.className = 'mdCell' + (curVal === String(d).padStart(2,'0') ? ' selected':'');
+        btn.type='button';
+        btn.setAttribute('role','gridcell');
+        btn.setAttribute('aria-selected', btn.classList.contains('selected') ? 'true' : 'false');
+        btn.textContent = d + '日';
+        btn.addEventListener('click', function(){ selectDay(d, btn); });
+        return btn;
+      };
+
+      for (let d=1; d<=Math.min(30, maxDay); d++){ grid.appendChild(makeCell(d)); }
+      if (maxDay >= 31){ grid.appendChild(makeCell(31)); }
+
+      const sub = getEl('mdPickerSub');
+      if (sub) sub.textContent = '「日」を選んでください。選択後に元の画面へ戻ります。';
+    }
+
+    // 選択後にチェック表示 → 1秒後に自動遷移
+    function selectMonth(m, btn){
+      const cfg = groups[group];
+      if (!cfg) return;
+      const val = String(m).padStart(2,'0');
+
+      // 視覚状態（チェック/色）を反映
+      try{
+        btn && btn.classList.add('selected');
+        btn && btn.setAttribute('aria-selected','true');
+      }catch(e){}
+
+      // selectへ反映
+      const sel = getEl(cfg.monthId);
+      if (sel){ sel.value = val; lastSelectedMonth = val; sel.dispatchEvent(new Event('change')); }
+
+      // 表示ボタンへ反映
+      const disp = getEl(cfg.monthBtn);
+      if (disp) disp.textContent = m + '月';
+
+      // 初度登録は月のみ → 1秒後に閉じる、他は日へ
+      if (group === 'firstReg'){
+        setTimeout(closePicker, 1000);
+      }else{
+        setTimeout(renderDayGrid, 1000);
+      }
+    }
+
+    function selectDay(d, btn){
+      const cfg = groups[group];
+      if (!cfg) return;
+      const val = String(d).padStart(2,'0');
+
+      // 視覚状態（チェック/色）
+      try{
+        btn && btn.classList.add('selected');
+        btn && btn.setAttribute('aria-selected','true');
+      }catch(e){}
+
+      // selectへ反映
+      const sel = getEl(cfg.dayId);
+      if (sel){ sel.value = val; sel.dispatchEvent(new Event('change')); }
+
+      // 表示ボタンへ反映
+      const disp = getEl(cfg.dayBtn);
+      if (disp) disp.textContent = d + '日';
+
+      // 1秒後に閉じて元画面へ
+      setTimeout(closePicker, 1000);
+    }
+
+    // 公開関数（各対象）
+    function openMonthDayPicker(targetGroup, targetPhase){
+      group = targetGroup || 'license';
+      // 初期準備の最低限（populateが未完でも安全に動作）
+      const cfg = groups[group];
+      if (cfg){
+        if (!getEl(cfg.monthId)) return openPicker();
+        if (getEl(cfg.monthId) && getEl(cfg.monthId).options.length <= 1){
+          getEl(cfg.monthId).innerHTML = '<option value="">月</option>' + Array.from({length:12},(_,i)=> `<option value="${String(i+1).padStart(2,'0')}">${i+1}月</option>`).join('');
+        }
+        if (cfg.dayId && getEl(cfg.dayId) && getEl(cfg.dayId).options.length <= 1){
+          getEl(cfg.dayId).innerHTML = '<option value="">日</option>' + Array.from({length:31},(_,i)=> `<option value="${String(i+1).padStart(2,'0')}">${i+1}日</option>`).join('');
+        }
+      }
+      openPicker();
+      if (targetPhase === 'day'){
+        // 月未選択なら月から促す
+        const mv = cfg && (getEl(cfg.monthId)?.value || '');
+        if (!mv && group !== 'firstReg'){ renderMonthGrid(); return; }
+        if (group === 'firstReg'){ /* 初度登録は日なし */ return; }
+        renderDayGrid();
+      }
+    }
+
+    // ラッパー（既存onclick互換）
+    window.openMonthDayPickerForLicense = function(target){ openMonthDayPicker('license', target); };
+    window.openMonthDayPickerForDob     = function(target){ openMonthDayPicker('dob', target); };
+    window.openMonthDayPickerForMdDob   = function(target){ openMonthDayPicker('md_dob', target); };
+    window.openMonthPickerForFirstReg   = function(){ openMonthDayPicker('firstReg', 'month'); };
+
+    // 初期表示のボタンラベルを既存select値に同期（空なら「月」「日」）
+    document.addEventListener('DOMContentLoaded', function(){
+      try{
+        const sync = (cfg)=>{
+          const mSel = getEl(cfg.monthId), dSel = cfg.dayId ? getEl(cfg.dayId) : null;
+          const mBtn = getEl(cfg.monthBtn), dBtn = cfg.dayBtn ? getEl(cfg.dayBtn) : null;
+          if (mBtn) mBtn.textContent = (mSel && mSel.value) ? Number(mSel.value) + '月' : '月';
+          if (dBtn) dBtn.textContent = (dSel && dSel.value) ? Number(dSel.value) + '日' : '日';
+        };
+        sync(groups.license);
+        sync(groups.dob);
+        sync(groups.md_dob);
+        sync(groups.firstReg);
+      }catch(e){}
+    });
+  })(window.App);
+</script>
+<!-- END: js-monthday-picker -->
+
 <!-- START: js-core -->
 <script>
   // 画面番号マップ（分割後もここで維持）
@@ -2758,13 +3089,15 @@
     try{
       const st = (window.choiceState || {});
       const sendImpPdf = !!window.flagSendPdf;
-      const elPdf       = document.getElementById('donePdf');
-      const elImpPdf    = document.getElementById('doneImpPdf');
-      const elPostal    = document.getElementById('donePostal');
+      const elPdf         = document.getElementById('donePdf');
+      const elImpPdf      = document.getElementById('doneImpPdf');
+      const elPostal      = document.getElementById('donePostal');
+      const elTermsPostal = document.getElementById('doneTermsPostal');
 
-      if (elPdf)    elPdf.style.display    = st['pdf_yes']     ? '' : 'none';
-      if (elImpPdf) elImpPdf.style.display = sendImpPdf        ? '' : 'none';
-      if (elPostal) elPostal.style.display = st['cert_paper']  ? '' : 'none';
+      if (elPdf)         elPdf.style.display         = st['pdf_yes']      ? '' : 'none';
+      if (elImpPdf)      elImpPdf.style.display      = sendImpPdf         ? '' : 'none';
+      if (elPostal)      elPostal.style.display      = st['cert_paper']   ? '' : 'none';
+      if (elTermsPostal) elTermsPostal.style.display = st['terms_paper']  ? '' : 'none';
 
       // 既定では利用しない補助行（必要時のみ活用）
       // const elPostalUnder = document.getElementById('donePostalUnder');
@@ -2774,7 +3107,6 @@
 
   // ナビゲーション（モジュール）への委譲設定
   (function(){
-    // タイトルごとの追加初期化（従来の setActive 内にあった日付系呼び出しは dates モジュールに委譲）
     function afterActivate(title){
       try{
         if (title==='免許証の色')                         App.modules?.dates?.populateLicenseDateSelects();
@@ -2797,7 +3129,6 @@
   // 初期化
   (function(){
     document.addEventListener('DOMContentLoaded', function(){
-      // 初回の各セレクト準備（dates モジュールに委譲）
       try{
         App.modules?.dates?.populateLicenseDateSelects();
         App.modules?.dates?.populateDobSelects();
@@ -2805,12 +3136,10 @@
         App.modules?.dates?.populateFirstRegSelects();
       }catch(e){}
 
-      // ラベル
       const l=document.getElementById('lblLarge');
       if(l) l.textContent = document.body.classList.contains('large') ? '文字縮小' : '文字拡大';
       try{ if (typeof setGuidedBtn === 'function') setGuidedBtn(); }catch(e){}
 
-      // カバーへ
       try{
         const ss = Array.from(document.querySelectorAll('.screen'));
         const coverIdx = ss.findIndex(s=> s.dataset.role==='cover');
@@ -2822,7 +3151,6 @@
         }
       }catch(e){ App.modules?.navigation?.setActive(0); }
 
-      // 途中保存の再開提案（表紙でのみ）
       try{
         App.modules?.storage?.offerResume && App.modules.storage.offerResume();
       }catch(e){}
