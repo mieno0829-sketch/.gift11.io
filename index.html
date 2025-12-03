@@ -3983,7 +3983,6 @@
   function applyShrinkThenHide(el){
     try{
       if (!el) return;
-      // prefers-reduced-motion を尊重
       const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReduced){
         el.style.display = 'none';
@@ -4232,10 +4231,11 @@
             fallbackMock('入力が確認できませんでした。');
           }
         }
-        // 認識完了後：0.8秒待機→0.25秒縮退で消す
-        setIndicator(targetFieldId, '認識完了', 'recognizing');
+        // 認識完了後：0.8秒待機→縮退で消す（フィールドIDを退避して確実に消す）
+        const fid = targetFieldId;
+        setIndicator(fid, '認識完了', 'recognizing');
         hideVoiceStatusDelayed(800);
-        setTimeout(()=> hideIndicator(targetFieldId), 800);
+        setTimeout(()=> hideIndicator(fid), 800);
 
         targetFieldId = null;
         modeDigitsOnly = false;
@@ -4289,8 +4289,11 @@
     toggleButtons(false);
     setStatus('停止しました。');
     if (targetFieldId) setIndicator(targetFieldId, '停止しました', 'ready');
+
+    // キャンセル時もフィールドIDを退避して確実に消す
+    const fid = targetFieldId;
     hideVoiceStatusDelayed(800);
-    setTimeout(()=> hideIndicator(targetFieldId), 800);
+    setTimeout(()=> hideIndicator(fid), 800);
 
     targetFieldId = null;
     modeDigitsOnly = false;
