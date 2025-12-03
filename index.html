@@ -2630,34 +2630,25 @@
     if (!App) App = (window.App = { modules:{}, bus:{ on(){}, emit(){} }});
     if (App.modules && App.modules.navigation) return;
 
-    // 内部状態
     let _TITLE_NO = {};
     let _MAX_STEPS = 26;
     let _step = 0;
     let _historyStack = [];
+    const afterHooks = [];
 
-    // 依存を安全に呼ぶヘルパ
     function safe(fn){ try{ return fn && fn(); }catch(e){} }
     function screens(){ return Array.from(document.querySelectorAll('.screen')); }
     function titles(){ return screens().map(s=> s.dataset.title || ''); }
     function isCover(i){ const ss = screens(); return !!(ss[i] && ss[i].dataset.role === 'cover'); }
     function curTitle(i){ const t = titles(); return t[i] || ''; }
 
-    // 外部フック（多重フック：優先度A）
-    const afterHooks = [];
     function configure(cfg){
       _TITLE_NO = cfg && cfg.TITLE_NO ? cfg.TITLE_NO : _TITLE_NO;
       _MAX_STEPS = typeof cfg?.MAX_STEPS === 'number' ? cfg.MAX_STEPS : _MAX_STEPS;
     }
-    function setAfterActivate(fn){
-      // 従来APIのまま、登録されたフックは多重に保持して順次呼び出す
-      if (typeof fn === 'function') afterHooks.push(fn);
-    }
-    function addAfterActivate(fn){
-      if (typeof fn === 'function') afterHooks.push(fn);
-    }
+    function setAfterActivate(fn){ if (typeof fn === 'function') afterHooks.push(fn); }
+    function addAfterActivate(fn){ if (typeof fn === 'function') afterHooks.push(fn); }
 
-    // 進捗更新
     function updateProgress(i){
       if (isCover(i)) return;
       if (App.modules && App.modules.progress && typeof App.modules.progress.onActive === 'function'){
@@ -2665,11 +2656,8 @@
       }
     }
 
-    // 画面切り替え本体
     function setActive(i){
-      // 音声ガイド停止（読み上げ）
       safe(()=> window.stopGuidedVoice && window.stopGuidedVoice());
-      // 音声入力停止（認識中断＋ターゲットクリア）
       safe(()=> window.cancelVoiceInput && window.cancelVoiceInput());
 
       const ss = screens();
@@ -2679,34 +2667,33 @@
         s.classList.toggle('anim-in', isActive);
       });
 
-      // cover表示制御
       const onCover = isCover(i);
       document.body.classList.toggle('cover', onCover);
 
-      // フッターの音声ステータスは画面切替後は非表示（受付時間のみ表示）
+      // フッター音声ステータスは切替後に隠す
       try{
         const vs = document.getElementById('voiceStatus');
         if (vs) vs.style.display = 'none';
       }catch(e){}
 
-      // スクロール
-      safe(()=> window.scrollToTop && window.scrollToTop());
+      // 画面切替時に残留インジケータを一括クリーンアップ
+      try{
+        document.querySelectorAll('.voiceIndicator').forEach(ind=>{
+          ind.style.display = 'none';
+          ind.classList.remove('fadeShrink','ready','recording','recognizing');
+        });
+      }catch(e){}
 
-      // 進捗
+      safe(()=> window.scrollToTop && window.scrollToTop());
       updateProgress(i);
 
       const title = curTitle(i);
-      // 最終見積の整形（必要時）
       if (title === '最終見積のまとめ' || title === '最終見積もり'){
         safe(()=> window.updateFinalSummary && window.updateFinalSummary());
       }
 
-      // 画面ごとの初期化フック（多重フック順次呼び出し）
-      try{
-        afterHooks.forEach(fn => { try{ fn(title); }catch(e){} });
-      }catch(e){}
+      try{ afterHooks.forEach(fn => { try{ fn(title); }catch(e){} }); }catch(e){}
 
-      // 初期フォーカス
       safe(()=> App.modules && App.modules.accessibility && App.modules.accessibility.focusFirstInteractive());
 
       _step = i;
@@ -2722,7 +2709,6 @@
       pushHistory(_step);
       const idx = Math.min(_step + 1, screens().length - 1);
       setActive(idx);
-      // 見積り再計算
       safe(()=> App.modules && App.modules.estimate && App.modules.estimate.recalcAll());
     }
 
@@ -2744,7 +2730,6 @@
       }
     }
 
-    // 公開API
     App.modules.navigation = {
       configure, setAfterActivate, addAfterActivate, setActive, next, prev, goToTitle,
       titles,
@@ -2752,12 +2737,10 @@
       get historyStack(){ return _historyStack; }
     };
 
-    // 互換API（window に露出）
     window.setActive = setActive;
     window.next = next;
     window.prev = prev;
     window.goToTitle = goToTitle;
-    // 新API
     window.addAfterActivate = addAfterActivate;
   })(window.App);
 </script>
@@ -4028,9 +4011,16 @@
   }
   function hideIndicator(fieldId){
     try{
+      // 1) 参照が残っていればそれを使う
       const inp = getEl(fieldId);
       const ind = inp && inp.__voiceIndicator;
-      if (ind) applyShrinkThenHide(ind);
+      if (ind){ applyShrinkThenHide(ind); return; }
+      // 2) フォールバック：入力直後の .voiceIndicator を直接検索
+      if (fieldId){
+        const fallback = document.querySelector('#'+CSS.escape(fieldId)+' + .voiceIndicator');
+        if (fallback){ applyShrinkThenHide(fallback); return; }
+      }
+      // 3) それでも見つからない場合は何もしない（ナビゲーション側の一括クリーンアップで回収）
     }catch(e){}
   }
 
@@ -4231,7 +4221,7 @@
             fallbackMock('入力が確認できませんでした。');
           }
         }
-        // 認識完了後：0.8秒待機→縮退で消す（フィールドIDを退避して確実に消す）
+        // 認識完了後：0.8秒待機 → 指定フィールドIDのインジケータを縮退→非表示
         const fid = targetFieldId;
         setIndicator(fid, '認識完了', 'recognizing');
         hideVoiceStatusDelayed(800);
@@ -4248,11 +4238,7 @@
           for(let i=evt.resultIndex; i<evt.results.length; i++){
             const res = evt.results[i];
             const text = res[0]?.transcript || '';
-            if (res.isFinal){
-              finalChunk += text;
-            } else {
-              interimAccum += text;
-            }
+            if (res.isFinal){ finalChunk += text; } else { interimAccum += text; }
           }
           if (finalChunk) lastFinalTranscript = finalChunk;
 
