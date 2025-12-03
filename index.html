@@ -482,7 +482,7 @@
       <div aria-hidden="true" style="height:1.75em;"></div>
       <div class="coverLine noBullet">狙い：イメージ共有</div>
       <div class="coverLine">・スマらく改修</div>
-      <div class="coverLine">・e-Auto更新</div>
+      <div class="coverLine">・e-Auto更新 </div>
     </div>
 
     <button class="coverStartBtn" onclick="startDemo()" aria-label="デモを開始する">デモ開始</button>
@@ -619,7 +619,7 @@
     <div class="h1">車検証の情報を入力する</div>
     <div class="desc">以下の方法で車検証の情報を入力できます。</div>
     <button class="btnPrimary" onclick="showOCRGuide()">カメラで読み取る</button>
-    <button class="btnPrimary" onclick="showManual()">手入力する（選択式）</button>
+    <button class="btnPrimary" onclick="showManual()">手入力する（選択式･音声入力）</button>
   </div>
 
   <div class="card" id="ocrShoot" style="display:none;">
@@ -692,18 +692,6 @@
       <input class="input" id="vin" placeholder="例：ZVW50-1234567" />
     </div>
     <div class="field">
-      <div class="label" style="display:flex; align-items:center; justify-content:space-between;">
-        <span>ナンバー（数字4桁は自動整形）</span>
-        <button class="ghost" onclick="startVoiceForField('plate','digits')" aria-label="音声でナンバーを入力">
-          <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px;">
-            <path fill="#3c7fe6" d="M12 14a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v4a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V20H9v2h6v-2h-2v-2.08A7 7 0 0 0 19 11h-2z"/>
-          </svg>
-          音声で入力
-        </button>
-      </div>
-      <input class="input" id="plate" placeholder="12-34" />
-    </div>
-    <div class="field">
       <div class="label">初度登録年月</div>
       <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
         <select id="firstRegYear"><option value="">年</option></select>
@@ -712,7 +700,7 @@
         <select id="firstRegMonth" class="visHiddenSelect" aria-hidden="true"><option value="">月</option></select>
       </div>
     </div>
-    <button class="btnPrimary" onclick="if(validateVIN() && validateFirstRegSelect()) next()">次へ</button>
+    <button class="btnPrimary" onclick="if(validateFirstRegSelect()) next()">次へ</button>
   </div>
 </section>
 <!-- END: screen-04-vehicle-shaken -->
@@ -1457,7 +1445,7 @@
       <ul class="list">
         <li><a href="#" class="link" onclick="openNotice('本番では詳細を図を交えて表示する画面に推移します')">1章：等級と割引のしくみ</a></li>
         <li><a href="#" class="link" onclick="openNotice('本番では詳細を図を交えて表示する画面に推移します')">2章：自己負担（免責）について</a></li>
-        <li><a href="#" class="link" onclick="openNotice('本番では詳細解説画面に推移します')">3章：告知（ご申告）のお願い</a></li>
+        <li><a href="#" class="link" onclick="openNotice('本番では詳細を図を交えて表示する画面に推移します')">3章：告知（ご申告）のお願い</a></li>
         <li><a href="#" class="link" onclick="openNotice('本番では詳細を図を交えて表示する画面に推移します')">4章：事故・故障時の連絡</a></li>
       </ul>
     </div>
@@ -1490,7 +1478,7 @@
   </div>
 
   <div class="card">
-    <button class="btnPrimary" onclick="finishImportantNext()">次へ（受け取り方法を選ぶ）</button>
+    <button class="btnPrimary" onclick="finishImportantNext()">次へ（連絡方法を選ぶ）</button>
   </div>
 </section>
 <!-- END: screen-22-important-info -->
@@ -1810,7 +1798,7 @@
     let cancelFlag = false;
     let guidedCancelFn = function(){ cancelFlag = true; App.bus && App.bus.emit && App.bus.emit('voice:cancel'); };
 
-    const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=50, BREAK_PAUSE=400;
+    const ITEM_PAUSE=1500, SUB_PAUSE=700, NAME_BRIEF_PAUSE=30, BREAK_PAUSE=400;
 
     function setGuidedBtn(){
       const lbl=document.getElementById('lblSpeak');
