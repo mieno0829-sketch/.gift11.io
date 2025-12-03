@@ -572,7 +572,7 @@
 </section>
 <!-- END: screen-01-intro -->
 
-    <!-- START: screen-02-login -->
+<!-- START: screen-02-login -->
     <section class="screen" data-title="ログイン">
       <div class="card">
         <div class="h1">ログイン</div>
@@ -595,9 +595,9 @@
         <button class="btnPrimary" onclick="if(validateOtpLogin()) next()">認証して次へ</button>
       </div>
     </section>
-    <!-- END: screen-02-login -->
+<!-- END: screen-02-login -->
 
- <!-- START: screen-03-vehicle-summary -->
+<!-- START: screen-03-vehicle-summary -->
 <section class="screen" data-title="お車の情報">
   <div class="card">
     <div class="h1">お車情報を確認する</div>
@@ -1483,7 +1483,7 @@
 </section>
 <!-- END: screen-22-important-info -->
 
-    <!-- START: screen-23-contact-method -->
+<!-- START: screen-23-contact-method -->
     <section class="screen" data-title="連絡方法を選ぶ">
       <div class="card">
         <div class="h1">連絡方法を選ぶ</div>
@@ -1515,7 +1515,7 @@
         <button class="btnPrimary" onclick="finishContactChoice()">次へ（受け取り方法を選ぶ）</button>
       </div>
     </section>
-    <!-- END: screen-23-contact-method -->
+<!-- END: screen-23-contact-method -->
 
 <!-- START: screen-24-receive-method -->
 <section class="screen" data-title="受け取り方法を選ぶ">
@@ -1614,7 +1614,7 @@
 </section>
 <!-- END: screen-24-receive-method -->
 
-<!-- START: screen-26-consent -->
+<!-- START: screen-25-consent -->
 <section class="screen" data-title="同意と申込">
   <div class="card">
     <div class="h1">内容に同意して申し込む</div>
@@ -1628,9 +1628,9 @@
     <button class="btnPrimary" style="margin-top:10px;" onclick="onAgreeSubmit()">内容に同意して申し込む</button>
   </div>
 </section>
-<!-- END: screen-26-consent -->
+<!-- END: screen-25-consent -->
 
-<!-- START: screen-27-done -->
+<!-- START: screen-26-done -->
 <section class="screen" data-title="申込完了">
   <div class="card">
     <div class="h1">お申込みが完了しました</div>
@@ -1647,7 +1647,7 @@
     <button class="btnPrimary" onclick="openNotice('本番では払込方法の確認・変更の画面に推移します。デモ画面はここで終了です。')">次へ（払込方法の確認）</button>
   </div>
 </section>
-<!-- END: screen-27-done -->
+<!-- END: screen-26-done -->
 
   </main>
 
@@ -2048,7 +2048,8 @@
         var titleArr = getTitles();
         var title = titleArr[curStep] || '';
         var hist = Array.isArray(window.historyStack) ? window.historyStack.slice() : [];
-        var data = { step: curStep, title: title, hist: hist, timestamp: new Date().toISOString() };
+        // 新しい保存では「提案抑止」を解除（=次回提案する）
+        var data = { step: curStep, title: title, hist: hist, timestamp: new Date().toISOString(), suppressed: false };
         localStorage.setItem(KEY, JSON.stringify(data));
         safeOpenNotice('途中保存しました。次回は前回の続きから再開できます（デモ）。');
       }catch(e){
@@ -2078,16 +2079,23 @@
         var data = load();
         if (!data) return;
 
+        // suppressed（提案抑止）フラグが立っていれば提案しない
+        if (data.suppressed === true) return;
+
         // すでに表紙でない or すでにナビゲーション開始済みなら提案しない
         var screens = Array.from(document.querySelectorAll('.screen'));
         var activeIdx = screens.findIndex(function(s){ return s.classList.contains('active'); });
         var isCover = function(i){ return !!(screens[i] && screens[i].dataset.role === 'cover'); };
         var onCover = isCover(activeIdx);
-
         if (!onCover) return;
 
         var ok = window.confirm('前回の続き（「' + (data.title || '前回の画面') + '」）から再開しますか？');
-        if (!ok) return;
+        if (!ok){
+          // ユーザーがキャンセルした場合は、次回以降の提案を抑止
+          data.suppressed = true;
+          try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
+          return;
+        }
 
         // ヒストリーも復元（可能な範囲）
         try{
