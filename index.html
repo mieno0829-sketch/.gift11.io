@@ -1663,6 +1663,7 @@
       <button class="supportItem" onclick="openNotice('本番ではチャット画面に推移します。')">チャット</button>
     </div>
   </div>
+  <div class="footerNote" id="voiceStatus">音声入力の準備ができました（未対応端末ではキーボードのマイクをご利用ください）</div>
   <div class="footerNote">受付時間：平日 9:00–18:00（年末年始を除く）</div>
 </footer>
 <!-- END: footer -->
@@ -2616,8 +2617,10 @@
 
     // 画面切り替え本体
     function setActive(i){
-      // 音声ガイド停止
+      // 音声ガイド停止（読み上げ）
       safe(()=> window.stopGuidedVoice && window.stopGuidedVoice());
+      // 音声入力停止（認識中断＋ターゲットクリア）
+      safe(()=> window.cancelVoiceInput && window.cancelVoiceInput());
 
       const ss = screens();
       ss.forEach((s, idx)=>{
@@ -2626,7 +2629,15 @@
         s.classList.toggle('anim-in', isActive);
       });
 
-      document.body.classList.toggle('cover', isCover(i));
+      // cover表示制御
+      const onCover = isCover(i);
+      document.body.classList.toggle('cover', onCover);
+
+      // フッターの音声ステータスは画面切替後は非表示（受付時間のみ表示）
+      try{
+        const vs = document.getElementById('voiceStatus');
+        if (vs) vs.style.display = 'none';
+      }catch(e){}
 
       // スクロール
       safe(()=> window.scrollToTop && window.scrollToTop());
@@ -3910,56 +3921,163 @@
   let supported = false;
   let targetFieldId = null;
   let modeDigitsOnly = false;
+  let lastFinalTranscript = ''; // 数字欄のfinal確定用
 
   function getEl(id){ return document.getElementById(id); }
-  function setStatus(text){ const s=getEl('voiceStatus'); if(s){ s.textContent = String(text||''); } }
+  function showVoiceStatus(){ try{ const s=getEl('voiceStatus'); if(s) s.style.display=''; }catch(e){} }
+  function hideVoiceStatus(){ try{ const s=getEl('voiceStatus'); if(s) s.style.display='none'; }catch(e){} }
+
+  function setStatus(text){
+    const s = getEl('voiceStatus');
+    if (s){
+      s.textContent = String(text || '');
+      // ステータス更新時は確実に表示（画面切替時に隠された後でも再表示）
+      showVoiceStatus();
+    }
+  }
   function toggleButtons(isRecording){
     const start = getEl('btnStartVoice'), stop = getEl('btnStopVoice');
     if(start) start.style.display = isRecording ? 'none' : '';
     if(stop)  stop.style.display  = isRecording ? '' : 'none';
   }
+
+  function isActiveField(fieldId){
+    try{
+      const el = getEl(fieldId);
+      if (!el) return false;
+      if (!el.offsetParent) return false;
+      const scr = el.closest('.screen');
+      return !!(scr && scr.classList && scr.classList.contains('active'));
+    }catch(e){ return false; }
+  }
+
+  function normalizeDashesAndSpaces(s){
+    let t = String(s || '');
+    t = t.replace(/ー|−|―|‐|–|—/g, '-');
+    t = t.replace(/ハイフン|ダッシュ|まいなす|マイナス|minus/gi, '-');
+    t = t.replace(/スペース|空白|ブランク/gi, ' ');
+    return t;
+  }
+
+  function normalizeJapaneseNumberSpeech(s){
+    if (!s) return '';
+    let t = normalizeDashesAndSpaces(s);
+    t = t.replace(/の|ノ|ー/g, '');
+    t = t.replace(/[、。.,\s]/g, '');
+    const map = [
+      {re:/ゼロ|れい|レイ|零|〇|○/gi, rep:'0'},
+      {re:/いち|イチ|一/gi, rep:'1'},
+      {re:/に|ニ|二/gi, rep:'2'},
+      {re:/さん|サン|三/gi, rep:'3'},
+      {re:/よん|ヨン|四/gi, rep:'4'},
+      {re:/ご|ゴ|五/gi, rep:'5'},
+      {re:/ろく|ロク|六/gi, rep:'6'},
+      {re:/なな|ナナ|七/gi, rep:'7'},
+      {re:/はち|ハチ|八/gi, rep:'8'},
+      {re:/きゅう|キュウ|九/gi, rep:'9'}
+    ];
+    map.forEach(m => { t = t.replace(m.re, m.rep); });
+    t = t.replace(/[０-９]/g, d=> String.fromCharCode(d.charCodeAt(0)-0xFEE0));
+    t = t.replace(/[^\d]/g, '');
+    return t;
+  }
+
+  function normalizeVinSpeech(s){
+    if (!s) return '';
+    let t = normalizeDashesAndSpaces(s);
+    t = t.replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch=> String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
+    t = t.replace(/[、。.,\s]/g, '');
+    t = t.replace(/[^A-Za-z0-9-]/g, '');
+    t = t.replace(/-+/g, '-');
+    return t;
+  }
+
+  function formatPhoneDisplay(d){
+    const p = String(d || '');
+    if (p.length === 11) return `${p.slice(0,3)}-${p.slice(3,7)}-${p.slice(7)}`;
+    if (p.length === 10) return `${p.slice(0,3)}-${p.slice(3,6)}-${p.slice(6)}`;
+    return p;
+  }
+  function formatZipDisplay(d){
+    const z = String(d || '');
+    if (z.length === 7) return `${z.slice(0,3)}-${z.slice(3)}`;
+    return z;
+  }
+
   function putValue(fieldId, valueText){
+    if (!isActiveField(fieldId)) return;
     const inp = getEl(fieldId);
-    if(inp){
-      let v = String(valueText||'').trim();
-      if (modeDigitsOnly) v = v.replace(/[^\d]/g,'');
-      inp.value = v;
-      if (fieldId === 'zip') { mockZipToAddress(v); }
-      if (fieldId === 'md_zip' && typeof window.mdZipToAddress === 'function') { mdZipToAddress(v); }
-      if (fieldId === 'plate' && v){
-        const digits = v.replace(/[^\d]/g,'').slice(-4);
-        inp.value = digits;
-      }
-    }
-  }
-  function putName(nameText){
-    const normalized = String(nameText||'').replace(/\s+/g, ' ').trim();
-    putValue('mainDriverName', normalized);
-  }
-  function fallbackMock(reasonText){
-    try{ setStatus(reasonText || 'この端末では音声認識は未対応です。サンプルを入力します。'); }catch(e){}
-    if (targetFieldId){
-      if (targetFieldId === 'mainDriverName') { putName('山田 花子'); }
-      else if (targetFieldId === 'cust_name') { putValue(targetFieldId, '山田 花子'); }
-      else if (targetFieldId === 'zip') { putValue(targetFieldId, '1234567'); }
-      else if (targetFieldId === 'addr') { putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); }
-      else if (targetFieldId === 'cust_phone') { putValue(targetFieldId, '09012345678'); }
-      else if (targetFieldId === 'vin') { putValue(targetFieldId, 'A000000000'); }
-      else if (targetFieldId === 'plate') { putValue(targetFieldId, '1234'); }
-      else if (targetFieldId === 'company') { putValue(targetFieldId, 'ABC株式会社'); }
-      else if (targetFieldId === 'md_zip') { putValue(targetFieldId, '1234567'); }
-      else if (targetFieldId === 'md_addr') { putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); }
-      else if (targetFieldId === 'md_phone') { putValue(targetFieldId, '09012345678'); }
-      else if (targetFieldId === 'md_company') { putValue(targetFieldId, 'ABC株式会社'); }
-      else { putValue(targetFieldId, 'サンプル'); }
+    if(!inp) return;
+    let v = String(valueText||'').trim();
+
+    if (fieldId === 'cust_phone' || fieldId === 'md_phone'){
+      v = normalizeJapaneseNumberSpeech(v);
+      v = formatPhoneDisplay(v);
+    } else if (fieldId === 'zip' || fieldId === 'md_zip'){
+      v = normalizeJapaneseNumberSpeech(v);
+      v = formatZipDisplay(v);
+    } else if (fieldId === 'vin'){
+      v = normalizeVinSpeech(v);
     } else {
-      putName('山田 花子');
+      v = normalizeDashesAndSpaces(v);
+      v = v.replace(/[Ａ-Ｚａ-ｚ０-９]/g, ch=> String.fromCharCode(ch.charCodeAt(0) - 0xFEE0));
     }
-    try{ showToast('音声は未対応のため、サンプルを入力しました'); }catch(e){}
+
+    inp.value = v;
+
+    if (fieldId === 'zip'){
+      const pure = v.replace(/[^\d]/g,'');
+      try{ mockZipToAddress(pure); }catch(e){}
+    }
+    if (fieldId === 'md_zip' && typeof window.mdZipToAddress === 'function'){
+      const pure = v.replace(/[^\d]/g,'');
+      try{ mdZipToAddress(pure); }catch(e){}
+    }
+  }
+
+  // 未対応端末：サンプル投入せず、フィールドにフォーカス＋ガイド表示
+  function softFallbackGuide(){
+    if (targetFieldId && isActiveField(targetFieldId)){
+      try{
+        const el = getEl(targetFieldId);
+        if (el && typeof el.focus === 'function') el.focus();
+        setStatus('この端末ではブラウザの音声認識が未対応です。キーボードのマイクをご利用ください。');
+        if (typeof showToast === 'function') showToast('音声認識は未対応です。キーボードのマイクをご利用ください');
+      }catch(e){}
+    }
     toggleButtons(false);
     recognizing = false;
     targetFieldId = null;
     modeDigitsOnly = false;
+    lastFinalTranscript = '';
+  }
+
+  // エラー時・未入力時のみ使うサンプル投入（未対応端末では通常使わない）
+  function fallbackMock(reasonText){
+    try{ setStatus(reasonText || '音声認識で問題が発生しました'); }catch(e){}
+    if (targetFieldId && isActiveField(targetFieldId)){
+      switch (targetFieldId) {
+        case 'cust_name':
+        case 'mainDriverName': putValue(targetFieldId, '山田 花子'); break;
+        case 'zip':
+        case 'md_zip': putValue(targetFieldId, '1050001'); break;
+        case 'addr':
+        case 'md_addr': putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); break;
+        case 'cust_phone':
+        case 'md_phone': putValue(targetFieldId, '09012345678'); break;
+        case 'company':
+        case 'md_company': putValue(targetFieldId, 'ABC株式会社'); break;
+        case 'vin': putValue(targetFieldId, 'ZVW50-1234567'); break;
+        default: /* サンプル投入なし */ break;
+      }
+    }
+    toggleButtons(false);
+    recognizing = false;
+    targetFieldId = null;
+    modeDigitsOnly = false;
+    lastFinalTranscript = '';
+    // エラー後はフッターを占有しないよう非表示に戻す
+    hideVoiceStatus();
   }
 
   function initRecognizer(){
@@ -3969,50 +4087,78 @@
       recognition = new SR();
       recognition.lang = 'ja-JP';
       recognition.continuous = false;
-      recognition.interimResults = true;
+      recognition.interimResults = true; // finalのみ反映方針で捕捉性確保
 
       recognition.onstart = function(){
         recognizing = true;
-        setStatus('録音中です。お話しください…');
+        lastFinalTranscript = '';
+        setStatus('録音中です。お話しください…'); // 表示ON
         toggleButtons(true);
       };
       recognition.onerror = function(evt){
         recognizing = false;
         toggleButtons(false);
         if(evt && evt.error === 'not-allowed'){
-          fallbackMock('マイク権限が拒否されました。サンプルを入力します。');
+          setStatus('マイク権限が拒否されました。権限を許可してください。');
+          fallbackMock('マイク権限が拒否されました。');
         }else{
-          fallbackMock('音声認識でエラーが発生しました。サンプルを入力します。');
+          setStatus('音声認識でエラーが発生しました。');
+          fallbackMock('音声認識でエラーが発生しました。');
         }
       };
       recognition.onend = function(){
         recognizing = false;
         toggleButtons(false);
-        if(targetFieldId && !getEl(targetFieldId)?.value){
-          fallbackMock('入力が確認できませんでした。サンプルを入力します。');
-        }else{
-          setStatus('認識結果を入力しました。');
+
+        if (modeDigitsOnly && targetFieldId && isActiveField(targetFieldId)){
+          const buf = String(lastFinalTranscript || '').trim();
+          if (buf){
+            const normalized = normalizeJapaneseNumberSpeech(buf);
+            putValue(targetFieldId, normalized);
+          } else if (!getEl(targetFieldId)?.value){
+            fallbackMock('入力が確認できませんでした。');
+          }
+        } else {
+          if(targetFieldId && isActiveField(targetFieldId) && !getEl(targetFieldId)?.value){
+            fallbackMock('入力が確認できませんでした。');
+          }
         }
         targetFieldId = null;
         modeDigitsOnly = false;
+        lastFinalTranscript = '';
+        // 終了時は音声ステータスを隠す（受付時間のみに戻す）
+        hideVoiceStatus();
       };
       recognition.onresult = function(evt){
         try{
-          let transcript = '';
+          let finalChunk = '';
+          let interimAccum = '';
           for(let i=evt.resultIndex; i<evt.results.length; i++){
             const res = evt.results[i];
-            transcript += res[0]?.transcript || '';
-            if(res.isFinal){ transcript = res[0]?.transcript || transcript; }
+            const text = res[0]?.transcript || '';
+            if (res.isFinal){
+              finalChunk += text;
+            } else {
+              interimAccum += text;
+            }
           }
-          transcript = transcript.replace(/[、。.,]/g, ' ').replace(/\s+/g, ' ').trim();
-          if(targetFieldId){
-            putValue(targetFieldId, transcript);
+          if (finalChunk) lastFinalTranscript = finalChunk;
+
+          if (modeDigitsOnly){
+            if (finalChunk){
+              const normalized = normalizeJapaneseNumberSpeech(finalChunk);
+              if (targetFieldId && isActiveField(targetFieldId)) putValue(targetFieldId, normalized);
+            }
+            setStatus('認識中…'); // 表示維持
           } else {
-            putName(transcript);
+            const raw = (finalChunk || interimAccum);
+            const normalized = normalizeDashesAndSpaces(raw).replace(/[、。.,]/g, ' ').replace(/\s+/g, ' ').trim();
+            if (targetFieldId && isActiveField(targetFieldId)) putValue(targetFieldId, normalized);
+            setStatus('認識中…'); // 表示維持
           }
-          setStatus('認識中…');
         }catch(e){
-          fallbackMock('認識結果の処理に失敗しました。サンプルを入力します。');
+          setStatus('認識結果の処理に失敗しました。');
+          fallbackMock('認識結果の処理に失敗しました。');
         }
       };
 
@@ -4022,27 +4168,46 @@
     }
   }
 
-  window.startNameVoice = function(){
-    targetFieldId = 'mainDriverName'; modeDigitsOnly = false;
-    toggleButtons(true); setStatus('準備中…');
-    if(recognition === null) initRecognizer();
-    if(!supported || !recognition){ fallbackMock('音声認識は未対応です。サンプルを入力します。'); return; }
-    try{ recognition.start(); setStatus('録音中です。お名前をどうぞ…'); }catch(e){ fallbackMock('音声認識の開始に失敗しました。サンプルを入力します。'); }
+  window.cancelVoiceInput = function(){
+    try{ if(recognizing && recognition){ recognition.stop(); } }catch(e){}
+    recognizing = false;
+    toggleButtons(false);
+    setStatus('停止しました。'); // 一旦表示
+    targetFieldId = null;
+    modeDigitsOnly = false;
+    lastFinalTranscript = '';
+    // キャンセル後は非表示に戻す
+    hideVoiceStatus();
   };
 
   window.startVoiceForField = function(fieldId, mode){
     targetFieldId = fieldId;
     modeDigitsOnly = (mode === 'digits');
-    toggleButtons(true); setStatus('録音中です。お話しください…');
+    lastFinalTranscript = '';
+    toggleButtons(true);
+    setStatus('録音の準備をしています…'); // 表示ON
+
+    // 初期化
     if(recognition === null) initRecognizer();
-    if(!supported || !recognition){ fallbackMock('音声認識は未対応です。サンプルを入力します。'); return; }
-    try{ recognition.start(); }catch(e){ fallbackMock('音声認識の開始に失敗しました。サンプルを入力します。'); }
+
+    // ブラウザ未対応時はサンプル投入せず、ガイド表示＋フォーカスのみ（表示ON）
+    if (!supported || !recognition){
+      softFallbackGuide();
+      return;
+    }
+
+    try{ recognition.interimResults = true; }catch(e){}
+    try{
+      recognition.start();
+      setStatus('録音中です。お話しください…'); // 表示ON
+    }catch(e){
+      setStatus('音声認識の開始に失敗しました。');
+      fallbackMock('音声認識の開始に失敗しました。');
+    }
   };
 
-  window.stopNameVoice = function(){
-    try{ if(recognizing && recognition){ recognition.stop(); } }catch(e){}
-    recognizing = false; toggleButtons(false); setStatus('停止しました。'); targetFieldId = null; modeDigitsOnly=false;
-  };
+  window.startNameVoice = function(){ window.startVoiceForField('mainDriverName'); };
+  window.stopNameVoice  = function(){ window.cancelVoiceInput(); };
 })();
 </script>
 <!-- END: js-voice-input -->
