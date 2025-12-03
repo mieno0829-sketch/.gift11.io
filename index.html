@@ -411,6 +411,51 @@
 </style>
 <!-- END: styles-monthday-picker -->
 
+<!-- START: styles-voice-indicator -->
+<style>
+  /* 音声インジケータ（フィールド近傍・小型表示） */
+  .voiceIndicator {
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:6px; padding:4px 8px; border:1px solid #c8d6f3; border-radius:999px;
+    background:#eef4ff; color:#1f5fbf; font-size:12px; font-weight:700;
+    will-change: opacity, transform;
+  }
+  .voiceIndicator .dot {
+    width:8px; height:8px; border-radius:50%;
+    background:#e53935; /* 録音中は赤 */
+    box-shadow:0 0 0 2px rgba(229,57,53,.15);
+  }
+  .voiceIndicator.recognizing .dot { background:#ffb300; } /* 認識中は黄 */
+  .voiceIndicator.ready .dot { background:#3c7fe6; } /* 準備中は青 */
+
+  /* 縮退フェード（0.25s） */
+  @keyframes fadeShrink {
+    0% { opacity:1; transform:scale(1); }
+    100% { opacity:0; transform:scale(0.92); }
+  }
+  .fadeShrink {
+    animation: fadeShrink 0.25s ease-out forwards;
+  }
+
+  /* フッター音声ステータスにも同じ縮退フェードを適用可能 */
+  #voiceStatus.fadeShrink {
+    animation: fadeShrink 0.25s ease-out forwards;
+  }
+
+  @media (prefers-color-scheme: dark){
+    .voiceIndicator { border-color:#3c7fe6; background:#16365f; color:#fff; }
+    .voiceIndicator .dot { box-shadow:none; }
+  }
+
+  /* 動きを好まない設定への配慮：アニメーション無効化 */
+  @media (prefers-reduced-motion: reduce){
+    .fadeShrink {
+      animation: none !important;
+    }
+  }
+</style>
+<!-- END: styles-voice-indicator -->
+
 </head>
 <body>
 <div class="wrap">
@@ -2598,14 +2643,19 @@
     function isCover(i){ const ss = screens(); return !!(ss[i] && ss[i].dataset.role === 'cover'); }
     function curTitle(i){ const t = titles(); return t[i] || ''; }
 
-    // 外部フック
-    let afterActivateHook = null;
-
+    // 外部フック（多重フック：優先度A）
+    const afterHooks = [];
     function configure(cfg){
       _TITLE_NO = cfg && cfg.TITLE_NO ? cfg.TITLE_NO : _TITLE_NO;
       _MAX_STEPS = typeof cfg?.MAX_STEPS === 'number' ? cfg.MAX_STEPS : _MAX_STEPS;
     }
-    function setAfterActivate(fn){ afterActivateHook = fn; }
+    function setAfterActivate(fn){
+      // 従来APIのまま、登録されたフックは多重に保持して順次呼び出す
+      if (typeof fn === 'function') afterHooks.push(fn);
+    }
+    function addAfterActivate(fn){
+      if (typeof fn === 'function') afterHooks.push(fn);
+    }
 
     // 進捗更新
     function updateProgress(i){
@@ -2645,16 +2695,16 @@
       // 進捗
       updateProgress(i);
 
-      // 最終見積の整形（必要時）
       const title = curTitle(i);
+      // 最終見積の整形（必要時）
       if (title === '最終見積のまとめ' || title === '最終見積もり'){
         safe(()=> window.updateFinalSummary && window.updateFinalSummary());
       }
 
-      // 画面ごとの初期化フック（js-core側で設定）
-      if (typeof afterActivateHook === 'function'){
-        try{ afterActivateHook(title); }catch(e){}
-      }
+      // 画面ごとの初期化フック（多重フック順次呼び出し）
+      try{
+        afterHooks.forEach(fn => { try{ fn(title); }catch(e){} });
+      }catch(e){}
 
       // 初期フォーカス
       safe(()=> App.modules && App.modules.accessibility && App.modules.accessibility.focusFirstInteractive());
@@ -2696,7 +2746,7 @@
 
     // 公開API
     App.modules.navigation = {
-      configure, setAfterActivate, setActive, next, prev, goToTitle,
+      configure, setAfterActivate, addAfterActivate, setActive, next, prev, goToTitle,
       titles,
       get step(){ return _step; },
       get historyStack(){ return _historyStack; }
@@ -2707,6 +2757,8 @@
     window.next = next;
     window.prev = prev;
     window.goToTitle = goToTitle;
+    // 新API
+    window.addAfterActivate = addAfterActivate;
   })(window.App);
 </script>
 <!-- END: js-core-navigation -->
@@ -3921,20 +3973,76 @@
   let supported = false;
   let targetFieldId = null;
   let modeDigitsOnly = false;
-  let lastFinalTranscript = ''; // 数字欄のfinal確定用
+  let lastFinalTranscript = '';
+  let hideStatusTid = null;
 
   function getEl(id){ return document.getElementById(id); }
   function showVoiceStatus(){ try{ const s=getEl('voiceStatus'); if(s) s.style.display=''; }catch(e){} }
-  function hideVoiceStatus(){ try{ const s=getEl('voiceStatus'); if(s) s.style.display='none'; }catch(e){} }
+
+  // 縮退フェード→非表示（0.25秒）
+  function applyShrinkThenHide(el){
+    try{
+      if (!el) return;
+      // prefers-reduced-motion を尊重
+      const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReduced){
+        el.style.display = 'none';
+        el.classList.remove('fadeShrink');
+        return;
+      }
+      el.classList.add('fadeShrink');
+      setTimeout(()=>{ el.style.display = 'none'; el.classList.remove('fadeShrink'); }, 250);
+    }catch(e){}
+  }
+  function hideVoiceStatusDelayed(ms){
+    try{
+      clearTimeout(hideStatusTid);
+      hideStatusTid = setTimeout(()=>{
+        const s=getEl('voiceStatus');
+        if(s) applyShrinkThenHide(s);
+      }, ms||1500);
+    }catch(e){}
+  }
+
+  // ミニインジケータ（フィールド近傍）
+  function ensureIndicatorHost(fieldId){
+    const inp = getEl(fieldId); if(!inp) return null;
+    if (!inp.__voiceIndicator){
+      const ind = document.createElement('div');
+      ind.className = 'voiceIndicator ready';
+      ind.innerHTML = '<span class="dot"></span><span class="text">音声の準備中…</span>';
+      inp.insertAdjacentElement('afterend', ind);
+      inp.__voiceIndicator = ind;
+    }
+    return inp.__voiceIndicator;
+  }
+  function setIndicator(fieldId, stateText, stateClass){
+    try{
+      const ind = ensureIndicatorHost(fieldId);
+      if (!ind) return;
+      ind.style.display = '';
+      ind.classList.remove('ready','recording','recognizing','fadeShrink');
+      ind.classList.add(stateClass || 'ready');
+      const t = ind.querySelector('.text');
+      if (t) t.textContent = stateText || '音声の準備中…';
+    }catch(e){}
+  }
+  function hideIndicator(fieldId){
+    try{
+      const inp = getEl(fieldId);
+      const ind = inp && inp.__voiceIndicator;
+      if (ind) applyShrinkThenHide(ind);
+    }catch(e){}
+  }
 
   function setStatus(text){
     const s = getEl('voiceStatus');
     if (s){
       s.textContent = String(text || '');
-      // ステータス更新時は確実に表示（画面切替時に隠された後でも再表示）
       showVoiceStatus();
     }
   }
+
   function toggleButtons(isRecording){
     const start = getEl('btnStartVoice'), stop = getEl('btnStopVoice');
     if(start) start.style.display = isRecording ? 'none' : '';
@@ -3958,7 +4066,6 @@
     t = t.replace(/スペース|空白|ブランク/gi, ' ');
     return t;
   }
-
   function normalizeJapaneseNumberSpeech(s){
     if (!s) return '';
     let t = normalizeDashesAndSpaces(s);
@@ -3981,7 +4088,6 @@
     t = t.replace(/[^\d]/g, '');
     return t;
   }
-
   function normalizeVinSpeech(s){
     if (!s) return '';
     let t = normalizeDashesAndSpaces(s);
@@ -3991,7 +4097,6 @@
     t = t.replace(/-+/g, '-');
     return t;
   }
-
   function formatPhoneDisplay(d){
     const p = String(d || '');
     if (p.length === 11) return `${p.slice(0,3)}-${p.slice(3,7)}-${p.slice(7)}`;
@@ -4035,7 +4140,6 @@
     }
   }
 
-  // 未対応端末：サンプル投入せず、フィールドにフォーカス＋ガイド表示
   function softFallbackGuide(){
     if (targetFieldId && isActiveField(targetFieldId)){
       try{
@@ -4043,16 +4147,18 @@
         if (el && typeof el.focus === 'function') el.focus();
         setStatus('この端末ではブラウザの音声認識が未対応です。キーボードのマイクをご利用ください。');
         if (typeof showToast === 'function') showToast('音声認識は未対応です。キーボードのマイクをご利用ください');
+        setIndicator(targetFieldId, '未対応：キーボードのマイクをご利用ください', 'ready');
       }catch(e){}
     }
     toggleButtons(false);
     recognizing = false;
+    hideVoiceStatusDelayed(1500);
+    hideIndicator(targetFieldId);
     targetFieldId = null;
     modeDigitsOnly = false;
     lastFinalTranscript = '';
   }
 
-  // エラー時・未入力時のみ使うサンプル投入（未対応端末では通常使わない）
   function fallbackMock(reasonText){
     try{ setStatus(reasonText || '音声認識で問題が発生しました'); }catch(e){}
     if (targetFieldId && isActiveField(targetFieldId)){
@@ -4060,24 +4166,24 @@
         case 'cust_name':
         case 'mainDriverName': putValue(targetFieldId, '山田 花子'); break;
         case 'zip':
-        case 'md_zip': putValue(targetFieldId, '1050001'); break;
+        case 'md_zip':         putValue(targetFieldId, '1050001'); break;
         case 'addr':
-        case 'md_addr': putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); break;
+        case 'md_addr':        putValue(targetFieldId, '東京都港区赤坂1-1-1 〇〇マンション101'); break;
         case 'cust_phone':
-        case 'md_phone': putValue(targetFieldId, '09012345678'); break;
+        case 'md_phone':       putValue(targetFieldId, '09012345678'); break;
         case 'company':
-        case 'md_company': putValue(targetFieldId, 'ABC株式会社'); break;
-        case 'vin': putValue(targetFieldId, 'ZVW50-1234567'); break;
+        case 'md_company':     putValue(targetFieldId, 'ABC株式会社'); break;
+        case 'vin':            putValue(targetFieldId, 'ZVW50-1234567'); break;
         default: /* サンプル投入なし */ break;
       }
     }
     toggleButtons(false);
     recognizing = false;
+    hideVoiceStatusDelayed(1500);
+    hideIndicator(targetFieldId);
     targetFieldId = null;
     modeDigitsOnly = false;
     lastFinalTranscript = '';
-    // エラー後はフッターを占有しないよう非表示に戻す
-    hideVoiceStatus();
   }
 
   function initRecognizer(){
@@ -4087,22 +4193,25 @@
       recognition = new SR();
       recognition.lang = 'ja-JP';
       recognition.continuous = false;
-      recognition.interimResults = true; // finalのみ反映方針で捕捉性確保
+      recognition.interimResults = true;
 
       recognition.onstart = function(){
         recognizing = true;
         lastFinalTranscript = '';
-        setStatus('録音中です。お話しください…'); // 表示ON
+        setStatus('録音中です。お話しください…');
         toggleButtons(true);
+        if (targetFieldId) setIndicator(targetFieldId, '録音中…', 'recording');
       };
       recognition.onerror = function(evt){
         recognizing = false;
         toggleButtons(false);
         if(evt && evt.error === 'not-allowed'){
           setStatus('マイク権限が拒否されました。権限を許可してください。');
+          setIndicator(targetFieldId, '権限が必要です', 'ready');
           fallbackMock('マイク権限が拒否されました。');
         }else{
           setStatus('音声認識でエラーが発生しました。');
+          setIndicator(targetFieldId, 'エラーが発生しました', 'ready');
           fallbackMock('音声認識でエラーが発生しました。');
         }
       };
@@ -4123,11 +4232,14 @@
             fallbackMock('入力が確認できませんでした。');
           }
         }
+        // 認識完了後：0.8秒待機→0.25秒縮退で消す
+        setIndicator(targetFieldId, '認識完了', 'recognizing');
+        hideVoiceStatusDelayed(800);
+        setTimeout(()=> hideIndicator(targetFieldId), 800);
+
         targetFieldId = null;
         modeDigitsOnly = false;
         lastFinalTranscript = '';
-        // 終了時は音声ステータスを隠す（受付時間のみに戻す）
-        hideVoiceStatus();
       };
       recognition.onresult = function(evt){
         try{
@@ -4149,15 +4261,18 @@
               const normalized = normalizeJapaneseNumberSpeech(finalChunk);
               if (targetFieldId && isActiveField(targetFieldId)) putValue(targetFieldId, normalized);
             }
-            setStatus('認識中…'); // 表示維持
+            setStatus('認識中…');
+            if (targetFieldId) setIndicator(targetFieldId, '認識中…', 'recognizing');
           } else {
             const raw = (finalChunk || interimAccum);
             const normalized = normalizeDashesAndSpaces(raw).replace(/[、。.,]/g, ' ').replace(/\s+/g, ' ').trim();
             if (targetFieldId && isActiveField(targetFieldId)) putValue(targetFieldId, normalized);
-            setStatus('認識中…'); // 表示維持
+            setStatus('認識中…');
+            if (targetFieldId) setIndicator(targetFieldId, '認識中…', 'recognizing');
           }
         }catch(e){
           setStatus('認識結果の処理に失敗しました。');
+          setIndicator(targetFieldId, '処理に失敗しました', 'ready');
           fallbackMock('認識結果の処理に失敗しました。');
         }
       };
@@ -4172,12 +4287,14 @@
     try{ if(recognizing && recognition){ recognition.stop(); } }catch(e){}
     recognizing = false;
     toggleButtons(false);
-    setStatus('停止しました。'); // 一旦表示
+    setStatus('停止しました。');
+    if (targetFieldId) setIndicator(targetFieldId, '停止しました', 'ready');
+    hideVoiceStatusDelayed(800);
+    setTimeout(()=> hideIndicator(targetFieldId), 800);
+
     targetFieldId = null;
     modeDigitsOnly = false;
     lastFinalTranscript = '';
-    // キャンセル後は非表示に戻す
-    hideVoiceStatus();
   };
 
   window.startVoiceForField = function(fieldId, mode){
@@ -4185,12 +4302,11 @@
     modeDigitsOnly = (mode === 'digits');
     lastFinalTranscript = '';
     toggleButtons(true);
-    setStatus('録音の準備をしています…'); // 表示ON
+    setStatus('録音の準備をしています…');
+    setIndicator(fieldId, '準備中…', 'ready');
 
-    // 初期化
     if(recognition === null) initRecognizer();
 
-    // ブラウザ未対応時はサンプル投入せず、ガイド表示＋フォーカスのみ（表示ON）
     if (!supported || !recognition){
       softFallbackGuide();
       return;
@@ -4199,9 +4315,11 @@
     try{ recognition.interimResults = true; }catch(e){}
     try{
       recognition.start();
-      setStatus('録音中です。お話しください…'); // 表示ON
+      setStatus('録音中です。お話しください…');
+      setIndicator(fieldId, '録音中…', 'recording');
     }catch(e){
       setStatus('音声認識の開始に失敗しました。');
+      setIndicator(fieldId, '開始に失敗しました', 'ready');
       fallbackMock('音声認識の開始に失敗しました。');
     }
   };
