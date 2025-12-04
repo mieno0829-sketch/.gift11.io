@@ -189,51 +189,39 @@
 
 <!-- START: styles-addon -->
 <style>
-  /* ヒーロー導入（非操作トーン：表示のみ） */
-  .heroStrip{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; padding:0; margin:8px 0 0 0; background:none; border:none; }
-  .heroStrip svg{ display:block; width:18px; height:18px; opacity:.75; } /* アイコンは淡め */
-  .heroChip{
-    display:inline-flex; align-items:center; gap:6px;
-    background:transparent; border:none; padding:0; box-shadow:none;
-    color:#5b6470; font-size:12px; font-weight:600; white-space:nowrap;
-    cursor:default; pointer-events:none; -webkit-tap-highlight-color:transparent;
-  }
-
-  /* ヘッダー：左寄せで1行維持、ラベル13px/600の統一（操作できるボタンは青・太字） */
-  .headerTop{ display:flex; align-items:center; justify-content:flex-start; gap:6px; flex-wrap:nowrap; }
-  .toolbar{ display:flex; gap:6px; align-items:center; flex-wrap:nowrap; flex:0 0 auto; }
+  /* ヘッダー：一行に収める（アイコン縮小・余白圧縮・フォント調整） */
+  .headerTop{ display:flex; align-items:center; justify-content:flex-start; gap:4px; flex-wrap:nowrap; }
+  .toolbar{ display:flex; gap:4px; align-items:center; flex-wrap:nowrap; flex:0 0 auto; }
   .headerTop .btn{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:4px 6px; border:none; background:transparent;
-    color:var(--blue-800); font-size:13px; font-weight:600; text-decoration:none; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 4px; border:none; background:transparent;
+    color:var(--blue-800); font-size:12px; font-weight:600; text-decoration:none; white-space:nowrap;
   }
-  .headerTop .btn svg{ width:28px; height:28px; display:block; }
-
-  .aiAgent{ display:inline-flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; flex-shrink:0; margin-left:6px; }
-  .aiLabel{ font-size:13px; font-weight:600; color:var(--blue-800); white-space:nowrap; }
-
+  .headerTop .btn svg{ width:22px; height:22px; display:block; }
+  .aiAgent{ display:inline-flex; align-items:center; gap:4px; cursor:pointer; white-space:nowrap; flex-shrink:1; margin-left:4px; }
+  .aiLabel{ font-size:12px; font-weight:600; color:var(--blue-800); white-space:nowrap; }
   .headerTop .toggleLarge{
     border:none !important; border-radius:0 !important; background:transparent !important;
-    padding:4px 6px !important; color:var(--blue-800) !important; font-size:13px; white-space:nowrap;
+    padding:3px 4px !important; color:var(--blue-800) !important; font-size:12px; white-space:nowrap;
   }
   .large .headerTop .btn, .large .headerTop .toggleLarge, .large .aiLabel, .large #lblSpeak, .large #lblLarge{ font-size:13px !important; }
 
   .badgeOfficial{
     display:inline-flex; align-items:center; justify-content:center;
-    padding:4px 8px; border:1px solid var(--blue-800); border-radius:999px;
-    background:#eef4ff; color:var(--blue-800); font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
+    padding:3px 6px; border:1px solid var(--blue-800); border-radius:999px;
+    background:#eef4ff; color:#1f5fbf; font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
   }
-
   .aiRobot{
-    width:28px; height:28px; border-radius:8px;
+    width:24px; height:24px; border-radius:8px;
     background-color:#3c7fe6 !important;
     border:2px solid #d7e0f0;
     background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>') !important;
     background-repeat:no-repeat !important;
     background-position:center !important;
-    background-size:70% 70% !important;
+    background-size:68% 68% !important;
   }
 
+  /* 進捗と章ラベル */
   .bar{ position:relative; }
   .bar::before{
     content:""; position:absolute; inset:0; pointer-events:none; border-radius:999px;
@@ -242,27 +230,21 @@
       linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 49.5%, rgba(31,95,191,.18) 50%, rgba(0,0,0,0) 50.5%),
       linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 74.5%, rgba(31,95,191,.18) 75%, rgba(0,0,0,0) 75.5%);
   }
-
   .chapters{ display:flex; gap:6px; justify-content:space-between; margin:2px 10px 0 10px; font-size:11px; color:#5b6470; }
   .chapter{ flex:1; text-align:center; opacity:.75; }
   .chapter.active{ color:#1f5fbf; font-weight:700; opacity:1; }
 
-  /* cover時はヘッダー/進捗/フッターを確実に非表示、背景はやや濃い淡青に */
-  body.cover{
-    background:#dbe7ff !important;
-    background-image:none !important;
-  }
+  /* cover時はヘッダー/進捗/フッターを非表示、背景調整 */
+  body.cover{ background:#dbe7ff !important; background-image:none !important; }
   body.cover header{ background:transparent !important; border-bottom:none !important; padding:0 !important; position:static !important; }
   body.cover .headerTop, body.cover .chapters, body.cover .progress, body.cover footer{ display:none !important; }
 
   .coverWrap{ min-height:100vh; min-height:100svh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px 16px; color:#111; }
   .coverCar svg{ width:72%; max-width:320px; height:auto; margin-bottom:18px; }
-
   .coverTitle .coverLine{ position:relative; color:#000; font-size:20px; font-weight:700; line-height:1.75; letter-spacing:.02em; padding-left:0; }
   .coverTitle .coverLine::before{ content:none !important; }
   .coverTitle .coverLine.noBullet{ padding-left:0 !important; }
   .coverTitle .coverLine.noBullet::before{ content:none !important; }
-
   .coverStartBtn{
     margin-top:22px; display:inline-block; padding:12px 20px; border-radius:14px;
     background:#3c7fe6; color:#fff; font-size:16px; font-weight:800; border:none; cursor:pointer;
@@ -272,39 +254,41 @@
   .coverStartBtn:hover{ filter:brightness(1.02); }
   .coverStartBtn:active{ transform:translateY(1px) scale(0.99); filter:brightness(0.98); }
 
-  /* スマホ/PC共通：リンクの操作の手がかり（矢印アイコン常時併設） */
-  .link{
-    color:var(--blue-800); text-decoration:none; position:relative; font-weight:700;
-  }
-  .link::after{
-    content:"›"; display:inline-block; margin-left:4px; color:var(--blue-800); font-weight:700;
-  }
+  /* リンクの操作の手がかり（矢印アイコン常時併設） */
+  .link{ color:var(--blue-800); text-decoration:none; position:relative; font-weight:700; }
+  .link::after{ content:"›"; display:inline-block; margin-left:4px; color:var(--blue-800); font-weight:700; }
   .link:active{ opacity:.85; }
   .link:focus-visible{ text-decoration:underline; outline:3px solid #3c7fe6; outline-offset:2px; border-radius:2px; }
 
-  /* 動画チップ（淡い塗り） */
-  .videoChip {
-    display:flex; align-items:center; gap:10px;
-    width:100%;
-    border:1px solid #c8d6f3;
-    background:#eef4ff;
-    color:var(--blue-900);
-    border-radius:14px; padding:12px 14px; text-decoration:none;
-    font-weight:700; font-size:14px; margin-top:8px;
-    box-shadow:0 1px 0 rgba(31,95,191,.06);
-    transition:background-color .12s ease, border-color .12s ease, transform .06s ease;
+  /* WEB/書面選択トグル */
+  .choiceRow{ display:flex; gap:6px; margin-top:6px; }
+  .choiceToggle{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:8px 10px; border-radius:10px; border:1px solid var(--blue-800); background:#fff; color:var(--blue-800);
+    font-weight:700; cursor:pointer; white-space:nowrap; /* 二段化防止 */
   }
-  .videoChip:hover, .videoChip:focus-visible { background:#e6f0ff; border-color:#aecdff; }
-  .videoChip:active { background:#dfe9ff; border-color:#93b8ff; }
-  .videoChip-icon { width:22px; height:22px; flex:0 0 22px; }
-  .videoChip-icon rect{ fill:#2b6fd6; transition: fill .12s ease; }
-  .videoChip-icon polygon{ fill:#ffffff; transition: transform .12s ease; transform-origin:center; }
+  .choiceToggle.active{ outline:2px solid var(--blue-800); background:#eef4ff; }
 
-  /* 新規：WEBと書面の選択（免許証色UIと同系） */
-  .choiceRow{display:flex; gap:6px; margin-top:6px;}
-  .choiceToggle{flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
-    padding:8px 10px; border-radius:10px; border:1px solid var(--blue-800); background:#fff; color:var(--blue-800); font-weight:700; cursor:pointer;}
-  .choiceToggle.active{outline:2px solid var(--blue-800); background:#eef4ff;}
+  /* フッターノート（センタリング＋通常本文と同じ13px） */
+  .footerNote{ text-align:center; font-size:13px !important; line-height:1.55; margin-top:6px; color:var(--blue-900); }
+  .large .footerNote{ font-size:13px !important; }
+
+  /* フッターアクション（戻ると途中保存の等幅維持） */
+  .footerActions{ display:grid; grid-template-columns: 1fr 1fr; gap:6px; width:100%; }
+  .footerActions .ghost{ width:100%; }
+
+  /* 申込完了リスト（行頭記号） */
+  #donePostalUnder.doneLine, #doneList .doneLine{ position:relative; padding-left:1.8em; }
+  #donePostalUnder.doneLine::before, #doneList .doneLine::before{
+    content:"■"; position:absolute; left:0.25em; top:0.1em; color:var(--blue-900);
+    font-weight:700; font-size:0.95em; line-height:1;
+  }
+
+  /* 進捗行は改行しない */
+  .progressTop{ display:flex; align-items:center; justify-content:space-between; gap:8px; white-space:nowrap; }
+
+  /* 長文ボタンのフォントわずかに小さく（改行抑止） */
+  .btnPrimary{ font-size:15px; white-space:nowrap; }
 </style>
 <!-- END: styles-addon -->
 
@@ -469,10 +453,32 @@
 
 <!-- START: styles-tap-visual-tips -->
 <style>
-  /* タップ領域拡大（44px以上） */
-  .btnPrimary{ min-height:48px; padding:14px; font-size:16px; }
-  .choiceToggle{ min-height:44px; padding:10px 12px; font-size:14px; }
-  .colorBtn{ min-height:44px; padding:10px 12px; font-size:14px; }
+  /* タップ領域（44px以上）＋二段表示対策（nowrap） */
+  .btnPrimary{
+    min-height:46px;
+    padding:12px;
+    font-size:15px;
+    white-space:nowrap;     /* ボタン内改行禁止 */
+  }
+  .choiceToggle{
+    min-height:44px;
+    padding:10px 12px;
+    font-size:14px;
+    white-space:nowrap;     /* 二段化防止 */
+  }
+  .colorBtn{
+    min-height:44px;
+    padding:10px 12px;
+    font-size:14px;
+    white-space:nowrap;
+  }
+  /* フッターのゴーストボタン（戻る／途中保存）を揃える */
+  .footerActions .ghost{
+    min-height:44px;
+    padding:10px 12px;
+    font-size:14px;
+    white-space:nowrap;
+  }
 
   /* 選択済みの見える化（チェック：choiceToggle） */
   .choiceToggle.active{
@@ -560,21 +566,24 @@
 
 <!-- START: styles-year-select-fix -->
 <style>
-  /* 年セレクトの幅を固定し、月・日ボタンと同一行に収める */
+  /* 年セレクトの幅を復元（年は約半幅、月・日は十分な幅で一行維持） */
   #licenseYear, #dobYear, #md_dobYear, #firstRegYear{
-    flex: 0 0 120px;
-    width: auto !important;
-    min-width: 110px;
-  }
-  /* グローバルの select{width:100%} の影響を抑制 */
-  .field select#licenseYear,
-  .field select#dobYear,
-  .field select#md_dobYear,
-  .field select#firstRegYear{
+    flex: 1 1 48%;
+    min-width: 136px;
     width: auto !important;
   }
-  /* 月・日ボタンは既定の70px幅（mdDisplayBtn）を維持 */
+  /* 月・日ボタン（表示用）は十分な幅を確保（従来値） */
+  #licenseMonth, #licenseDay, #dobMonth, #dobDay, #md_dobMonth, #md_dobDay, #firstRegMonth{
+    flex: 0 0 92px;
+    max-width: 100px;
+  }
   .mdDisplayBtn{ flex: 0 0 70px; }
+
+  @media (max-width:360px){
+    #licenseYear, #dobYear, #md_dobYear, #firstRegYear{ min-width:126px; flex-basis:46%; }
+    #licenseMonth, #licenseDay, #dobMonth, #dobDay, #md_dobMonth, #md_dobDay, #firstRegMonth{ flex-basis:82px; max-width:88px; }
+    select#licenseMonth, select#licenseDay, select#dobMonth, select#dobDay, select#md_dobMonth, select#md_dobDay, select#firstRegMonth{ font-size:15px; padding:7px; }
+  }
 </style>
 <!-- END: styles-year-select-fix -->
 
