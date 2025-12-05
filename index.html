@@ -4443,7 +4443,7 @@
       hideStatusTid = setTimeout(()=>{
         const s=getEl('voiceStatus');
         if(s) applyShrinkThenHide(s);
-      }, ms||0); // ③ 即時フェードアウト（待機なし）
+      }, ms||0); // 即時フェードアウト
     }catch(e){}
   }
 
@@ -4597,7 +4597,25 @@
 
     inp.value = v;
 
-    // ② 音声入力時は住所自動補完を実行しない（手入力のoninputでのみ補完）
+    // 住所補完：音声入力時も「1回だけ」実行（既に住所が入っていれば実行しない）
+    try{
+      if (fieldId === 'zip'){
+        const addrEl = getEl('addr');
+        const zipDigits = v.replace(/[^\d]/g,'');
+        if (addrEl && !addrEl.value && typeof window.mockZipToAddress === 'function' && zipDigits.length === 7){
+          window.mockZipToAddress(zipDigits);
+        }
+      }
+      if (fieldId === 'md_zip'){
+        const addrEl = getEl('md_addr');
+        const zipDigits = v.replace(/[^\d]/g,'');
+        if (addrEl && !addrEl.value && typeof window.mdZipToAddress === 'function' && zipDigits.length === 7){
+          window.mdZipToAddress(zipDigits);
+        }
+      }
+    }catch(e){}
+
+    // 次フィールドへの移動
     if (fieldId === 'cust_phone'){ focusNextForField('cust_phone'); }
     if (fieldId === 'md_phone'){   focusNextForField('md_phone'); }
     if (fieldId === 'zip'){        focusNextForField('zip'); }
@@ -4699,7 +4717,7 @@
           }
         }
 
-        // ③ 認識完了後：待機なしですぐフェードアウト
+        // 認識完了後：待機なしですぐフェードアウト
         const fid = targetFieldId;
         setIndicator(fid, '認識完了', 'recognizing');
         hideVoiceStatusDelayed(0);
