@@ -693,39 +693,17 @@
         送信元メールは
         <span class="inlineChip" aria-label="送信元メールドメイン">@example.co.jp</span>
         から届きます。
-        <a href="#" class="link" onclick="openSecurityCheck()">偽サイトの見分け方はコチラ</a>
+        <a href="#" class="officialLink" onclick="openSecurityCheck()">偽サイトの見分け方はコチラ</a>
       </span>
     </div>
   </div>
 
   <div class="card">
-    <div class="heroStrip" aria-hidden="true">
-      <div class="heroChip">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="#3c7fe6" d="M12 2l7 4v6c0 5-4 8-7 10-3-2-7-5-7-10V6l7-4z"/>
-        </svg>
-        公式・安全
-      </div>
-      <div class="heroChip">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <path fill="#3c7fe6" d="M12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13h-1v6l5 3 .5-.87-4.5-2.63V7z"/>
-        </svg>
-        所要時間約12分
-      </div>
-      <div class="heroChip">
-        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="1" y="1" width="22" height="22" rx="5" fill="#3c7fe6"/>
-          <path fill="#ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/>
-        </svg>
-        困ったらAIに相談
-      </div>
-    </div>
-
-    <div aria-hidden="true" style="height:0.9em;"></div>
-
+    <!-- 先頭に動画リンク（ヒーローチップは削除） -->
     <a href="#" class="videoChip" role="button"
        onclick="openNotice('本番では60秒動画に推移します')"
-       aria-label="使い方の60秒動画をご覧になりたい方はコチラ">
+       aria-label="使い方の60秒動画をご覧になりたい方はコチラ"
+       style="margin-top:4px;">
       <svg class="videoChip-icon" viewBox="0 0 22 22" aria-hidden="true" focusable="false">
         <rect x="1.5" y="1.5" width="19" height="19" rx="4"/>
         <polygon points="9,6.5 16,11 9,15.5"/>
@@ -733,9 +711,39 @@
       使い方の60秒動画をご覧になりたい方はコチラ
     </a>
 
-    <div class="list" style="margin-top:8px;">・スマホまたはPCで手続きできます（途中保存OK）</div>
-    <div class="list">・紙の保険証券の郵送もできます</div>
-    <div class="list">・困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
+    <!-- 絵文字風の行（アイコン＋テキスト） -->
+    <div class="item infoRow" style="margin-top:8px;">
+      <!-- スマホ/PC風アイコン（モニタ＋スマホ） -->
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="3" y="4" width="12" height="9" rx="2" fill="#3c7fe6"></rect>
+        <rect x="17" y="6" width="4" height="10" rx="1.5" fill="#1f5fbf"></rect>
+        <rect x="8" y="13.5" width="2" height="1.5" fill="#3c7fe6"></rect>
+      </svg>
+      <div style="line-height:1.55;">スマホまたはPCで手続きできます（途中保存OK）</div>
+    </div>
+
+    <div class="item infoRow">
+      <!-- 所要時間（時計アイコン） -->
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="#3c7fe6" d="M12 20a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13h-1v6l5 3 .5-.87-4.5-2.63V7z"/>
+      </svg>
+      <div style="line-height:1.55;">所要時間約12分です</div>
+    </div>
+
+    <div class="item infoRow">
+      <!-- 〒の絵（シンプルな郵便マーク） -->
+      <div aria-hidden="true" style="width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid #c8d6f3; background:#eef4ff; color:#1f5fbf; font-weight:800; font-size:12px;">〒</div>
+      <div style="line-height:1.55;">紙の保険証券の郵送もできます</div>
+    </div>
+
+    <div class="item infoRow">
+      <!-- AI相談（ヘッダーと同系の人アイコン） -->
+      <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="1" y="1" width="22" height="22" rx="5" fill="#3c7fe6"/>
+        <path fill="#ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/>
+      </svg>
+      <div style="line-height:1.55;">困ったらAIに質問できます。また電話予約やチャットもご利用いただけます</div>
+    </div>
   </div>
 
   <div class="card">
