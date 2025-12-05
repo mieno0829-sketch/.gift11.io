@@ -211,8 +211,10 @@
     padding:3px 6px; border:1px solid var(--blue-800); border-radius:999px;
     background:#eef4ff; color:#1f5fbf; font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
   }
+
+  /* AIと対話アイコン：わずかに縮小（22px） */
   .aiRobot{
-    width:24px; height:24px; border-radius:8px;
+    width:22px; height:22px; border-radius:8px;
     background-color:#3c7fe6 !important;
     border:2px solid #d7e0f0;
     background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ffffff" d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9v-1a7 7 0 0 1 14 0v1H5z"/></svg>') !important;
@@ -260,7 +262,7 @@
   .link:active{ opacity:.85; }
   .link:focus-visible{ text-decoration:underline; outline:3px solid #3c7fe6; outline-offset:2px; border-radius:2px; }
 
-  /* WEB/書面選択トグル */
+  /* 新規：WEBと書面の選択（免許証色UIと同系） */
   .choiceRow{ display:flex; gap:6px; margin-top:6px; }
   .choiceToggle{
     flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
@@ -269,7 +271,12 @@
   }
   .choiceToggle.active{ outline:2px solid var(--blue-800); background:#eef4ff; }
 
-  /* フッターノート（センタリング＋通常本文と同じ13px） */
+  /* ヒーロー導入（1行・小さめ・改行抑止） */
+  .heroStrip{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; padding:0; margin:8px 0 0 0; background:none; border:none; }
+  .heroStrip svg{ display:block; width:18px; height:18px; }
+  .heroChip{ display:inline-flex; align-items:center; gap:6px; background:transparent; border:none; padding:0; box-shadow:none; color:#0f3d7a; font-size:12px; font-weight:600; white-space:nowrap; }
+
+  /* フッターノート（センタリング＋本文相当13px） */
   .footerNote{ text-align:center; font-size:13px !important; line-height:1.55; margin-top:6px; color:var(--blue-900); }
   .large .footerNote{ font-size:13px !important; }
 
@@ -277,7 +284,7 @@
   .footerActions{ display:grid; grid-template-columns: 1fr 1fr; gap:6px; width:100%; }
   .footerActions .ghost{ width:100%; }
 
-  /* 申込完了リスト（行頭記号） */
+  /* 申込完了リスト（行頭記号 ■） */
   #donePostalUnder.doneLine, #doneList .doneLine{ position:relative; padding-left:1.8em; }
   #donePostalUnder.doneLine::before, #doneList .doneLine::before{
     content:"■"; position:absolute; left:0.25em; top:0.1em; color:var(--blue-900);
@@ -289,6 +296,11 @@
 
   /* 長文ボタンのフォントわずかに小さく（改行抑止） */
   .btnPrimary{ font-size:15px; white-space:nowrap; }
+
+  /* ④ 免許証の確認画面の2ボタンを車情報に合わせて縦積み（同じ間隔） */
+  .screen[data-title="免許証の情報を確認する"] .card > div[style*="display:flex"]{
+    display:block !important;
+  }
 </style>
 <!-- END: styles-addon -->
 
@@ -472,12 +484,21 @@
     font-size:14px;
     white-space:nowrap;
   }
-  /* フッターのゴーストボタン（戻る／途中保存）を揃える */
+
+  /* フッターのゴーストボタン（戻る／途中保存）を「電話予約／チャット」と高さ揃え */
   .footerActions .ghost{
-    min-height:44px;
-    padding:10px 12px;
-    font-size:14px;
+    /* supportItemに合わせる：inline-flexで中央寄せ、padding/フォント/行高を一致 */
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:8px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#fff;
+    font-size:13px;
+    line-height:1.2;
     white-space:nowrap;
+    min-height:auto; /* 44px固定を解除して高さを揃える */
   }
 
   /* 選択済みの見える化（チェック：choiceToggle） */
@@ -517,28 +538,6 @@
 </style>
 <!-- END: styles-tap-visual-tips -->
 
-<!-- START: styles-chapter-done -->
-<style>
-  /* 章完了のチェック表示（現在章より前を✓） */
-  .chapter.done {
-    position: relative;
-    color: #0f3d7a;
-    font-weight: 700;
-  }
-  .chapter.done::after {
-    content: "✓";
-    position: relative;
-    margin-left: 4px;
-    color: var(--blue-800);
-    font-weight: 800;
-    font-size: 12px;
-  }
-  @media (prefers-color-scheme: dark){
-    .chapter.done::after { color:#66B2FF; }
-  }
-</style>
-<!-- END: styles-chapter-done -->
-
 <!-- START: styles-fixes-1204v7 -->
 <style>
   /* 表紙（cover）時の背景色を、やや濃い淡青に調整 */
@@ -551,12 +550,17 @@
   }
   .progress #progressText, .progress #timeLeft{ white-space:nowrap; }
 
-  /* 申込完了リストの行頭に■を付与 */
+  /* 申込完了リストの行頭に■を付与（重なり防止：左に余白を作り、■は絶対配置） */
   #doneList .doneLine{
-    position:relative; padding-left:0;
+    position:relative;
+    padding-left:1.8em; /* ■の分だけ左余白 */
   }
   #doneList .doneLine::before{
-    content:"■"; display:inline-block; margin-right:6px; color:var(--blue-900);
+    content:"■";
+    position:absolute;
+    left:0.25em; top:0.1em;
+    color:var(--blue-900);
+    font-weight:700; font-size:0.95em; line-height:1;
   }
   @media (prefers-color-scheme:dark){
     #doneList .doneLine::before{ color:#66B2FF; }
@@ -1361,7 +1365,7 @@
         </tbody>
       </table>
 
-      <button class="btnPrimary" onclick="chooseSimplePlan('up')">このプランで進む</button>
+      <button class="btnPrimary" onclick="chooseSimplePlan('up')">このプランを選ぶ</button>
       <div aria-hidden="true" style="height:8px;"></div>
       <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
     </div>
@@ -1397,7 +1401,7 @@
         </tbody>
       </table>
 
-      <button class="btnPrimary" onclick="chooseSimplePlan('down')">このプランで進む</button>
+      <button class="btnPrimary" onclick="chooseSimplePlan('down')">このプランを選ぶ</button>
       <div aria-hidden="true" style="height:8px;"></div>
       <button class="btnPrimary" onclick="goStepByStep()">項目ごとに設定する（人身傷害・車両・特約）</button>
     </div>
@@ -1611,7 +1615,7 @@
     <div class="foldHeader">大切なポイント（短くまとめました）</div>
     <div class="foldBody">
       <ul class="list">
-        <li>保険を使うと翌年の割引（等級）が変わる場合があります</li>
+        <li>保険を使うと翌年の等級が変わる場合があります</li>
         <li>自己負担（免責）がある補償があります</li>
         <li>正しい内容のご申告をお願いします（虚偽は補償対象外になることがあります）</li>
         <li>事故のときは早めのご連絡が必要です</li>
@@ -4082,19 +4086,14 @@
     };
   }
 
-  // お客様の住所補完（郵便番号7桁→市区まで）
+  // ② 手入力時の住所補完（上書き・重複なし）
   if (typeof window.mockZipToAddress !== 'function') {
     window.mockZipToAddress = function(zip){
       try{
         const z = String(zip || '').replace(/[^\d]/g,'');
         if (z.length === 7){
           const addr = document.getElementById('addr');
-          if (addr){
-            // 既存入力があれば保持しつつ先頭に候補を付加
-            const rest = addr.value ? (' ' + addr.value.trim()) : '';
-            addr.value = ('東京都港区赤坂' + rest).trim();
-            try{ showToast && showToast('郵便番号から住所の候補を入力しました（市区まで）'); }catch(e){}
-          }
+          if (addr) addr.value = '東京都港区赤坂';
         }
       }catch(e){}
     };
@@ -4444,7 +4443,7 @@
       hideStatusTid = setTimeout(()=>{
         const s=getEl('voiceStatus');
         if(s) applyShrinkThenHide(s);
-      }, ms||1500);
+      }, ms||0); // ③ 即時フェードアウト（待機なし）
     }catch(e){}
   }
 
@@ -4511,11 +4510,9 @@
   function focusNextForField(fid){
     try{
       const map = {
-        // お客様情報の編集（screen-08）
         'zip':        'addr',
         'addr':       'cust_phone',
         'cust_phone': 'dobYear',
-        // 主に運転する方の編集（screen-10）
         'md_zip':     'md_addr',
         'md_addr':    'md_phone',
         'md_phone':   'md_dobYear'
@@ -4524,7 +4521,7 @@
       if (!nextId) return;
       const nextEl = getEl(nextId);
       if (nextEl && isActiveField(nextId) && typeof nextEl.focus === 'function'){
-        setTimeout(()=>{ try{ nextEl.focus(); }catch(e){} }, 250);
+        setTimeout(()=>{ try{ nextEl.focus(); }catch(e){} }, 0);
       }
     }catch(e){}
   }
@@ -4600,19 +4597,11 @@
 
     inp.value = v;
 
-    // 入力連動・次フィールド自動フォーカス
-    if (fieldId === 'zip'){
-      const pure = v.replace(/[^\d]/g,'');
-      try{ mockZipToAddress(pure); }catch(e){}
-      focusNextForField('zip');
-    }
-    if (fieldId === 'md_zip' && typeof window.mdZipToAddress === 'function'){
-      const pure = v.replace(/[^\d]/g,'');
-      try{ mdZipToAddress(pure); }catch(e){}
-      focusNextForField('md_zip');
-    }
+    // ② 音声入力時は住所自動補完を実行しない（手入力のoninputでのみ補完）
     if (fieldId === 'cust_phone'){ focusNextForField('cust_phone'); }
     if (fieldId === 'md_phone'){   focusNextForField('md_phone'); }
+    if (fieldId === 'zip'){        focusNextForField('zip'); }
+    if (fieldId === 'md_zip'){     focusNextForField('md_zip'); }
     if (fieldId === 'addr'){       focusNextForField('addr'); }
     if (fieldId === 'md_addr'){    focusNextForField('md_addr'); }
   }
@@ -4629,7 +4618,7 @@
     }
     toggleButtons(false);
     recognizing = false;
-    hideVoiceStatusDelayed(1500);
+    hideVoiceStatusDelayed(0);
     hideIndicator(targetFieldId);
     targetFieldId = null;
     modeDigitsOnly = false;
@@ -4656,7 +4645,7 @@
     }
     toggleButtons(false);
     recognizing = false;
-    hideVoiceStatusDelayed(1500);
+    hideVoiceStatusDelayed(0);
     hideIndicator(targetFieldId);
     targetFieldId = null;
     modeDigitsOnly = false;
@@ -4701,7 +4690,7 @@
           if (buf){
             const normalized = normalizeJapaneseNumberSpeech(buf);
             putValue(targetFieldId, normalized);
-          } else if (!getEl(targetFieldId)?.value){
+          }else if (!getEl(targetFieldId)?.value){
             fallbackMock('入力が確認できませんでした。');
           }
         } else {
@@ -4709,11 +4698,14 @@
             fallbackMock('入力が確認できませんでした。');
           }
         }
-        // 認識完了後：0.8秒待機 → 指定フィールドIDのインジケータを縮退→非表示、次フィールドへフォーカス
+
+        // ③ 認識完了後：待機なしですぐフェードアウト
         const fid = targetFieldId;
         setIndicator(fid, '認識完了', 'recognizing');
-        hideVoiceStatusDelayed(800);
-        setTimeout(()=>{ hideIndicator(fid); focusNextForField(fid); }, 800);
+        hideVoiceStatusDelayed(0);
+        hideIndicator(fid);
+        // 入力系は次のフィールドへ
+        focusNextForField(fid);
 
         targetFieldId = null;
         modeDigitsOnly = false;
@@ -4764,8 +4756,8 @@
     setStatus('停止しました。');
     if (targetFieldId) setIndicator(targetFieldId, '停止しました', 'ready');
     const fid = targetFieldId;
-    hideVoiceStatusDelayed(800);
-    setTimeout(()=> hideIndicator(fid), 800);
+    hideVoiceStatusDelayed(0);
+    hideIndicator(fid);
     targetFieldId = null;
     modeDigitsOnly = false;
     lastFinalTranscript = '';
@@ -4806,17 +4798,13 @@
 <!-- START: js-md-zip-helper -->
 <script>
 (function(){
-  // 主運転者の住所補完（郵便番号7桁→市区まで）
+  // ② 主運転者の住所補完（上書き・重複なし）
   window.mdZipToAddress = function(zip){
     try{
       const z = String(zip || '').replace(/[^\d]/g,'');
       if (z.length === 7){
         const addr = document.getElementById('md_addr');
-        if (addr){
-          const rest = addr.value ? (' ' + addr.value.trim()) : '';
-          addr.value = ('東京都港区赤坂' + rest).trim();
-          try{ showToast && showToast('郵便番号から住所の候補を入力しました（市区まで）'); }catch(e){}
-        }
+        if (addr) addr.value = '東京都港区赤坂';
       }
     }catch(e){}
   };
