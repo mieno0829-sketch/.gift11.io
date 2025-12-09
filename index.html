@@ -3096,6 +3096,16 @@
       return era ? `${year}年（${era}）` : `${year}年`;
     }
 
+    // 汎用フォーカス（安全）
+    function safeFocusById(id){
+      try{
+        const el = document.getElementById(id);
+        if (el && el.offsetParent && typeof el.focus === 'function'){
+          setTimeout(()=>{ try{ el.focus(); }catch(e){} }, 0);
+        }
+      }catch(e){}
+    }
+
     function fillYearOptions(sel, startY, endY){
       if (!sel || sel.options.length > 1) return;
       for(let y=startY; y<=endY; y++){
@@ -3104,7 +3114,6 @@
     }
     function fillMonthOptions(sel, max=12){
       if (!sel) return;
-      // 一旦初期化し直す（最大月の制限に対応）
       sel.innerHTML = '<option value="">月</option>';
       for(let m=1; m<=max; m++){
         const o=document.createElement('option'); o.value=String(m).padStart(2,'0'); o.textContent=`${m}月`; sel.appendChild(o);
@@ -3128,6 +3137,9 @@
         fillYearOptions(ySel, startY, endY);
         if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
         fillDayOptions(dSel);
+
+        // 年を選んだら 月ボタン へ
+        ySel.addEventListener('change', function(){ safeFocusById('licenseMonthDisplay'); });
       }catch(e){}
     }
     function validateLicenseDate(){
@@ -3157,6 +3169,10 @@
         fillYearOptions(ySel, startY, endY);
         if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
         fillDayOptions(dSel);
+
+        // 年 → 月、 日 → 勤務先（お客様 = company）
+        ySel.addEventListener('change', function(){ safeFocusById('dobMonthDisplay'); });
+        dSel.addEventListener('change', function(){ safeFocusById('company'); });
       }catch(e){}
     }
     function validateDobSelect(){
@@ -3186,6 +3202,10 @@
         fillYearOptions(ySel, startY, endY);
         if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
         fillDayOptions(dSel);
+
+        // 年 → 月、 日 → 勤務先（主運転者 = md_company）
+        ySel.addEventListener('change', function(){ safeFocusById('md_dobMonthDisplay'); });
+        dSel.addEventListener('change', function(){ safeFocusById('md_company'); });
       }catch(e){}
     }
 
@@ -3200,13 +3220,14 @@
         const selectedY = Number(ySel.value || endY);
         const maxMonth  = (selectedY === now.getFullYear()) ? (now.getMonth()+1) : 12;
         fillMonthOptions(mSel, maxMonth);
-        // 年変更で再計算（onceだと2回目以降が機能しないので都度バインドに変更）
+        // 年変更で再計算＋月ボタンへフォーカス
         ySel.addEventListener('change', function(){
           try{
             const sy = Number(ySel.value || endY);
             const mm = (sy === now.getFullYear()) ? (now.getMonth()+1) : 12;
             fillMonthOptions(mSel, mm);
           }catch(e){}
+          safeFocusById('firstRegMonthDisplay');
         });
       }catch(e){}
     }
@@ -3281,7 +3302,7 @@
       months.forEach((mm)=>{
         const btn = document.createElement('button');
         const curVal = String(getEl(cfg.monthId)?.value||'');
-        btn.className = 'mdCell' + (curVal === String(mm).padStart(2,'0') ? ' selected':'');
+        btn.className = 'mdCell' + (curVal === String(mm).padStart(2,'0') ? 'selected':'');
         btn.type='button';
         btn.setAttribute('role','gridcell');
         btn.setAttribute('aria-selected', btn.classList.contains('selected') ? 'true' : 'false');
@@ -3305,7 +3326,7 @@
       const makeCell = function(d){
         const btn = document.createElement('button');
         const curVal = String(getEl(cfg.dayId)?.value||'');
-        btn.className = 'mdCell' + (curVal === String(d).padStart(2,'0') ? ' selected':'');
+        btn.className = 'mdCell' + (curVal === String(d).padStart(2,'0') ? 'selected':'');
         btn.type='button';
         btn.setAttribute('role','gridcell');
         btn.setAttribute('aria-selected', btn.classList.contains('selected') ? 'true' : 'false');
@@ -3327,21 +3348,17 @@
       if (!cfg) return;
       const val = String(m).padStart(2,'0');
 
-      // 視覚状態（チェック/色）を反映
       try{
         btn && btn.classList.add('selected');
         btn && btn.setAttribute('aria-selected','true');
       }catch(e){}
 
-      // selectへ反映
       const sel = getEl(cfg.monthId);
       if (sel){ sel.value = val; lastSelectedMonth = val; sel.dispatchEvent(new Event('change')); }
 
-      // 表示ボタンへ反映
       const disp = getEl(cfg.monthBtn);
       if (disp) disp.textContent = m + '月';
 
-      // 初度登録は月のみ → 0.5秒後に閉じる、他は日へ
       if (group === 'firstReg'){
         setTimeout(closePicker, 500);
       }else{
@@ -3354,28 +3371,32 @@
       if (!cfg) return;
       const val = String(d).padStart(2,'0');
 
-      // 視覚状態（チェック/色）
       try{
         btn && btn.classList.add('selected');
         btn && btn.setAttribute('aria-selected','true');
       }catch(e){}
 
-      // selectへ反映
       const sel = getEl(cfg.dayId);
       if (sel){ sel.value = val; sel.dispatchEvent(new Event('change')); }
 
-      // 表示ボタンへ反映
       const disp = getEl(cfg.dayBtn);
       if (disp) disp.textContent = d + '日';
 
       // 0.5秒後に閉じて元画面へ
-      setTimeout(closePicker, 500);
+      setTimeout(()=>{
+        closePicker();
+        // 日選択完了後：勤務先へ自動フォーカス（dob→company / md_dob→md_company）
+        if (group === 'dob'){
+          setTimeout(()=>{ try{ document.getElementById('company')?.focus(); }catch(e){} }, 0);
+        }else if (group === 'md_dob'){
+          setTimeout(()=>{ try{ document.getElementById('md_company')?.focus(); }catch(e){} }, 0);
+        }
+      }, 500);
     }
 
     // 公開関数（各対象）
     function openMonthDayPicker(targetGroup, targetPhase){
       group = targetGroup || 'license';
-      // 初期準備の最低限（populateが未完でも安全に動作）
       const cfg = groups[group];
       if (cfg){
         if (!getEl(cfg.monthId)) return openPicker();
@@ -3388,10 +3409,9 @@
       }
       openPicker();
       if (targetPhase === 'day'){
-        // 月未選択なら月から促す
         const mv = cfg && (getEl(cfg.monthId)?.value || '');
         if (!mv && group !== 'firstReg'){ renderMonthGrid(); return; }
-        if (group === 'firstReg'){ /* 初度登録は日なし */ return; }
+        if (group === 'firstReg'){ return; }
         renderDayGrid();
       }
     }
@@ -4299,6 +4319,15 @@
     {keys:['pdf_yes','pdf_no'],          label:'申込書控えPDF送付'}
   ];
 
+  function safeFocus(id){
+    try{
+      const el = document.getElementById(id);
+      if (el && el.offsetParent && typeof el.focus === 'function'){
+        setTimeout(()=>{ try{ el.focus(); }catch(e){} }, 0);
+      }
+    }catch(e){}
+  }
+
   function initA11y(){
     document.querySelectorAll('.choiceRow').forEach(row=>{
       const btns = row.querySelectorAll('.choiceToggle');
@@ -4380,6 +4409,15 @@
           b.setAttribute('tabindex', isOn ? '0' : '-1');
         });
       }
+
+      // 性別選択完了後に郵便番号へフォーカス
+      if (willActivate){
+        if (key === 'gender_m' || key === 'gender_f'){
+          safeFocus('zip');
+        } else if (key === 'gender_m2' || key === 'gender_f2'){
+          safeFocus('md_zip');
+        }
+      }
     }catch(e){}
   };
 
@@ -4449,7 +4487,6 @@
         setAll(true);
         goToTitle && goToTitle('同意と申込');
       }else{
-        // 統合後は画面24（受け取り方法を選ぶ）に留まる/戻る
         goToTitle && goToTitle('受け取り方法を選ぶ');
       }
     }catch(e){}
