@@ -4268,6 +4268,15 @@
 <!-- START: js-license-color-helper -->
 <script>
   (function(){
+    function safeFocus(id){
+      try{
+        const el = document.getElementById(id);
+        if (el && el.offsetParent && typeof el.focus === 'function'){
+          setTimeout(()=>{ try{ el.focus(); }catch(e){} }, 0);
+        }
+      }catch(e){}
+    }
+
     if (typeof window.selectColor !== 'function'){
       window.selectColor = function(name, el){
         // ボタンのactive切り替え
@@ -4278,6 +4287,16 @@
 
         // 可能ならトースト通知（未定義時は無視）
         try{ if (typeof showToast === 'function') showToast(name + 'を選択しました'); }catch(e){}
+
+        // フォーカス移動：免許証の色選択後 → 有効期限の年
+        safeFocus('licenseYear');
+      };
+    } else {
+      // 既存 selectColor がある場合は、終了時にフォーカスだけ追加
+      const orig = window.selectColor;
+      window.selectColor = function(name, el){
+        try{ orig(name, el); }catch(e){}
+        safeFocus('licenseYear');
       };
     }
   })();
@@ -4287,6 +4306,15 @@
 <!-- START: js-vehicle-handlers -->
 <script>
 (function(){
+  function safeFocus(id){
+    try{
+      const el = document.getElementById(id);
+      if (el && el.offsetParent && typeof el.focus === 'function'){
+        setTimeout(()=>{ try{ el.focus(); }catch(e){} }, 0);
+      }
+    }catch(e){}
+  }
+
   if (typeof window.onMakerChange !== 'function') {
     window.onMakerChange = function(){
       try{
@@ -4301,6 +4329,8 @@
           if (modelSel) modelSel.value = '';
           if (typeSel)  typeSel.value  = '';
         }
+        // フォーカス移動：メーカー選択後 → 車名
+        if (maker){ safeFocus('model'); }
       }catch(e){}
     };
   }
@@ -4315,6 +4345,8 @@
         if (typeSel && model === 'prius' && !typeSel.value){
           typeSel.value = 'ZVW50';
         }
+        // フォーカス移動：車名選択後 → 型式
+        if (model){ safeFocus('type'); }
       }catch(e){}
     };
   }
@@ -4381,6 +4413,18 @@
       }
     };
   }
+
+  // 型式選択 → 初度登録年 へフォーカス
+  document.addEventListener('DOMContentLoaded', function(){
+    try{
+      const typeSel = document.getElementById('type');
+      if (typeSel){
+        typeSel.addEventListener('change', function(){
+          if (typeSel.value){ safeFocus('firstRegYear'); }
+        });
+      }
+    }catch(e){}
+  });
 })();
 </script>
 <!-- END: js-vehicle-handlers -->
