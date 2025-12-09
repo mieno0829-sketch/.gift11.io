@@ -4310,8 +4310,42 @@
     try{
       const el = document.getElementById(id);
       if (el && el.offsetParent && typeof el.focus === 'function'){
-        setTimeout(()=>{ try{ el.focus(); }catch(e){} }, 0);
+        setTimeout(()=>{ try{ el.focus({preventScroll:true}); }catch(e){ try{ el.focus(); }catch(_){}} }, 0);
       }
+    }catch(e){}
+  }
+
+  // select向けの安定フォーカス（iOSでの一瞬のピッカー開閉→フォーカス消失を抑止）
+  function focusSelectSafely(id){
+    try{
+      const el = document.getElementById(id);
+      if (!el || !el.offsetParent) return;
+
+      // 直前のアクティブ要素を確実にblurしてから実行
+      try{
+        if (document.activeElement && typeof document.activeElement.blur === 'function'){
+          document.activeElement.blur();
+        }
+      }catch(e){}
+
+      // ネイティブドロップダウンの自動オープン抑止のため、一時的にpointer-eventsを無効化
+      const prevPointerEvents = el.style.pointerEvents;
+      el.style.pointerEvents = 'none';
+
+      // レイアウト確定後に2段階でフォーカス（タイミング依存の端末で安定化）
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          setTimeout(()=>{
+            try{
+              el.focus({preventScroll:true});
+            }catch(e){
+              try{ el.focus(); }catch(_){}
+            }
+            // 短時間の猶予後にpointer-eventsを戻す
+            setTimeout(()=>{ el.style.pointerEvents = prevPointerEvents || ''; }, 160);
+          }, 40);
+        });
+      });
     }catch(e){}
   }
 
@@ -4329,8 +4363,18 @@
           if (modelSel) modelSel.value = '';
           if (typeSel)  typeSel.value  = '';
         }
-        // フォーカス移動：メーカー選択後 → 車名
-        if (maker){ safeFocus('model'); }
+        // フォーカス移動：メーカー選択後 → 車名（安定版）
+        if (maker){ focusSelectSafely('model'); }
+      }catch(e){}
+    };
+  } else {
+    // 既存がある場合は上書き（安定版フォーカスに差し替え）
+    const orig = window.onMakerChange;
+    window.onMakerChange = function(){
+      try{ orig(); }catch(e){}
+      try{
+        const maker = document.getElementById('maker')?.value || '';
+        if (maker){ focusSelectSafely('model'); }
       }catch(e){}
     };
   }
@@ -4345,13 +4389,22 @@
         if (typeSel && model === 'prius' && !typeSel.value){
           typeSel.value = 'ZVW50';
         }
-        // フォーカス移動：車名選択後 → 型式
-        if (model){ safeFocus('type'); }
+        // フォーカス移動：車名選択後 → 型式（安定版）
+        if (model){ focusSelectSafely('type'); }
+      }catch(e){}
+    };
+  } else {
+    const orig2 = window.onModelChange;
+    window.onModelChange = function(){
+      try{ orig2(); }catch(e){}
+      try{
+        const model = document.getElementById('model')?.value || '';
+        if (model){ focusSelectSafely('type'); }
       }catch(e){}
     };
   }
 
-  // ② 手入力時の住所補完（上書き・重複なし）
+  // 住所補完（お客様）：上書き・重複なし
   if (typeof window.mockZipToAddress !== 'function') {
     window.mockZipToAddress = function(zip){
       try{
@@ -4414,13 +4467,13 @@
     };
   }
 
-  // 型式選択 → 初度登録年 へフォーカス
+  // 型式選択 → 初度登録年 へフォーカス（安定版）
   document.addEventListener('DOMContentLoaded', function(){
     try{
       const typeSel = document.getElementById('type');
       if (typeSel){
         typeSel.addEventListener('change', function(){
-          if (typeSel.value){ safeFocus('firstRegYear'); }
+          if (typeSel.value){ focusSelectSafely('firstRegYear'); }
         });
       }
     }catch(e){}
