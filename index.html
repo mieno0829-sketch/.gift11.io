@@ -4315,24 +4315,53 @@
     }catch(e){}
   }
 
-  // select向けの安定フォーカス（iOSでの一瞬のピッカー開閉→フォーカス消失を抑止）
+  // select向けの安定フォーカス（iOSでの一瞬のピッカー開閉やフォーカス喪失を抑止）
   function focusSelectSafely(id){
     try{
       const el = document.getElementById(id);
       if (!el || !el.offsetParent) return;
 
-      // 直前のアクティブ要素を確実にblurしてから実行
+      // アクティブ要素を一旦blur（change発火直後の競合回避）
       try{
         if (document.activeElement && typeof document.activeElement.blur === 'function'){
           document.activeElement.blur();
         }
       }catch(e){}
 
-      // ネイティブドロップダウンの自動オープン抑止のため、一時的にpointer-eventsを無効化
-      const prevPointerEvents = el.style.pointerEvents;
-      el.style.pointerEvents = 'none';
+      const startTs = Date.now();
+      let refocused = false;
 
-      // レイアウト確定後に2段階でフォーカス（タイミング依存の端末で安定化）
+      // 200ms以内の意図せぬblurは再フォーカス（ガード）
+      const onBlurGuard = function(){
+        const dt = Date.now() - startTs;
+        if (dt <= 200 && !refocused){
+          // 軽く待って再フォーカス（2回までリトライ）
+          tryRefocus(2);
+        }
+        // 一度処理したらハンドラ解除
+        el.removeEventListener('blur', onBlurGuard, true);
+      };
+      el.addEventListener('blur', onBlurGuard, true);
+
+      // リトライ付き再フォーカス
+      function tryRefocus(tries){
+        if (!tries) return;
+        setTimeout(()=>{
+          try{
+            el.focus({preventScroll:true});
+          }catch(e){
+            try{ el.focus(); }catch(_){}
+          }
+          // 取得に失敗していたら再試行
+          if (document.activeElement !== el){
+            tryRefocus(tries - 1);
+          }else{
+            refocused = true;
+          }
+        }, tries === 3 ? 80 : 60); // 最初やや長め→その後短め
+      }
+
+      // 初回フォーカスはrAF×2でレイアウト確定後に実行
       requestAnimationFrame(()=>{
         requestAnimationFrame(()=>{
           setTimeout(()=>{
@@ -4341,8 +4370,12 @@
             }catch(e){
               try{ el.focus(); }catch(_){}
             }
-            // 短時間の猶予後にpointer-eventsを戻す
-            setTimeout(()=>{ el.style.pointerEvents = prevPointerEvents || ''; }, 160);
+            if (document.activeElement !== el){
+              // 初回で取れなければ最大3回まで自動リトライ
+              tryRefocus(3);
+            }else{
+              refocused = true;
+            }
           }, 40);
         });
       });
@@ -4368,7 +4401,6 @@
       }catch(e){}
     };
   } else {
-    // 既存がある場合は上書き（安定版フォーカスに差し替え）
     const orig = window.onMakerChange;
     window.onMakerChange = function(){
       try{ orig(); }catch(e){}
