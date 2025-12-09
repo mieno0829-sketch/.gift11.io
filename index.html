@@ -4315,13 +4315,13 @@
     }catch(e){}
   }
 
-  // select向けの安定フォーカス（iOSでの一瞬のピッカー開閉やフォーカス喪失を抑止）
+  // select向けの安定フォーカス + フォーカスウォッチ（iOSでのフォーカス消失を抑止）
   function focusSelectSafely(id){
     try{
       const el = document.getElementById(id);
       if (!el || !el.offsetParent) return;
 
-      // アクティブ要素を一旦blur（change発火直後の競合回避）
+      // 直前のアクティブ要素を軽くblur（競合回避）
       try{
         if (document.activeElement && typeof document.activeElement.blur === 'function'){
           document.activeElement.blur();
@@ -4335,15 +4335,13 @@
       const onBlurGuard = function(){
         const dt = Date.now() - startTs;
         if (dt <= 200 && !refocused){
-          // 軽く待って再フォーカス（2回までリトライ）
           tryRefocus(2);
         }
-        // 一度処理したらハンドラ解除
         el.removeEventListener('blur', onBlurGuard, true);
       };
       el.addEventListener('blur', onBlurGuard, true);
 
-      // リトライ付き再フォーカス
+      // リトライ付きの再フォーカス
       function tryRefocus(tries){
         if (!tries) return;
         setTimeout(()=>{
@@ -4352,16 +4350,34 @@
           }catch(e){
             try{ el.focus(); }catch(_){}
           }
-          // 取得に失敗していたら再試行
           if (document.activeElement !== el){
             tryRefocus(tries - 1);
           }else{
             refocused = true;
           }
-        }, tries === 3 ? 80 : 60); // 最初やや長め→その後短め
+        }, tries === 3 ? 80 : 60);
       }
 
-      // 初回フォーカスはrAF×2でレイアウト確定後に実行
+      // フォーカス保持ウォッチ（短時間だけ監視し、外れたら即復帰）
+      function startFocusWatch(target, durationMs){
+        const deadline = Date.now() + durationMs;
+        const tryKeep = () => {
+          try{
+            if (Date.now() > deadline) return;
+            if (document.activeElement !== target){
+              try{ target.focus({preventScroll:true}); }catch(e){ try{ target.focus(); }catch(_){ } }
+            }
+            if (Date.now() <= deadline){
+              watchId = setTimeout(tryKeep, 80);
+            }
+          }catch(e){}
+        };
+        let watchId = setTimeout(tryKeep, 80);
+        // 念のため終了時にクリーンアップ
+        setTimeout(()=>{ clearTimeout(watchId); }, durationMs + 40);
+      }
+
+      // 初回フォーカス（レイアウト確定後）
       requestAnimationFrame(()=>{
         requestAnimationFrame(()=>{
           setTimeout(()=>{
@@ -4371,11 +4387,12 @@
               try{ el.focus(); }catch(_){}
             }
             if (document.activeElement !== el){
-              // 初回で取れなければ最大3回まで自動リトライ
               tryRefocus(3);
             }else{
               refocused = true;
             }
+            // ここから短時間だけフォーカス保持を監視（400ms）
+            startFocusWatch(el, 400);
           }, 40);
         });
       });
@@ -4396,7 +4413,7 @@
           if (modelSel) modelSel.value = '';
           if (typeSel)  typeSel.value  = '';
         }
-        // フォーカス移動：メーカー選択後 → 車名（安定版）
+        // フォーカス移動：メーカー → 車名（安定版+ウォッチ）
         if (maker){ focusSelectSafely('model'); }
       }catch(e){}
     };
@@ -4421,7 +4438,7 @@
         if (typeSel && model === 'prius' && !typeSel.value){
           typeSel.value = 'ZVW50';
         }
-        // フォーカス移動：車名選択後 → 型式（安定版）
+        // フォーカス移動：車名 → 型式（安定版+ウォッチ）
         if (model){ focusSelectSafely('type'); }
       }catch(e){}
     };
@@ -4499,7 +4516,7 @@
     };
   }
 
-  // 型式選択 → 初度登録年 へフォーカス（安定版）
+  // 型式選択 → 初度登録年 へフォーカス（安定版+ウォッチ）
   document.addEventListener('DOMContentLoaded', function(){
     try{
       const typeSel = document.getElementById('type');
