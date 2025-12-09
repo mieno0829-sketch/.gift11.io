@@ -304,6 +304,16 @@
 </style>
 <!-- END: styles-addon -->
 
+<!-- START: styles-addon-nextFocusHint -->
+<style>
+  .nextFocusHint{
+    outline:2px solid var(--blue-800);
+    background:#eef4ff;
+    transition: background .6s ease, outline-color .6s ease;
+  }
+</style>
+<!-- END: styles-addon-nextFocusHint -->
+
 <!-- START: styles-override-airobot -->
 <style>
   /* AIと対話のアイコンを青地＋白シルエットに統一（「文字を大きく」アイコンと同系の青） */
@@ -4306,6 +4316,14 @@
 <!-- START: js-vehicle-handlers -->
 <script>
 (function(){
+  function isMobileiOS(){
+    try{
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPhone|iPad|iPod/.test(ua);
+      const isMacTouch = /Macintosh/.test(ua) && 'ontouchend' in document;
+      return isIOS || isMacTouch;
+    }catch(e){ return false; }
+  }
   function safeFocus(id){
     try{
       const el = document.getElementById(id);
@@ -4314,91 +4332,44 @@
       }
     }catch(e){}
   }
-
-  // select向けの安定フォーカス + フォーカスウォッチ（iOSでのフォーカス消失を抑止）
-  function focusSelectSafely(id){
+  // 次の<select>を中央へスクロール＋一時ハイライト（iOS向けフォールバック）
+  function guideNextSelect(id, label){
     try{
       const el = document.getElementById(id);
       if (!el || !el.offsetParent) return;
 
-      // 直前のアクティブ要素を軽くblur（競合回避）
-      try{
-        if (document.activeElement && typeof document.activeElement.blur === 'function'){
-          document.activeElement.blur();
-        }
-      }catch(e){}
+      el.scrollIntoView({behavior:'smooth', block:'center', inline:'nearest'});
 
-      const startTs = Date.now();
-      let refocused = false;
+      el.classList.add('nextFocusHint');
+      setTimeout(()=>{ el.classList.remove('nextFocusHint'); }, 1200);
 
-      // 200ms以内の意図せぬblurは再フォーカス（ガード）
-      const onBlurGuard = function(){
-        const dt = Date.now() - startTs;
-        if (dt <= 200 && !refocused){
-          tryRefocus(2);
-        }
-        el.removeEventListener('blur', onBlurGuard, true);
-      };
-      el.addEventListener('blur', onBlurGuard, true);
-
-      // リトライ付きの再フォーカス
-      function tryRefocus(tries){
-        if (!tries) return;
-        setTimeout(()=>{
-          try{
-            el.focus({preventScroll:true});
-          }catch(e){
-            try{ el.focus(); }catch(_){}
-          }
-          if (document.activeElement !== el){
-            tryRefocus(tries - 1);
-          }else{
-            refocused = true;
-          }
-        }, tries === 3 ? 80 : 60);
+      // aria-liveで穏やかにガイド（存在しなければ作成）
+      let live = document.getElementById('ariaAnnounce');
+      if (!live){
+        live = document.createElement('div');
+        live.id = 'ariaAnnounce';
+        live.setAttribute('aria-live','polite');
+        live.setAttribute('aria-atomic','true');
+        live.style.position='absolute';
+        live.style.left='-9999px';
+        live.style.width='1px';
+        live.style.height='1px';
+        document.body.appendChild(live);
       }
-
-      // フォーカス保持ウォッチ（短時間だけ監視し、外れたら即復帰）
-      function startFocusWatch(target, durationMs){
-        const deadline = Date.now() + durationMs;
-        const tryKeep = () => {
-          try{
-            if (Date.now() > deadline) return;
-            if (document.activeElement !== target){
-              try{ target.focus({preventScroll:true}); }catch(e){ try{ target.focus(); }catch(_){ } }
-            }
-            if (Date.now() <= deadline){
-              watchId = setTimeout(tryKeep, 80);
-            }
-          }catch(e){}
-        };
-        let watchId = setTimeout(tryKeep, 80);
-        // 念のため終了時にクリーンアップ
-        setTimeout(()=>{ clearTimeout(watchId); }, durationMs + 40);
-      }
-
-      // 初回フォーカス（レイアウト確定後）
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          setTimeout(()=>{
-            try{
-              el.focus({preventScroll:true});
-            }catch(e){
-              try{ el.focus(); }catch(_){}
-            }
-            if (document.activeElement !== el){
-              tryRefocus(3);
-            }else{
-              refocused = true;
-            }
-            // ここから短時間だけフォーカス保持を監視（400ms）
-            startFocusWatch(el, 400);
-          }, 40);
-        });
-      });
+      live.textContent = (label || '次の項目') + 'を選んでください';
     }catch(e){}
   }
 
+  // PCではselectへフォーカス、iOSではガイドのみ（フォーカスは当てない）
+  function moveToNextSelect(nextId, label){
+    if (isMobileiOS()){
+      guideNextSelect(nextId, label);
+    }else{
+      safeFocus(nextId);
+    }
+  }
+
+  // メーカー選択時
   if (typeof window.onMakerChange !== 'function') {
     window.onMakerChange = function(){
       try{
@@ -4413,8 +4384,9 @@
           if (modelSel) modelSel.value = '';
           if (typeSel)  typeSel.value  = '';
         }
-        // フォーカス移動：メーカー → 車名（安定版+ウォッチ）
-        if (maker){ focusSelectSafely('model'); }
+        if (maker){
+          moveToNextSelect('model', '車名');
+        }
       }catch(e){}
     };
   } else {
@@ -4423,11 +4395,12 @@
       try{ orig(); }catch(e){}
       try{
         const maker = document.getElementById('maker')?.value || '';
-        if (maker){ focusSelectSafely('model'); }
+        if (maker){ moveToNextSelect('model', '車名'); }
       }catch(e){}
     };
   }
 
+  // 車名選択時
   if (typeof window.onModelChange !== 'function') {
     window.onModelChange = function(){
       try{
@@ -4438,8 +4411,9 @@
         if (typeSel && model === 'prius' && !typeSel.value){
           typeSel.value = 'ZVW50';
         }
-        // フォーカス移動：車名 → 型式（安定版+ウォッチ）
-        if (model){ focusSelectSafely('type'); }
+        if (model){
+          moveToNextSelect('type', '型式');
+        }
       }catch(e){}
     };
   } else {
@@ -4448,7 +4422,7 @@
       try{ orig2(); }catch(e){}
       try{
         const model = document.getElementById('model')?.value || '';
-        if (model){ focusSelectSafely('type'); }
+        if (model){ moveToNextSelect('type', '型式'); }
       }catch(e){}
     };
   }
@@ -4516,13 +4490,19 @@
     };
   }
 
-  // 型式選択 → 初度登録年 へフォーカス（安定版+ウォッチ）
+  // 型式選択 → 初度登録（年）
   document.addEventListener('DOMContentLoaded', function(){
     try{
       const typeSel = document.getElementById('type');
       if (typeSel){
         typeSel.addEventListener('change', function(){
-          if (typeSel.value){ focusSelectSafely('firstRegYear'); }
+          if (typeSel.value){
+            if (isMobileiOS()){
+              guideNextSelect('firstRegYear', '初度登録の年');
+            }else{
+              safeFocus('firstRegYear');
+            }
+          }
         });
       }
     }catch(e){}
