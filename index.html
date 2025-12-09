@@ -768,7 +768,7 @@
         <span class="inlineChip" aria-label="公式ドメイン">example.co.jp</span><br>
         送信元メールは
         <span class="inlineChip" aria-label="送信元メールドメイン">@example.co.jp</span>
-        から届きます。
+        から届きます。<br>
         <a href="#" class="officialLink" onclick="openSecurityCheck()">偽サイトの見分け方はコチラ</a>
       </span>
     </div>
@@ -3747,6 +3747,16 @@
       return s.replace(/[０-９]/g, function(d){ return String.fromCharCode(d.charCodeAt(0) - 0xFEE0); });
     }
 
+    // 汎用フォーカス
+    function safeFocus(id){
+      try{
+        var el = document.getElementById(id);
+        if (el && el.offsetParent && typeof el.focus === 'function'){
+          setTimeout(function(){ try{ el.focus(); }catch(e){} }, 0);
+        }
+      }catch(e){}
+    }
+
     // 次のOTPへ自動フォーカス
     function otpAutoNext(idx){
       try{
@@ -3790,6 +3800,70 @@
       }
     }
 
+    // ============ 手入力の完了で次フィールドに移動（Zip→Addr→Phone→DobYear） ============
+    function digitsOnly(str){
+      return String(str || '').replace(/[^\d０-９]/g,'').replace(/[０-９]/g, function(d){ return String.fromCharCode(d.charCodeAt(0) - 0xFEE0); });
+    }
+    function bindManualFocusChain(){
+      try{
+        // 1) お客様側
+        var zip      = document.getElementById('zip');
+        var addr     = document.getElementById('addr');
+        var phone    = document.getElementById('cust_phone');
+        var dobYear  = document.getElementById('dobYear');
+
+        // 2) 主運転者側
+        var md_zip     = document.getElementById('md_zip');
+        var md_addr    = document.getElementById('md_addr');
+        var md_phone   = document.getElementById('md_phone');
+        var md_dobYear = document.getElementById('md_dobYear');
+
+        // 共通バインダ：Enter で移動、blur でも値があれば移動
+        function chainOnEnterAndBlur(srcEl, nextId){
+          if (!srcEl || !nextId) return;
+          srcEl.addEventListener('keydown', function(e){
+            if (e.key === 'Enter'){
+              e.preventDefault();
+              // 値があるときだけ遷移。空なら遷移しない（誤移動防止）
+              var val = (srcEl.value || '').trim();
+              if (val) safeFocus(nextId);
+            }
+          });
+          srcEl.addEventListener('blur', function(){
+            try{
+              var val = (srcEl.value || '').trim();
+              if (val) safeFocus(nextId);
+            }catch(e){}
+          });
+        }
+
+        // 郵便番号：7桁入力時点でも即時遷移（input監視）
+        function chainZipInput(zipEl, nextId){
+          if (!zipEl || !nextId) return;
+          zipEl.addEventListener('input', function(){
+            try{
+              var d = digitsOnly(zipEl.value);
+              if (d.length >= 7){
+                safeFocus(nextId);
+              }
+            }catch(e){}
+          });
+        }
+
+        // お客様側のチェーン
+        chainZipInput(zip, 'addr');
+        chainOnEnterAndBlur(zip, 'addr');
+        chainOnEnterAndBlur(addr, 'cust_phone');
+        chainOnEnterAndBlur(phone, 'dobYear');
+
+        // 主運転者側のチェーン
+        chainZipInput(md_zip, 'md_addr');
+        chainOnEnterAndBlur(md_zip, 'md_addr');
+        chainOnEnterAndBlur(md_addr, 'md_phone');
+        chainOnEnterAndBlur(md_phone, 'md_dobYear');
+      }catch(e){}
+    }
+
     // 使い勝手向上（Enterキー送信、初期バインド）
     function bindOtpUX(){
       try{
@@ -3818,8 +3892,11 @@
       }catch(e){}
     }
 
-    // DOM準備時にUXバインド
-    document.addEventListener('DOMContentLoaded', bindOtpUX);
+    // DOM準備時にUXバインド＋手入力チェーンをセット
+    document.addEventListener('DOMContentLoaded', function(){
+      bindOtpUX();
+      bindManualFocusChain();
+    });
 
     // モジュール公開 + 互換グローバル
     App.modules.inputAssist = { otpAutoNext, validateOtpLogin };
