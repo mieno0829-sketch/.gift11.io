@@ -304,16 +304,6 @@
 </style>
 <!-- END: styles-addon -->
 
-<!-- START: styles-addon-nextFocusHint -->
-<style>
-  .nextFocusHint{
-    outline:2px solid var(--blue-800);
-    background:#eef4ff;
-    transition: background .6s ease, outline-color .6s ease;
-  }
-</style>
-<!-- END: styles-addon-nextFocusHint -->
-
 <!-- START: styles-override-airobot -->
 <style>
   /* AIと対話のアイコンを青地＋白シルエットに統一（「文字を大きく」アイコンと同系の青） */
@@ -4316,14 +4306,6 @@
 <!-- START: js-vehicle-handlers -->
 <script>
 (function(){
-  function isMobileiOS(){
-    try{
-      const ua = navigator.userAgent || '';
-      const isIOS = /iPhone|iPad|iPod/.test(ua);
-      const isMacTouch = /Macintosh/.test(ua) && 'ontouchend' in document;
-      return isIOS || isMacTouch;
-    }catch(e){ return false; }
-  }
   function safeFocus(id){
     try{
       const el = document.getElementById(id);
@@ -4332,44 +4314,41 @@
       }
     }catch(e){}
   }
-  // 次の<select>を中央へスクロール＋一時ハイライト（iOS向けフォールバック）
-  function guideNextSelect(id, label){
+
+  // select向けの安定フォーカス（iOSでの一瞬のピッカー開閉→フォーカス消失を抑止）
+  function focusSelectSafely(id){
     try{
       const el = document.getElementById(id);
       if (!el || !el.offsetParent) return;
 
-      el.scrollIntoView({behavior:'smooth', block:'center', inline:'nearest'});
+      // 直前のアクティブ要素を確実にblurしてから実行
+      try{
+        if (document.activeElement && typeof document.activeElement.blur === 'function'){
+          document.activeElement.blur();
+        }
+      }catch(e){}
 
-      el.classList.add('nextFocusHint');
-      setTimeout(()=>{ el.classList.remove('nextFocusHint'); }, 1200);
+      // ネイティブドロップダウンの自動オープン抑止のため、一時的にpointer-eventsを無効化
+      const prevPointerEvents = el.style.pointerEvents;
+      el.style.pointerEvents = 'none';
 
-      // aria-liveで穏やかにガイド（存在しなければ作成）
-      let live = document.getElementById('ariaAnnounce');
-      if (!live){
-        live = document.createElement('div');
-        live.id = 'ariaAnnounce';
-        live.setAttribute('aria-live','polite');
-        live.setAttribute('aria-atomic','true');
-        live.style.position='absolute';
-        live.style.left='-9999px';
-        live.style.width='1px';
-        live.style.height='1px';
-        document.body.appendChild(live);
-      }
-      live.textContent = (label || '次の項目') + 'を選んでください';
+      // レイアウト確定後に2段階でフォーカス（タイミング依存の端末で安定化）
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          setTimeout(()=>{
+            try{
+              el.focus({preventScroll:true});
+            }catch(e){
+              try{ el.focus(); }catch(_){}
+            }
+            // 短時間の猶予後にpointer-eventsを戻す
+            setTimeout(()=>{ el.style.pointerEvents = prevPointerEvents || ''; }, 160);
+          }, 40);
+        });
+      });
     }catch(e){}
   }
 
-  // PCではselectへフォーカス、iOSではガイドのみ（フォーカスは当てない）
-  function moveToNextSelect(nextId, label){
-    if (isMobileiOS()){
-      guideNextSelect(nextId, label);
-    }else{
-      safeFocus(nextId);
-    }
-  }
-
-  // メーカー選択時
   if (typeof window.onMakerChange !== 'function') {
     window.onMakerChange = function(){
       try{
@@ -4384,23 +4363,22 @@
           if (modelSel) modelSel.value = '';
           if (typeSel)  typeSel.value  = '';
         }
-        if (maker){
-          moveToNextSelect('model', '車名');
-        }
+        // フォーカス移動：メーカー選択後 → 車名（安定版）
+        if (maker){ focusSelectSafely('model'); }
       }catch(e){}
     };
   } else {
+    // 既存がある場合は上書き（安定版フォーカスに差し替え）
     const orig = window.onMakerChange;
     window.onMakerChange = function(){
       try{ orig(); }catch(e){}
       try{
         const maker = document.getElementById('maker')?.value || '';
-        if (maker){ moveToNextSelect('model', '車名'); }
+        if (maker){ focusSelectSafely('model'); }
       }catch(e){}
     };
   }
 
-  // 車名選択時
   if (typeof window.onModelChange !== 'function') {
     window.onModelChange = function(){
       try{
@@ -4411,9 +4389,8 @@
         if (typeSel && model === 'prius' && !typeSel.value){
           typeSel.value = 'ZVW50';
         }
-        if (model){
-          moveToNextSelect('type', '型式');
-        }
+        // フォーカス移動：車名選択後 → 型式（安定版）
+        if (model){ focusSelectSafely('type'); }
       }catch(e){}
     };
   } else {
@@ -4422,7 +4399,7 @@
       try{ orig2(); }catch(e){}
       try{
         const model = document.getElementById('model')?.value || '';
-        if (model){ moveToNextSelect('type', '型式'); }
+        if (model){ focusSelectSafely('type'); }
       }catch(e){}
     };
   }
@@ -4490,19 +4467,13 @@
     };
   }
 
-  // 型式選択 → 初度登録（年）
+  // 型式選択 → 初度登録年 へフォーカス（安定版）
   document.addEventListener('DOMContentLoaded', function(){
     try{
       const typeSel = document.getElementById('type');
       if (typeSel){
         typeSel.addEventListener('change', function(){
-          if (typeSel.value){
-            if (isMobileiOS()){
-              guideNextSelect('firstRegYear', '初度登録の年');
-            }else{
-              safeFocus('firstRegYear');
-            }
-          }
+          if (typeSel.value){ focusSelectSafely('firstRegYear'); }
         });
       }
     }catch(e){}
