@@ -1576,7 +1576,6 @@
         <tr class="rowDelta"><td class="rowLabel">差額</td><td id="kpiDelta1">+¥900</td><td id="kpiDelta1Y">+¥10,800</td></tr>
       </tbody>
     </table>
-    <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
     <button class="btnPrimary" onclick="next()">次へ（車両保険）</button>
   </div>
 </section>
@@ -1612,7 +1611,6 @@
         <tr class="rowDelta"><td class="rowLabel">差額</td><td id="kpiDelta2">+¥750</td><td id="kpiDelta2Y">+¥9,000</td></tr>
       </tbody>
     </table>
-    <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
     <button class="btnPrimary" onclick="next()">次へ（特約）</button>
   </div>
 </section>
@@ -1637,6 +1635,12 @@
       <input type="checkbox" id="opt_dap" onchange="recalcAll()" aria-label="DAP（ドライブレコーダー）特約">
       <label class="item" for="opt_dap" style="margin:0;">DAP（ドライブレコーダー）特約（+¥200/月）</label>
     </div>
+
+    <!-- リンクを保険料表の「上」に移動 -->
+    <div class="desc" style="margin-top:4px;">
+      <a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a>
+    </div>
+
     <table class="priceTable">
       <thead><tr><th class="rowLabel"></th><th>月額</th><th>年額</th></tr></thead>
       <tbody>
@@ -1645,7 +1649,7 @@
         <tr class="rowDelta"><td class="rowLabel">差額</td><td id="kpiDelta3">+¥1,130</td><td id="kpiDelta3Y">+¥13,560</td></tr>
       </tbody>
     </table>
-    <div class="desc" style="margin-top:4px;"><a href="#" class="link" onclick="openNotice('本番では補償内容の詳細説明画面に遷移します')">・補償の詳細はコチラ</a></div>
+
     <button class="btnPrimary" onclick="next()">次へ（最終見積）</button>
   </div>
 </section>
@@ -4030,7 +4034,7 @@
       switch (title) {
         case '手続き開始':
           return '<ul class="list">' +
-                   '<li>・音声解説・文字拡大・ヘルプ・AIと対話が利用できます（全画面でご利用できます）</li>' +
+                   '<li>「音声解説」「文字拡大」「ヘルプ」「AIと対話」が利用できます（全画面でご利用できます）</li>' +
                    '<li>ヘルプからは各画面の概要を確認できます（全画面でご利用できます）</li>' +
 　　　　　　 　　 '<li>進捗バーで操作の進み具合と残りの予測時間を確認できます（全画面でご利用できます）</li>' +
                    '<li>公式サイトと送信元ドメインをご案内します。偽サイトの見分け方はリンクから確認できます</li>' +
@@ -4156,8 +4160,8 @@
                  '</ul>';
         case '受け取り方法を選ぶ':
           return '<ul class="list">' +
-                   '<li>一括選択で全体の設定ができます。個別の変更も可能です</li>' +
                    '<li>ご契約のしおり（約款）・証券・更新案内・申込書控えの受け取り方法を選びます</li>' +
+                   '<li>一括選択で全体の設定ができます。個別の変更も可能です</li>' +
                    '<li>迷ったら各項目の「？」ボタンで用語の説明をご覧ください</li>' +
                  '</ul>';
         case '同意と申込':
