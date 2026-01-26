@@ -280,9 +280,9 @@
   .footerNote{ text-align:center; font-size:13px !important; line-height:1.55; margin-top:6px; color:var(--blue-900); }
   .large .footerNote{ font-size:13px !important; }
 
-  /* フッターアクション（戻ると途中保存の等幅維持） */
-  .footerActions{ display:grid; grid-template-columns: 1fr 1fr; gap:6px; width:100%; }
-  .footerActions .ghost{ width:100%; }
+  /* フッターアクション（戻る/保存をコンパクトに。等幅固定を解除） */
+  .footerActions{ display:flex; align-items:center; gap:6px; width:auto; }
+  .footerActions .ghost{ width:auto; min-width:88px; padding:8px 10px; }
 
   /* 申込完了リスト（行頭記号 ■） */
   #donePostalUnder.doneLine, #doneList .doneLine{ position:relative; padding-left:1.8em; }
@@ -303,6 +303,42 @@
   }
 </style>
 <!-- END: styles-addon -->
+
+<!-- START: styles-footer-compact -->
+<style>
+  /* フッターのボタンを最小幅・最小余白にしてスマホで1行に収める */
+  footer .footerRow{
+    display:flex; align-items:center; justify-content:flex-start; gap:4px; flex-wrap:nowrap;
+  }
+  footer .footerActions{
+    display:flex; align-items:center; gap:4px; flex-wrap:nowrap; width:100%;
+  }
+  /* ゴースト/サポートボタン幅の最小化（等幅解除＋白抜き保持） */
+  footer .footerActions .ghost,
+  footer .footerActions .supportItem,
+  footer .supportItem{
+    min-width:60px;       /* 360px幅端末で5ボタンを1行に収める想定 */
+    padding:6px 8px;      /* 横幅を圧縮 */
+    font-size:12.5px;     /* わずかに縮小 */
+    line-height:1.2;
+    white-space:nowrap;
+  }
+  /* 既存のmin-widthを確実に上書き */
+  .supportItem{ min-width:60px !important; }
+
+  /* より狭い端末向けの微調整 */
+  @media (max-width:360px){
+    footer .footerActions .ghost,
+    footer .footerActions .supportItem,
+    footer .supportItem{
+      min-width:56px;
+      padding:5px 7px;
+      font-size:12px;
+    }
+    footer .footerRow{ gap:3px; }
+  }
+</style>
+<!-- END: styles-footer-compact -->
 
 <!-- START: styles-override-airobot -->
 <style>
@@ -955,6 +991,135 @@
   </div>
 
   <div class="card" id="manualForm" style="display:none;">
+
+    <!-- 追加：ナンバーを選ぶ -->
+    <div class="foldCard" aria-label="ナンバーを選ぶ">
+      <div class="foldHeader">・ナンバーを選ぶ</div>
+      <div class="foldBody">
+        <div style="display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap;">
+          <!-- 普通乗用車（白ナンバー） -->
+          <div style="flex:1; min-width:160px;">
+            <div class="desc" style="font-weight:700; color:#1f5fbf; margin-bottom:4px;">普通乗用車（白）</div>
+            <img alt="白ナンバー例（品川300／さ 12-34）"
+                 style="width:100%; border:1px solid var(--border); border-radius:8px;"
+                 src="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='180' height='110'>
+  <!-- 高さをやや低く -->
+  <rect x='10' y='12' width='160' height='86' rx='8' fill='%23ffffff' stroke='%230f3d7a' stroke-width='1.4'/>
+  <!-- 1行目：中央揃え（品川 と 3 の間は半角1スペース、3のみ赤） -->
+  <text x='90' y='54' text-anchor='middle' font-size='16' font-weight='700'>
+    <tspan fill='%230f3d7a'>品川</tspan><tspan> </tspan><tspan fill='%23d32f2f' font-weight='800'>3</tspan><tspan fill='%230f3d7a' font-weight='700'>00</tspan>
+  </text>
+  <!-- 2行目：中央揃え -->
+  <text x='90' y='82' text-anchor='middle' font-size='18' fill='%230f3d7a' font-weight='800'>さ 12-34</text>
+</svg>"/>
+            <div class="desc" style="margin-top:6px;">３から始まるナンバー</div>
+          </div>
+
+          <!-- その他（黒・緑） -->
+          <div style="flex:1; min-width:160px;">
+            <div class="desc" style="font-weight:700; color:#0b7a3e; margin-bottom:4px;">その他（黒・緑）</div>
+            <div style="display:flex; gap:8px; align-items:flex-start;">
+              <!-- 黒ナンバー -->
+              <img alt="黒ナンバー例（品川400／さ 12-34）"
+                   style="width:80px; border:1px solid var(--border); border-radius:6px;"
+                   src="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='100' height='70'>
+  <rect x='8' y='8' width='84' height='54' rx='6' fill='%23000000' stroke='%230f3d7a' stroke-width='1.2'/>
+  <!-- 中央揃え：x=50 -->
+  <text x='50' y='36' text-anchor='middle' font-size='12' font-weight='700'>
+    <tspan fill='%23ffffff'>品川</tspan><tspan> </tspan><tspan fill='%23d32f2f' font-weight='800'>4</tspan><tspan fill='%23ffffff'>00</tspan>
+  </text>
+  <text x='50' y='54' text-anchor='middle' font-size='13' fill='%23ffffff' font-weight='800'>さ 12-34</text>
+</svg>"/>
+              <!-- 緑ナンバー -->
+              <img alt="緑ナンバー例（品川500／さ 12-34）"
+                   style="width:80px; border:1px solid var(--border); border-radius:6px;"
+                   src="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='100' height='70'>
+  <rect x='8' y='8' width='84' height='54' rx='6' fill='%230b7a3e' stroke='%230f3d7a' stroke-width='1.2'/>
+  <!-- 中央揃え：x=50 -->
+  <text x='50' y='36' text-anchor='middle' font-size='12' font-weight='700'>
+    <tspan fill='%23ffffff'>品川</tspan><tspan> </tspan><tspan fill='%23d32f2f' font-weight='800'>5</tspan><tspan fill='%23ffffff'>00</tspan>
+  </text>
+  <text x='50' y='54' text-anchor='middle' font-size='13' fill='%23ffffff' font-weight='800'>さ 12-34</text>
+</svg>"/>
+            </div>
+            <div class="desc" style="margin-top:6px;">営業車や改造車など</div>
+          </div>
+        </div>
+
+        <!-- 2択選択（排他） -->
+        <div class="field" style="margin-top:8px;">
+          <div class="choiceRow" role="radiogroup" aria-label="ナンバー種別の選択">
+            <button class="choiceToggle" id="plate_choice_normal" onclick="selectPlateType('normal')">普通乗用車</button>
+            <button class="choiceToggle" id="plate_choice_other"  onclick="selectPlateType('other')">その他</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 追加ここまで -->
+
+    <!-- 実物風：自動車検査証の記載場所（外側の枠線のみ削除） -->
+    <div class="foldCard" aria-label="自動車検査証の記載場所">
+      <div class="foldHeader">・自動車検査証の記載場所</div>
+      <div class="foldBody">
+        <img alt="自動車検査証の記載例（赤枠＝初度登録年月/車名/型式）"
+             style="width:100%; border:1px solid var(--border); border-radius:8px;"
+             src="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' width='360' height='280'>
+  <!-- 外側の用紙枠は削除 -->
+  <text x='24' y='28' font-size='12' fill='%231f5fbf' font-weight='700'>自動車検査証（簡略図・イメージ）</text>
+  <g stroke='%23e3e9f7' stroke-width='1'>
+    <line x1='10' y1='40'  x2='350' y2='40'/>
+    <line x1='10' y1='64'  x2='350' y2='64'/>
+    <line x1='10' y1='88'  x2='350' y2='88'/>
+    <line x1='10' y1='112' x2='350' y2='112'/>
+    <line x1='10' y1='136' x2='350' y2='136'/>
+    <line x1='10' y1='160' x2='350' y2='160'/>
+    <line x1='10' y1='184' x2='350' y2='184'/>
+    <line x1='10' y1='208' x2='350' y2='208'/>
+    <line x1='10' y1='232' x2='350' y2='232'/>
+    <line x1='10' y1='256' x2='350' y2='256'/>
+  </g>
+  <g stroke='%23e3e9f7' stroke-width='1'>
+    <line x1='95'  y1='40'  x2='95'  y2='64'/><line x1='180' y1='40'  x2='180' y2='64'/><line x1='265' y1='40'  x2='265' y2='64'/>
+    <line x1='95'  y1='64'  x2='95'  y2='88'/><line x1='180' y1='64'  x2='180' y2='88'/><line x1='265' y1='64'  x2='265' y2='88'/>
+    <line x1='95'  y1='88'  x2='95'  y2='112'/><line x1='180' y1='88'  x2='180' y2='112'/><line x1='265' y1='88'  x2='265'  y2='112'/>
+    <line x1='95'  y1='112' x2='95'  y2='136'/><line x1='180' y1='112' x2='180' y2='136'/><line x1='265' y1='112' x2='265' y2='136'/>
+  </g>
+  <g font-size='10' fill='%230f3d7a'>
+    <text x='18'  y='52'>自動車登録番号</text>
+    <text x='104' y='52'>交付日</text>
+    <text x='188' y='52'>初度登録年月</text>
+    <text x='274' y='52'>自動車の種類</text>
+    <text x='18'  y='76'>車名</text>
+    <text x='104' y='76'>乗車定員</text>
+    <text x='188' y='76'>最大積載量</text>
+    <text x='274' y='76'>車両重量</text>
+    <text x='18'  y='100'>車台番号</text>
+    <text x='104' y='100'>長さ</text>
+    <text x='188' y='100'>幅</text>
+    <text x='274' y='100'>高さ</text>
+    <text x='18'  y='124'>型式</text>
+    <text x='104' y='124'>原動機の型式</text>
+    <text x='188' y='124'>総排気量</text>
+    <text x='274' y='124'>燃料の種類</text>
+    <text x='18' y='148'>所有者の氏名又は名称</text>
+    <text x='18' y='172'>所有者の住所</text>
+    <text x='18' y='196'>使用者の氏名又は名称</text>
+    <text x='18' y='220'>使用者の住所</text>
+    <text x='18' y='244'>備考</text>
+  </g>
+  <!-- 赤枠 -->
+  <rect x='180' y='42'  width='85' height='22' fill='none' stroke='%23d32f2f' stroke-width='2'/>
+  <rect x='10'  y='66'  width='85' height='22' fill='none' stroke='%23d32f2f' stroke-width='2'/>
+  <rect x='10'  y='114' width='85' height='22' fill='none' stroke='%23d32f2f' stroke-width='2'/>
+</svg>"/>
+      </div>
+    </div>
+    <!-- 図示ここまで -->
+
     <div class="h1">お車情報を入力する</div>
 
     <div class="field">
@@ -1005,6 +1170,25 @@
 
     <button class="btnPrimary" onclick="if(validateFirstRegSelect()) next()">次へ（免許証の情報）</button>
   </div>
+
+  <script>
+    // plate種別選択（排他）＋「その他」時の案内
+    function selectPlateType(type){
+      try{
+        var n = document.getElementById('plate_choice_normal');
+        var o = document.getElementById('plate_choice_other');
+        var isNormal = (type === 'normal');
+        if (n && o){
+          n.classList.toggle('active', isNormal);
+          o.classList.toggle('active', !isNormal);
+        }
+        if (!isNormal){
+          var msg = 'お取り扱いできません。画面下部にあるzoom相談か電話予約かチャットにて相談へ進んで下さい';
+          if (typeof openNotice === 'function') openNotice(msg); else alert(msg);
+        }
+      }catch(e){}
+    }
+  </script>
 </section>
 <!-- END: screen-04-vehicle-shaken -->
 
@@ -1796,43 +1980,113 @@
   </div>
 
   <div class="card">
-    <button class="btnPrimary" onclick="finishImportantNext()">次へ（連絡方法を選ぶ）</button>
+    <button class="btnPrimary" onclick="finishImportantNext()">次へ（連絡方法）</button>
   </div>
 </section>
 <!-- END: screen-22-important-info -->
 
 <!-- START: screen-23-contact-method -->
-    <section class="screen" data-title="連絡方法を選ぶ">
-      <div class="card">
-        <div class="h1">連絡方法を選ぶ</div>
-        <div class="desc">ご連絡方法をどちらか選び、メールアドレスか電話番号を入力してください</div>
-        <div class="field">
-          <div class="label">方法</div>
-          <div class="choiceRow">
-            <button class="choiceToggle" id="choice_contact_email" onclick="toggleChoice('contact_email')">メール</button>
-            <button class="choiceToggle" id="choice_contact_sms" onclick="toggleChoice('contact_sms')">SMS</button>
-          </div>
-        </div>
-        <div class="field">
-          <div class="label">メールアドレス / 電話番号</div>
-          <input class="input" id="contactValue" placeholder="例：name@example.co.jp / 090..." />
-        </div>
+<section class="screen" data-title="連絡先">
+  <div class="card">
+    <div class="h1">連絡先</div>
+    <div class="desc">・メールアドレスを入力してください</div>
+    <div class="desc" style="margin-top:4px;">・表示されているメールアドレスに変更がある場合は修正して下さい</div>
 
-        <div class="field">
-          <div class="label">情報配信のご希望</div>
-          <div class="desc" style="margin-bottom:6px;">
-            お困りごとが無いかお伺いしたり、<br>
-            お役立ち情報や新しい商品・サービスなどの情報を、今後お届けしてもよろしいですか？
-          </div>
-          <select id="optMarketing">
-            <option value="yes" selected>はい</option>
-            <option value="no">いいえ</option>
-          </select>
-        </div>
+    <div class="field">
+      <div class="label">メールアドレス</div>
+      <input class="input" id="contactValue" placeholder="例：name@example.co.jp" />
+    </div>
 
-        <button class="btnPrimary" onclick="finishContactChoice()">次へ（受け取り方法を選ぶ）</button>
+    <button class="btnPrimary" onclick="sendContactCode()">認証コードを送信</button>
+
+    <div class="field">
+      <div class="label">認証コード（4桁）</div>
+      <div class="otpRow" role="group" aria-label="認証コード4桁">
+        <input class="otpBox" inputmode="numeric" maxlength="1" id="cOtp1" oninput="cOtpAutoNext(1)" />
+        <input class="otpBox" inputmode="numeric" maxlength="1" id="cOtp2" oninput="cOtpAutoNext(2)" />
+        <input class="otpBox" inputmode="numeric" maxlength="1" id="cOtp3" oninput="cOtpAutoNext(3)" />
+        <input class="otpBox" inputmode="numeric" maxlength="1" id="cOtp4" oninput="cOtpAutoNext(4)" />
       </div>
-    </section>
+    </div>
+
+    <div class="field">
+      <div class="label">情報配信のご希望</div>
+      <div class="desc" style="margin-bottom:6px;">
+        お困りごとが無いかお伺いしたり、<br>
+        お役立ち情報や新しい商品・サービスなどの情報を、今後お届けしてもよろしいですか？
+      </div>
+      <select id="optMarketing">
+        <option value="yes" selected>はい</option>
+        <option value="no">いいえ</option>
+      </select>
+    </div>
+
+    <button class="btnPrimary" onclick="finishContactEmail()">次へ（受け取り方法を選ぶ）</button>
+  </div>
+
+  <script>
+    (function(){
+      // 1文字のみ許容（全角→半角）＋次へ自動フォーカス
+      function normalizeOne(v){ if(!v) return ''; var s=String(v).replace(/[^0-9０-９]/g,'').slice(-1); return s.replace(/[０-９]/g,function(d){return String.fromCharCode(d.charCodeAt(0)-0xFEE0)}); }
+      window.cOtpAutoNext = function(idx){
+        try{
+          var id = 'cOtp' + idx;
+          var cur = document.getElementById(id);
+          if (!cur) return;
+          cur.value = normalizeOne(cur.value);
+          if (cur.value && idx < 4){
+            var next = document.getElementById('cOtp' + (idx + 1));
+            if (next && typeof next.focus === 'function') next.focus();
+          }
+          if (idx === 4){
+            var filled = ['cOtp1','cOtp2','cOtp3','cOtp4'].every(function(i){ var el = document.getElementById(i); return el && (el.value||'').length===1; });
+            if (filled && typeof cur.blur === 'function') cur.blur();
+          }
+        }catch(e){}
+      };
+
+      // 認証コード送信（デモ：トースト表示＋cOtp1へフォーカス）
+      window.sendContactCode = async function(){
+        try{
+          var email = (document.getElementById('contactValue')?.value || '').trim();
+          if (!email){
+            if (typeof openNotice === 'function') openNotice('メールアドレスを入力してください');
+            return;
+          }
+          try{ if (window.App && App.modules && App.modules.network){ await App.modules.network.request('/auth/send-code', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ contact: email }) }); } }catch(e){}
+          if (typeof showToast === 'function') showToast('認証コードを送信しました（デモ）。届いた４桁の認証コードを入力してください');
+          try{ document.getElementById('cOtp1')?.focus(); }catch(e){}
+        }catch(e){
+          if (typeof openNotice === 'function') openNotice('認証コードの送信に失敗しました。しばらくしてから再度お試しください。');
+        }
+      };
+
+      // 4桁チェック
+      function validateContactOtp(){
+        try{
+          var ids=['cOtp1','cOtp2','cOtp3','cOtp4'];
+          return ids.every(function(i){ var el=document.getElementById(i); return el && (el.value||'').length===1; });
+        }catch(e){ return false; }
+      }
+
+      // 次へ（受け取り方法へ）押下時のバリデーション
+      window.finishContactEmail = function(){
+        try{
+          var email = (document.getElementById('contactValue')?.value || '').trim();
+          if (!email){
+            if (typeof openNotice === 'function') openNotice('メールアドレスを入力してください');
+            return;
+          }
+          if (!validateContactOtp()){
+            if (typeof openNotice === 'function') openNotice('認証コード4桁を入力してください');
+            return;
+          }
+          if (typeof goToTitle === 'function') goToTitle('受け取り方法を選ぶ');
+        }catch(e){}
+      };
+    })();
+  </script>
+</section>
 <!-- END: screen-23-contact-method -->
 
 <!-- START: screen-24-receive-method -->
@@ -1985,10 +2239,9 @@
   <div class="footerRow">
     <div class="footerActions">
       <button class="ghost" onclick="prev()">戻る</button>
-      <button class="ghost" onclick="saveDraft()">途中保存</button>
-    </div>
-    <div style="display:flex; gap:6px;">
+      <button class="ghost" onclick="saveDraft()">保存</button>
       <button class="supportItem" onclick="openNotice('本番では電話予約画面に推移します。')">電話予約</button>
+      <button class="supportItem" onclick="openNotice('本番ではzoomでの面談画面に推移します')">zoom相談</button>
       <button class="supportItem" onclick="openNotice('本番ではチャット画面に推移します。')">チャット</button>
     </div>
   </div>
@@ -3149,8 +3402,11 @@
         if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
         fillDayOptions(dSel);
 
-        // 年を選んだら 月ボタン へ
-        ySel.addEventListener('change', function(){ safeFocusById('licenseMonthDisplay'); });
+        // 年を選んだら 月ボタンへ + 月ピッカーを自動オープン
+        ySel.addEventListener('change', function(){
+          safeFocusById('licenseMonthDisplay');
+          setTimeout(()=>{ try{ openMonthDayPickerForLicense('month'); }catch(e){} }, 0);
+        });
       }catch(e){}
     }
     function validateLicenseDate(){
@@ -3181,8 +3437,11 @@
         if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
         fillDayOptions(dSel);
 
-        // 年 → 月、 日 → 勤務先（お客様 = company）
-        ySel.addEventListener('change', function(){ safeFocusById('dobMonthDisplay'); });
+        // 年 → 月（自動で月ピッカーを開く）、 日 → 勤務先（お客様 = company）
+        ySel.addEventListener('change', function(){
+          safeFocusById('dobMonthDisplay');
+          setTimeout(()=>{ try{ openMonthDayPickerForDob('month'); }catch(e){} }, 0);
+        });
         dSel.addEventListener('change', function(){ safeFocusById('company'); });
       }catch(e){}
     }
@@ -3214,8 +3473,11 @@
         if (mSel.options.length <= 1) fillMonthOptions(mSel, 12);
         fillDayOptions(dSel);
 
-        // 年 → 月、 日 → 勤務先（主運転者 = md_company）
-        ySel.addEventListener('change', function(){ safeFocusById('md_dobMonthDisplay'); });
+        // 年 → 月（自動で月ピッカーを開く）、 日 → 勤務先（主運転者 = md_company）
+        ySel.addEventListener('change', function(){
+          safeFocusById('md_dobMonthDisplay');
+          setTimeout(()=>{ try{ openMonthDayPickerForMdDob('month'); }catch(e){} }, 0);
+        });
         dSel.addEventListener('change', function(){ safeFocusById('md_company'); });
       }catch(e){}
     }
@@ -3231,7 +3493,7 @@
         const selectedY = Number(ySel.value || endY);
         const maxMonth  = (selectedY === now.getFullYear()) ? (now.getMonth()+1) : 12;
         fillMonthOptions(mSel, maxMonth);
-        // 年変更で再計算＋月ボタンへフォーカス
+        // 年変更で再計算＋月ボタンへフォーカス＋月ピッカー自動オープン
         ySel.addEventListener('change', function(){
           try{
             const sy = Number(ySel.value || endY);
@@ -3239,6 +3501,7 @@
             fillMonthOptions(mSel, mm);
           }catch(e){}
           safeFocusById('firstRegMonthDisplay');
+          setTimeout(()=>{ try{ openMonthPickerForFirstReg(); }catch(e){} }, 0);
         });
       }catch(e){}
     }
@@ -3815,6 +4078,30 @@
     function digitsOnly(str){
       return String(str || '').replace(/[^\d０-９]/g,'').replace(/[０-９]/g, function(d){ return String.fromCharCode(d.charCodeAt(0) - 0xFEE0); });
     }
+    // 電話番号のハイフン整形（10桁=3-3-4、11桁=3-4-4）
+    function formatPhoneWithHyphen(raw){
+      var p = digitsOnly(raw || '');
+      if (p.length === 11) return p.slice(0,3) + '-' + p.slice(3,7) + '-' + p.slice(7);
+      if (p.length === 10) return p.slice(0,3) + '-' + p.slice(3,6) + '-' + p.slice(6);
+      return raw || '';
+    }
+    function bindPhoneFormat(el){
+      if (!el) return;
+      // 入力中に10/11桁に達したら即整形
+      el.addEventListener('input', function(){
+        try{
+          var p = digitsOnly(el.value);
+          if (p.length === 10 || p.length === 11){
+            el.value = formatPhoneWithHyphen(p);
+          }
+        }catch(e){}
+      });
+      // フィールド離脱時に整形
+      el.addEventListener('blur', function(){
+        try{ el.value = formatPhoneWithHyphen(el.value); }catch(e){}
+      });
+    }
+
     function bindManualFocusChain(){
       try{
         // 1) お客様側
@@ -3829,21 +4116,34 @@
         var md_phone   = document.getElementById('md_phone');
         var md_dobYear = document.getElementById('md_dobYear');
 
-        // 共通バインダ：Enter で移動、blur でも値があれば移動
+        // 電話番号の整形バインド（手入力用）
+        bindPhoneFormat(phone);
+        bindPhoneFormat(md_phone);
+
+        // 共通バインダ：Enter で移動、blur でも値があれば移動（電話番号は移動前に整形）
         function chainOnEnterAndBlur(srcEl, nextId){
           if (!srcEl || !nextId) return;
           srcEl.addEventListener('keydown', function(e){
             if (e.key === 'Enter'){
               e.preventDefault();
-              // 値があるときだけ遷移。空なら遷移しない（誤移動防止）
               var val = (srcEl.value || '').trim();
-              if (val) safeFocus(nextId);
+              if (val){
+                if (srcEl.id === 'cust_phone' || srcEl.id === 'md_phone'){
+                  srcEl.value = formatPhoneWithHyphen(srcEl.value);
+                }
+                safeFocus(nextId);
+              }
             }
           });
           srcEl.addEventListener('blur', function(){
             try{
               var val = (srcEl.value || '').trim();
-              if (val) safeFocus(nextId);
+              if (val){
+                if (srcEl.id === 'cust_phone' || srcEl.id === 'md_phone'){
+                  srcEl.value = formatPhoneWithHyphen(srcEl.value);
+                }
+                safeFocus(nextId);
+              }
             }catch(e){}
           });
         }
@@ -3893,7 +4193,6 @@
           last.addEventListener('keydown', function(e){
             if (e.key === 'Enter'){
               e.preventDefault();
-              // 画面内の「認証して次へ」ボタンを探してクリック
               var btns = Array.from(document.querySelectorAll('button.btnPrimary'));
               var submit = btns.find(function(b){ return /認証して次へ/.test((b.textContent || '').trim()); });
               if (submit) submit.click();
@@ -4735,6 +5034,27 @@
 })();
 </script>
 <!-- END: js-choice-toggles -->
+
+<!-- START: js-choice-toggles-override-finishImportantNext -->
+<script>
+  (function(){
+    // 「重要事項 → 次へ（連絡方法）」の遷移先を「連絡先」に変更（選択チェックは従来通り）
+    window.finishImportantNext = function(){
+      try{
+        const full = document.getElementById('imp_choice_full')?.classList.contains('active');
+        const pdf  = document.getElementById('imp_choice_pdf')?.classList.contains('active');
+        if (!full && !pdf){
+          const msg = '全文を表示するかPDFで受け取る（メール送付）のどちらかを選んでください';
+          if (typeof openNotice === 'function') openNotice(msg); else alert(msg);
+          return;
+        }
+        try{ window.flagSendPdf = !!pdf; }catch(e){}
+        if (typeof goToTitle === 'function') goToTitle('連絡先');
+      }catch(e){}
+    };
+  })();
+</script>
+<!-- END: js-choice-toggles-override-finishImportantNext -->
 
 <!-- START: js-ai-choice -->
 <script>
