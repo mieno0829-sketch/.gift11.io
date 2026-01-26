@@ -996,9 +996,17 @@
     <div class="foldCard" aria-label="ナンバーを選ぶ">
       <div class="foldHeader">・ナンバーを選ぶ</div>
       <div class="foldBody">
-        <div style="display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap;">
+        <!-- レイアウト修正：2カラムGridで横並び固定（狭幅でも2列維持） -->
+        <style>
+          .plateRow{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:flex-start; }
+          @media (max-width: 320px){
+            .plateRow{ grid-template-columns: 1fr 1fr; } /* 320pxでも2列を維持 */
+          }
+          .plateCol{ display:block; }
+        </style>
+        <div class="plateRow">
           <!-- 普通乗用車（白ナンバー） -->
-          <div style="flex:1; min-width:160px;">
+          <div class="plateCol" style="flex:1;">
             <div class="desc" style="font-weight:700; color:#1f5fbf; margin-bottom:4px;">普通乗用車（白）</div>
             <img alt="白ナンバー例（品川300／さ 12-34）"
                  style="width:100%; border:1px solid var(--border); border-radius:8px;"
@@ -1017,7 +1025,7 @@
           </div>
 
           <!-- その他（黒・緑） -->
-          <div style="flex:1; min-width:160px;">
+          <div class="plateCol" style="flex:1;">
             <div class="desc" style="font-weight:700; color:#0b7a3e; margin-bottom:4px;">その他（黒・緑）</div>
             <div style="display:flex; gap:8px; align-items:flex-start;">
               <!-- 黒ナンバー -->
@@ -1026,7 +1034,6 @@
                    src="data:image/svg+xml;utf8,
 <svg xmlns='http://www.w3.org/2000/svg' width='100' height='70'>
   <rect x='8' y='8' width='84' height='54' rx='6' fill='%23000000' stroke='%230f3d7a' stroke-width='1.2'/>
-  <!-- 中央揃え：x=50 -->
   <text x='50' y='36' text-anchor='middle' font-size='12' font-weight='700'>
     <tspan fill='%23ffffff'>品川</tspan><tspan> </tspan><tspan fill='%23d32f2f' font-weight='800'>4</tspan><tspan fill='%23ffffff'>00</tspan>
   </text>
@@ -1038,7 +1045,6 @@
                    src="data:image/svg+xml;utf8,
 <svg xmlns='http://www.w3.org/2000/svg' width='100' height='70'>
   <rect x='8' y='8' width='84' height='54' rx='6' fill='%230b7a3e' stroke='%230f3d7a' stroke-width='1.2'/>
-  <!-- 中央揃え：x=50 -->
   <text x='50' y='36' text-anchor='middle' font-size='12' font-weight='700'>
     <tspan fill='%23ffffff'>品川</tspan><tspan> </tspan><tspan fill='%23d32f2f' font-weight='800'>5</tspan><tspan fill='%23ffffff'>00</tspan>
   </text>
