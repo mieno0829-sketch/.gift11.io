@@ -990,24 +990,22 @@
     <button class="btnPrimary" onclick="showManual()">変更する</button>
   </div>
 
-  <div class="card" id="manualForm" style="display:none;">
-
-    <!-- 追加：ナンバーを選ぶ（既存保持） -->
-    <div class="foldCard" aria-label="ナンバーを選ぶ">
-      <div class="foldHeader">・ナンバーを選ぶ</div>
-      <div class="foldBody">
-        <style>
-          .plateRow{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:flex-start; }
-          @media (max-width: 320px){ .plateRow{ grid-template-columns: 1fr 1fr; } }
-          .plateCol{ display:block; }
-        </style>
-        <div class="plateRow">
-          <!-- 普通乗用車（白） -->
-          <div class="plateCol">
-            <div class="desc" style="font-weight:700; color:#1f5fbf; margin-bottom:4px;">普通乗用車（白）</div>
-            <img alt="白ナンバー例（品川300／さ 12-34）"
-                 style="width:100%; border:1px solid var(--border); border-radius:8px;"
-                 src="data:image/svg+xml;utf8,
+  <!-- 手入力（カードを分割） -->
+  <div class="card" id="manualPlateCard" style="display:none;">
+    <div class="h1">ナンバーの種類を選ぶ</div>
+    <div class="foldBody">
+      <style>
+        .plateRow{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; align-items:flex-start; }
+        @media (max-width: 320px){ .plateRow{ grid-template-columns: 1fr 1fr; } }
+        .plateCol{ display:block; }
+      </style>
+      <div class="plateRow">
+        <!-- 普通乗用車（白） -->
+        <div class="plateCol">
+          <div class="desc" style="font-weight:700; color:#1f5fbf; margin-bottom:4px;">普通乗用車（白）</div>
+          <img alt="白ナンバー例（品川300／さ 12-34）"
+               style="width:100%; border:1px solid var(--border); border-radius:8px;"
+               src="data:image/svg+xml;utf8,
 <svg xmlns='http://www.w3.org/2000/svg' width='180' height='110'>
   <rect x='10' y='12' width='160' height='86' rx='8' fill='%23ffffff' stroke='%230f3d7a' stroke-width='1.4'/>
   <text x='90' y='54' text-anchor='middle' font-size='16' font-weight='700'>
@@ -1015,16 +1013,16 @@
   </text>
   <text x='90' y='82' text-anchor='middle' font-size='18' fill='%230f3d7a' font-weight='800'>さ 12-34</text>
 </svg>"/>
-            <div class="desc" style="margin-top:6px;">３から始まるナンバー</div>
-          </div>
+          <div class="desc" style="margin-top:6px;">３から始まるナンバー</div>
+        </div>
 
-          <!-- その他（黒・緑） -->
-          <div class="plateCol">
-            <div class="desc" style="font-weight:700; color:#0b7a3e; margin-bottom:4px;">その他（黒・緑）</div>
-            <div style="display:flex; gap:8px; align-items:flex-start;">
-              <img alt="黒ナンバー例（品川400／さ 12-34）"
-                   style="width:80px; border:1px solid var(--border); border-radius:6px;"
-                   src="data:image/svg+xml;utf8,
+        <!-- その他（黒・緑） -->
+        <div class="plateCol">
+          <div class="desc" style="font-weight:700; color:#0b7a3e; margin-bottom:4px;">その他（黒・緑）</div>
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <img alt="黒ナンバー例（品川400／さ 12-34）"
+                 style="width:80px; border:1px solid var(--border); border-radius:6px;"
+                 src="data:image/svg+xml;utf8,
 <svg xmlns='http://www.w3.org/2000/svg' width='100' height='70'>
   <rect x='8' y='8' width='84' height='54' rx='6' fill='%23000000' stroke='%230f3d7a' stroke-width='1.2'/>
   <text x='50' y='36' text-anchor='middle' font-size='12' font-weight='700'>
@@ -1032,9 +1030,9 @@
   </text>
   <text x='50' y='54' text-anchor='middle' font-size='13' fill='%23ffffff' font-weight='800'>さ 12-34</text>
 </svg>"/>
-              <img alt="緑ナンバー例（品川500／さ 12-34）"
-                   style="width:80px; border:1px solid var(--border); border-radius:6px;"
-                   src="data:image/svg+xml;utf8,
+            <img alt="緑ナンバー例（品川500／さ 12-34）"
+                 style="width:80px; border:1px solid var(--border); border-radius:6px;"
+                 src="data:image/svg+xml;utf8,
 <svg xmlns='http://www.w3.org/2000/svg' width='100' height='70'>
   <rect x='8' y='8' width='84' height='54' rx='6' fill='%230b7a3e' stroke='%230f3d7a' stroke-width='1.2'/>
   <text x='50' y='36' text-anchor='middle' font-size='12' font-weight='700'>
@@ -1042,25 +1040,24 @@
   </text>
   <text x='50' y='54' text-anchor='middle' font-size='13' fill='%23ffffff' font-weight='800'>さ 12-34</text>
 </svg>"/>
-            </div>
-            <div class="desc" style="margin-top:6px;">営業車や改造車など</div>
           </div>
+          <div class="desc" style="margin-top:6px;">営業車や改造車など</div>
         </div>
+      </div>
 
-        <!-- 2択（排他） -->
-        <div class="field" style="margin-top:8px;">
-          <div class="choiceRow" role="radiogroup" aria-label="ナンバー種別の選択">
-            <button class="choiceToggle" id="plate_choice_normal" onclick="selectPlateType('normal')">普通乗用車</button>
-            <button class="choiceToggle" id="plate_choice_other"  onclick="selectPlateType('other')">その他</button>
-          </div>
+      <!-- 2択（排他） -->
+      <div class="field" style="margin-top:8px;">
+        <div class="choiceRow" role="radiogroup" aria-label="ナンバー種別の選択">
+          <button class="choiceToggle" id="plate_choice_normal" onclick="selectPlateType('normal')">普通乗用車</button>
+          <button class="choiceToggle" id="plate_choice_other"  onclick="selectPlateType('other')">その他</button>
         </div>
       </div>
     </div>
-    <!-- 追加ここまで -->
+  </div>
 
+  <div class="card" id="manualVehicleCard" style="display:none;">
     <div class="h1">お車情報を入力する</div>
 
-    <!-- ここに「車検証の見方」リンクを追加（ポップアップ表示） -->
     <div class="desc" style="margin-top:4px;">
       <a href="#" class="link" onclick="openModal(document.getElementById('shakenGuideModal'))">車検証の見方はコチラ</a>
     </div>
@@ -1115,7 +1112,38 @@
   </div>
 
   <script>
-    // plate種別選択（排他）＋「その他」時の案内（既存）
+    // 既存のshowManual/showOCRGuide/showOCRResultを安全に上書きし、2カード表示に切替
+    (function(){
+      function safeDisplay(id, show){
+        var el = document.getElementById(id);
+        if (el) el.style.display = show ? 'block' : 'none';
+      }
+      window.showManual = function(){
+        safeDisplay('ocrShoot', false);
+        safeDisplay('ocrGuide', false);
+        safeDisplay('ocrResult', false);
+        safeDisplay('manualPlateCard', true);
+        safeDisplay('manualVehicleCard', true);
+        // 初度登録のセレクト初期化（必要に応じて）
+        try{ App.modules?.dates?.populateFirstRegSelects && App.modules.dates.populateFirstRegSelects(); }catch(e){}
+      };
+      window.showOCRGuide = function(){
+        safeDisplay('ocrShoot', true);
+        safeDisplay('ocrGuide', true);
+        safeDisplay('ocrResult', false);
+        safeDisplay('manualPlateCard', false);
+        safeDisplay('manualVehicleCard', false);
+      };
+      window.showOCRResult = function(){
+        safeDisplay('ocrShoot', false);
+        safeDisplay('ocrGuide', false);
+        safeDisplay('ocrResult', true);
+        safeDisplay('manualPlateCard', false);
+        safeDisplay('manualVehicleCard', false);
+      };
+    })();
+
+    // plate種別選択（排他）＋「その他」時の案内（既存ロジック維持）
     function selectPlateType(type){
       try{
         var n = document.getElementById('plate_choice_normal');
